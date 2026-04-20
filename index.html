@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="FastKungFu" />
+  <meta name="theme-color" content="#000000" />
+  <title>FastKungFu</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: SELECCIÓN DE IDIOMA
+════════════════════════════════════ -->
+<div id="screen-lang" class="screen hidden">
+  <div class="screen-inner center-content">
+    <img src="assets/LOGO_FASTKUNGFU.png" class="logo-img" alt="FastKungFu" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',textContent:'🥊'}))">
+    <p class="lang-subtitle">Choose your language</p>
+    <div class="lang-buttons">
+      <button class="btn-lang" data-lang="es">🇪🇸 Español</button>
+      <button class="btn-lang" data-lang="en">🇬🇧 English</button>
+      <button class="btn-lang" data-lang="pt">🇵🇹 Português</button>
+      <button class="btn-lang" data-lang="de">🇩🇪 Deutsch</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: PERFIL (primera vez)
+════════════════════════════════════ -->
+<div id="screen-profile" class="screen hidden">
+  <div class="screen-inner center-content">
+    <img src="assets/LOGO_FASTKUNGFU.png" class="logo-img" alt="FastKungFu" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',textContent:'🥊'}))">
+    <p class="subtitle" data-i18n="profile_subtitle">Configura tu perfil para comenzar</p>
+    <div class="form-group">
+      <label for="input-name" data-i18n="name">Nombre</label>
+      <input type="text" id="input-name" data-i18n-placeholder="name_placeholder" placeholder="Tu nombre" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label for="input-weight" data-i18n="weight">Peso (kg)</label>
+      <input type="number" id="input-weight" data-i18n-placeholder="weight_placeholder" placeholder="70" min="30" max="200" />
+    </div>
+    <div class="form-group">
+      <label for="input-age" data-i18n="age">Edad</label>
+      <input type="number" id="input-age" data-i18n-placeholder="age_placeholder" placeholder="25" min="10" max="100" />
+    </div>
+    <div class="form-group">
+      <label data-i18n="sex">Sexo</label>
+      <div class="sex-toggle">
+        <button class="sex-btn active" data-sex="hombre" data-i18n="male">♂ Hombre</button>
+        <button class="sex-btn" data-sex="mujer" data-i18n="female">♀ Mujer</button>
+      </div>
+    </div>
+    <button class="btn-primary" id="btn-save-profile" data-i18n="save_continue">GUARDAR Y CONTINUAR</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: MENÚ PRINCIPAL
+════════════════════════════════════ -->
+<div id="screen-menu" class="screen hidden">
+  <div class="screen-inner">
+    <div class="topbar">
+      <button class="icon-btn" id="btn-settings" title="Ajustes">⚙️</button>
+      <div></div>
+      <button class="icon-btn" id="btn-history" title="Estadísticas">📊</button>
+    </div>
+    <img src="assets/LOGO_FASTKUNGFU.png" class="logo-img logo-menu" alt="FastKungFu" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',textContent:'🥊'}))">
+    <div class="menu-buttons">
+      <button class="btn-mode btn-striking" id="btn-striking-mode">
+        <span class="mode-icon">🥊</span>
+        <span class="mode-label" data-i18n="striking_mode">MODO GOLPEO</span>
+        <span class="mode-desc" data-i18n="striking_desc">Mide velocidad y potencia</span>
+      </button>
+      <button class="btn-mode btn-reaction" id="btn-reaction-mode">
+        <span class="mode-icon">🔴</span>
+        <span class="mode-label" data-i18n="reaction_mode">MODO REACCIÓN</span>
+        <span class="mode-desc" data-i18n="reaction_desc">Entrena tu tiempo de reacción</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: CONFIGURACIÓN DE SESIÓN
+════════════════════════════════════ -->
+<div id="screen-config" class="screen hidden">
+  <div class="screen-inner">
+    <div class="topbar">
+      <button class="icon-btn" id="btn-config-back">←</button>
+      <h2 id="config-mode-title">MODO GOLPEO</h2>
+      <div></div>
+    </div>
+
+    <div class="config-body">
+      <div class="config-item">
+        <div class="config-label-row">
+          <label data-i18n="rounds_label">Rounds</label>
+          <span class="config-value" id="val-rounds">3</span>
+        </div>
+        <input type="range" id="input-rounds" min="1" max="12" value="3" class="slider" />
+        <div class="slider-range"><span>1</span><span>12</span></div>
+      </div>
+
+      <div class="config-item">
+        <div class="config-label-row">
+          <label data-i18n="round_duration_label">Duración del round</label>
+          <span class="config-value" id="val-round-duration">2 min</span>
+        </div>
+        <input type="range" id="input-round-duration" min="1" max="5" value="2" class="slider" />
+        <div class="slider-range"><span>1 min</span><span>5 min</span></div>
+      </div>
+
+      <div class="config-item">
+        <div class="config-label-row">
+          <label data-i18n="rest_duration_label">Descanso entre rounds</label>
+          <span class="config-value" id="val-rest-duration">30 s</span>
+        </div>
+        <input type="range" id="input-rest-duration" min="15" max="90" value="30" step="5" class="slider" />
+        <div class="slider-range"><span>15 s</span><span>90 s</span></div>
+      </div>
+
+      <div class="config-summary" id="config-summary"></div>
+
+      <div id="ios-permission-block" class="ios-permission hidden">
+        <p data-i18n="ios_permission_text">iOS requiere permiso para el acelerómetro</p>
+        <button class="btn-secondary" id="btn-ios-permission" data-i18n="ios_permission_btn">🎯 Activar sensor de movimiento</button>
+        <p class="permission-status" id="permission-status"></p>
+      </div>
+
+      <button class="btn-primary" id="btn-start-session" data-i18n="config_start">EMPEZAR SESIÓN</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: MODO GOLPEO (en vivo)
+════════════════════════════════════ -->
+<div id="screen-striking" class="screen hidden">
+  <div class="screen-inner">
+    <div class="workout-topbar">
+      <span class="round-indicator" id="strike-round-indicator">Round 1 de 3</span>
+      <button class="btn-stop" id="btn-strike-stop">■</button>
+    </div>
+
+    <div class="timer-big" id="strike-timer">2:00</div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-value green" id="strike-punch-count">0</div>
+        <div class="metric-label" data-i18n="punches">Golpes</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="strike-speed">0.0</div>
+        <div class="metric-label" data-i18n="speed_label">Velocidad (m/s²)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="strike-power">0.0G</div>
+        <div class="metric-label" data-i18n="power_label">Potencia actual</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value red" id="strike-best">0.0G</div>
+        <div class="metric-label" data-i18n="best_punch">Mejor golpe</div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-label" data-i18n="chart_last10">Últimos 10 golpes (G)</div>
+      <canvas id="strike-chart" width="320" height="80"></canvas>
+    </div>
+
+    <button class="btn-fallback hidden" id="btn-fallback-punch" data-i18n="fallback_punch">👊 GOLPEAR</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: MODO REACCIÓN (en vivo)
+════════════════════════════════════ -->
+<div id="screen-reaction" class="screen hidden">
+  <div class="screen-inner">
+    <div class="workout-topbar">
+      <span class="round-indicator" id="reaction-round-indicator">Round 1 de 3</span>
+      <button class="btn-stop" id="btn-reaction-stop">■</button>
+    </div>
+
+    <div class="timer-big" id="reaction-timer">2:00</div>
+
+    <div class="reaction-stimulus" id="reaction-stimulus">
+      <div class="stimulus-text" id="stimulus-text">LISTO</div>
+      <div class="stimulus-sub" id="stimulus-sub"></div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-value" id="reaction-last-time">—</div>
+        <div class="metric-label" data-i18n="last_reaction">Última reacción</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value green" id="reaction-hits">0</div>
+        <div class="metric-label" data-i18n="hits">Aciertos</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value red" id="reaction-misses">0</div>
+        <div class="metric-label" data-i18n="misses">Fallos</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="reaction-best">—</div>
+        <div class="metric-label" data-i18n="best_reaction">Mejor reacción</div>
+      </div>
+    </div>
+
+    <button class="btn-fallback hidden" id="btn-fallback-hit" data-i18n="fallback_hit">👊 ¡GOLPEAR!</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: DESCANSO
+════════════════════════════════════ -->
+<div id="screen-rest" class="screen hidden">
+  <div class="screen-inner center-content">
+    <div class="rest-label" data-i18n="rest_title">DESCANSO</div>
+    <div class="rest-countdown" id="rest-countdown">30</div>
+    <div class="rest-next" id="rest-next">Próximo: Round 2</div>
+
+    <div class="rest-stats" id="rest-stats"></div>
+
+    <button class="btn-secondary" id="btn-skip-rest" data-i18n="skip_rest">SALTAR DESCANSO</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: RESUMEN DE SESIÓN
+════════════════════════════════════ -->
+<div id="screen-summary" class="screen hidden">
+  <div class="screen-inner">
+    <div class="summary-header">
+      <div class="summary-icon">🏆</div>
+      <h2 data-i18n="session_complete">SESIÓN COMPLETADA</h2>
+      <div class="summary-date" id="summary-date"></div>
+    </div>
+
+    <div class="summary-body">
+      <div class="summary-mode" id="summary-mode"></div>
+
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-value" id="sum-rounds">3</div>
+          <div class="summary-label" data-i18n="rounds_completed">Rounds</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value green" id="sum-punches">0</div>
+          <div class="summary-label" data-i18n="total_punches">Golpes totales</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value" id="sum-avg-power">0.0G</div>
+          <div class="summary-label" data-i18n="avg_power_s">Potencia media</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value red" id="sum-max-power">0.0G</div>
+          <div class="summary-label" data-i18n="max_power_s">Potencia máxima</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value" id="sum-avg-speed">0.0</div>
+          <div class="summary-label" data-i18n="avg_speed_s">Velocidad media</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value" id="sum-max-speed">0.0</div>
+          <div class="summary-label" data-i18n="max_speed_s">Velocidad máxima</div>
+        </div>
+        <div class="summary-item hidden" id="sum-reaction-row">
+          <div class="summary-value" id="sum-avg-reaction">—</div>
+          <div class="summary-label" data-i18n="avg_reaction_s">Reacción media</div>
+        </div>
+        <div class="summary-item hidden" id="sum-best-reaction-row">
+          <div class="summary-value green" id="sum-best-reaction">—</div>
+          <div class="summary-label" data-i18n="best_reaction_s">Mejor reacción</div>
+        </div>
+        <div class="summary-item hidden" id="sum-hits-row">
+          <div class="summary-value green" id="sum-hits">0</div>
+          <div class="summary-label" data-i18n="hits_s">Aciertos</div>
+        </div>
+        <div class="summary-item hidden" id="sum-misses-row">
+          <div class="summary-value red" id="sum-misses">0</div>
+          <div class="summary-label" data-i18n="misses_s">Fallos</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value" id="sum-duration">0:00</div>
+          <div class="summary-label" data-i18n="duration_s">Duración</div>
+        </div>
+        <div class="summary-item calories-big">
+          <div class="summary-value orange" id="sum-calories">0</div>
+          <div class="summary-label" data-i18n="calories_s">Calorías estimadas</div>
+        </div>
+      </div>
+
+      <div class="summary-message" id="summary-message"></div>
+      <div class="summary-comparison" id="summary-comparison"></div>
+    </div>
+
+    <div class="summary-actions">
+      <button class="btn-primary" id="btn-save-session" data-i18n="save_session">GUARDAR SESIÓN</button>
+      <button class="btn-secondary" id="btn-summary-menu" data-i18n="back_menu">VOLVER AL MENÚ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: HISTORIAL / ANALÍTICAS
+════════════════════════════════════ -->
+<div id="screen-history" class="screen hidden">
+  <div class="screen-inner">
+    <div class="topbar">
+      <button class="icon-btn" id="btn-history-back">←</button>
+      <h2 data-i18n="stats_title">ESTADÍSTICAS</h2>
+      <div></div>
+    </div>
+
+    <div class="history-body">
+      <section class="hist-section">
+        <h3 data-i18n="records_title">🏆 Récords Históricos</h3>
+        <div class="records-grid">
+          <div class="record-item">
+            <div class="record-value green" id="hist-best-reaction">—</div>
+            <div class="record-label" data-i18n="best_reaction_rec">Mejor reacción</div>
+          </div>
+          <div class="record-item">
+            <div class="record-value red" id="hist-best-power">—</div>
+            <div class="record-label" data-i18n="best_power_rec">Mayor potencia</div>
+          </div>
+          <div class="record-item">
+            <div class="record-value" id="hist-most-punches">—</div>
+            <div class="record-label" data-i18n="most_punches_rec">Más golpes en sesión</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="hist-section">
+        <h3 data-i18n="totals_title">Totales</h3>
+        <div class="totals-grid">
+          <div class="total-item">
+            <span class="total-value" id="hist-total-sessions">0</span>
+            <span class="total-label" data-i18n="total_sessions">Sesiones</span>
+          </div>
+          <div class="total-item">
+            <span class="total-value" id="hist-total-punches">0</span>
+            <span class="total-label" data-i18n="total_punches_h">Golpes históricos</span>
+          </div>
+          <div class="total-item">
+            <span class="total-value orange" id="hist-total-calories">0</span>
+            <span class="total-label" data-i18n="total_calories_h">Calorías totales</span>
+          </div>
+        </div>
+        <div class="streak-display" id="hist-streak"></div>
+      </section>
+
+      <section class="hist-section">
+        <h3 data-i18n="power_chart_title">Evolución Potencia Media (últimas 10)</h3>
+        <canvas id="hist-power-chart" width="320" height="120"></canvas>
+      </section>
+
+      <section class="hist-section">
+        <h3 data-i18n="reaction_chart_title">Tiempo de Reacción (últimas 10)</h3>
+        <canvas id="hist-reaction-chart" width="320" height="120"></canvas>
+      </section>
+
+      <section class="hist-section">
+        <h3 data-i18n="calories_chart_title">Calorías por sesión (últimas 10)</h3>
+        <canvas id="hist-calories-chart" width="320" height="120"></canvas>
+      </section>
+
+      <div style="height:80px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     MODAL: AJUSTES / PERFIL
+════════════════════════════════════ -->
+<div id="modal-settings" class="modal hidden">
+  <div class="modal-overlay" id="modal-overlay"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 data-i18n="settings_title">Ajustes</h3>
+      <button class="icon-btn" id="btn-close-settings">✕</button>
+    </div>
+    <div class="form-group">
+      <label for="settings-name" data-i18n="name">Nombre</label>
+      <input type="text" id="settings-name" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label for="settings-weight" data-i18n="weight">Peso (kg)</label>
+      <input type="number" id="settings-weight" min="30" max="200" />
+    </div>
+    <div class="form-group">
+      <label for="settings-age" data-i18n="age">Edad</label>
+      <input type="number" id="settings-age" min="10" max="100" />
+    </div>
+    <div class="form-group">
+      <label data-i18n="sex">Sexo</label>
+      <div class="sex-toggle">
+        <button class="sex-btn active" data-sex="hombre" id="settings-sex-hombre" data-i18n="male">♂ Hombre</button>
+        <button class="sex-btn" data-sex="mujer" id="settings-sex-mujer" data-i18n="female">♀ Mujer</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label data-i18n="language_label">Idioma</label>
+      <div class="lang-toggle">
+        <button class="btn-lang-sm" data-lang="es">🇪🇸 ES</button>
+        <button class="btn-lang-sm" data-lang="en">🇬🇧 EN</button>
+        <button class="btn-lang-sm" data-lang="pt">🇵🇹 PT</button>
+        <button class="btn-lang-sm" data-lang="de">🇩🇪 DE</button>
+      </div>
+    </div>
+    <button class="btn-primary" id="btn-save-settings" data-i18n="save_settings">GUARDAR</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

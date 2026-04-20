@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head><title>Generar iconos FastKungFu</title></head>
+<body style="background:#111;color:#fff;font-family:sans-serif;padding:20px">
+<p>Haz clic en los botones para descargar los iconos PNG necesarios para la PWA.</p>
+<canvas id="c192" width="192" height="192" style="border:1px solid #333"></canvas>
+<canvas id="c512" width="512" height="512" style="border:1px solid #333;display:none"></canvas>
+<br><br>
+<button onclick="download(192)" style="padding:10px 20px;background:#00cc44;color:#000;border:none;cursor:pointer;font-size:16px">Descargar icon-192.png</button>
+<button onclick="download(512)" style="padding:10px 20px;background:#00cc44;color:#000;border:none;cursor:pointer;font-size:16px;margin-left:10px">Descargar icon-512.png</button>
+
+<script>
+function drawIcon(size) {
+  const id = 'c' + size;
+  const c = document.getElementById(id);
+  c.width = size; c.height = size;
+  c.style.display = 'inline-block';
+  const ctx = c.getContext('2d');
+  const r = size / 2;
+  
+  // Fondo negro con borde verde
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, size, size, size * 0.2);
+  ctx.fill();
+  
+  // Borde verde
+  ctx.strokeStyle = '#00cc44';
+  ctx.lineWidth = size * 0.04;
+  ctx.beginPath();
+  ctx.roundRect(size*0.04, size*0.04, size*0.92, size*0.92, size * 0.17);
+  ctx.stroke();
+  
+  // Emoji del guante
+  ctx.font = `${size * 0.55}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🥊', r, r * 0.95);
+  
+  // Texto "FKF"
+  ctx.font = `bold ${size * 0.13}px sans-serif`;
+  ctx.fillStyle = '#00cc44';
+  ctx.fillText('FastKungFu', r, size * 0.85);
+  
+  return c;
+}
+
+function download(size) {
+  const c = drawIcon(size);
+  const a = document.createElement('a');
+  a.download = 'icon-' + size + '.png';
+  a.href = c.toDataURL('image/png');
+  a.click();
+}
+
+// Dibujar preview
+drawIcon(192);
+</script>
+</body>
+</html>
