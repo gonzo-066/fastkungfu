@@ -1,8 +1,3 @@
-/* ═══════════════════════════════════════════════════
-   FASTKUNGFU — app.js
-   PWA de entrenamiento de boxeo y reacción
-═══════════════════════════════════════════════════ */
-
 'use strict';
 
 // ═══════════════════════════════════════════════════
@@ -19,7 +14,6 @@ if ('serviceWorker' in navigator) {
 // ═══════════════════════════════════════════════════
 const TRANSLATIONS = {
   es: {
-    // Perfil
     profile_subtitle:     'Configura tu perfil para comenzar',
     name:                 'Nombre',
     weight:               'Peso (kg)',
@@ -31,54 +25,45 @@ const TRANSLATIONS = {
     name_placeholder:     'Tu nombre',
     weight_placeholder:   '70',
     age_placeholder:      '25',
-    // Menú
-    striking_mode:        'MODO GOLPEO',
-    striking_desc:        'Mide velocidad y potencia',
-    reaction_mode:        'MODO REACCIÓN',
-    reaction_desc:        'Entrena tu tiempo de reacción',
-    // Config
+    training_mode:        'ENTRENAMIENTO',
+    training_desc:        'Mide velocidad y potencia por rounds',
+    combo_mode:           'MODO REACCIÓN',
+    combo_desc:           'Combos con tiempo de reacción',
     rounds_label:         'Rounds',
     round_duration_label: 'Duración del round',
     rest_duration_label:  'Descanso entre rounds',
-    config_start:         'EMPEZAR SESIÓN',
+    config_start:         'INICIAR ENTRENAMIENTO',
     config_summary:       '{r} rounds · {rd} min · {rst}s descanso · ~{total} min totales',
     val_rounds:           '{n} rounds',
     val_round_duration:   '{n} min',
     val_rest_duration:    '{n} s',
+    combo_hits_label:     'GOLPES POR COMBO',
+    combo_duration_label: 'DURACIÓN MÁXIMA DEL COMBO',
+    combo_pause_label:    'PAUSA ENTRE SEÑALES',
+    combo_mode_label:     'MODO',
+    mode_fixed:           'FIJO',
+    mode_random:          'ALEATORIO',
+    nav_home:             'Inicio',
+    nav_train:            'Entrenar',
+    nav_history:          'Historial',
     ios_permission_text:  'iOS requiere permiso para el acelerómetro',
     ios_permission_btn:   '🎯 Activar sensor de movimiento',
     ios_granted:          '✓ Sensor activado',
     ios_denied:           '✗ Permiso denegado — se usará botón manual',
-    // Modo golpeo
-    round_indicator:      'Round {n} de {total}',
+    round_indicator:      'ROUND {n}/{total}',
     fallback_punch:       '👊 GOLPEAR',
     punches:              'Golpes',
-    speed_label:          'Velocidad (m/s²)',
-    power_label:          'Potencia actual',
+    speed_label:          'Velocidad m/s',
+    power_label:          'Potencia',
     best_punch:           'Mejor golpe',
     chart_last10:         'Últimos 10 golpes (G)',
-    // Modo reacción
-    fallback_hit:         '👊 ¡GOLPEAR!',
-    stimulus_idle:        'PREPARADO',
-    stimulus_idle_sub:    'Espera el inicio del round...',
-    stimulus_wait:        'LISTO',
-    stimulus_wait_sub:    'Espera la señal...',
-    stimulus_hit:         '¡GOLPEA!',
-    stimulus_miss:        'FALLO',
-    stimulus_miss_sub:    'Sin golpe detectado',
-    last_reaction:        'Última reacción',
-    hits:                 'Aciertos',
-    misses:               'Fallos',
-    best_reaction:        'Mejor reacción',
-    // Descanso
     rest_title:           'DESCANSO',
     next_round:           'Próximo: Round {n}',
     skip_rest:            'SALTAR DESCANSO',
     avg_power_rest:       'Potencia media',
-    // Resumen
     session_complete:     'SESIÓN COMPLETADA',
-    mode_striking:        '🥊 Modo Golpeo',
-    mode_reaction:        '🔴 Modo Reacción',
+    mode_training:        '🥊 Entrenamiento',
+    mode_combo:           '⚡ Modo Reacción',
     rounds_completed:     'Rounds',
     total_punches:        'Golpes totales',
     avg_power_s:          'Potencia media',
@@ -87,8 +72,8 @@ const TRANSLATIONS = {
     max_speed_s:          'Velocidad máxima',
     avg_reaction_s:       'Reacción media',
     best_reaction_s:      'Mejor reacción',
-    hits_s:               'Aciertos',
-    misses_s:             'Fallos',
+    hits_s:               'Combos OK',
+    misses_s:             'Combos fallidos',
     duration_s:           'Duración',
     calories_s:           'Calorías estimadas',
     save_session:         'GUARDAR SESIÓN',
@@ -104,7 +89,6 @@ const TRANSLATIONS = {
     diff_power_down:      '↓ {n}G potencia',
     diff_reaction_faster: '↑ {n}ms más rápido',
     diff_reaction_slower: '↓ {n}ms más lento',
-    // Historial
     stats_title:          'ESTADÍSTICAS',
     records_title:        '🏆 Récords Históricos',
     best_reaction_rec:    'Mejor reacción',
@@ -118,29 +102,20 @@ const TRANSLATIONS = {
     reaction_chart_title: 'Tiempo de Reacción (últimas 10)',
     calories_chart_title: 'Calorías por sesión (últimas 10)',
     no_sessions:          'Sin sesiones aún 🥊',
-    // Ajustes
     settings_title:       'Ajustes',
     language_label:       'Idioma',
     save_settings:        'GUARDAR',
-    // Alertas
     alert_enter_name:     'Ingresa tu nombre',
     alert_weight:         'Ingresa un peso válido (30-200 kg)',
     alert_age:            'Ingresa una edad válida (10-100)',
     alert_weight_s:       'Peso inválido',
     alert_age_s:          'Edad inválida',
     confirm_stop:         '¿Abandonar la sesión?',
-    // Rankings reacción
     rank_master:          '⚫ Maestro',
     rank_fast:            '🟤 Rápido',
     rank_good:            '🟡 Bueno',
     rank_keep:            '⚪ Sigue practicando',
-    // Rankings potencia
-    rank_explosive:       '🔴 Explosivo',
-    rank_strong:          '🟠 Fuerte',
-    rank_moderate:        '🟡 Moderado',
-    rank_soft:            '⚪ Suave',
   },
-
   en: {
     profile_subtitle:     'Set up your profile to start',
     name:                 'Name',
@@ -153,48 +128,45 @@ const TRANSLATIONS = {
     name_placeholder:     'Your name',
     weight_placeholder:   '70',
     age_placeholder:      '25',
-    striking_mode:        'STRIKING MODE',
-    striking_desc:        'Measure speed and power',
-    reaction_mode:        'REACTION MODE',
-    reaction_desc:        'Train your reaction time',
+    training_mode:        'TRAINING',
+    training_desc:        'Measure speed and power by rounds',
+    combo_mode:           'REACTION MODE',
+    combo_desc:           'Combos with reaction time tracking',
     rounds_label:         'Rounds',
     round_duration_label: 'Round duration',
     rest_duration_label:  'Rest between rounds',
-    config_start:         'START SESSION',
+    config_start:         'START TRAINING',
     config_summary:       '{r} rounds · {rd} min · {rst}s rest · ~{total} min total',
     val_rounds:           '{n} rounds',
     val_round_duration:   '{n} min',
     val_rest_duration:    '{n} s',
+    combo_hits_label:     'HITS PER COMBO',
+    combo_duration_label: 'MAX COMBO DURATION',
+    combo_pause_label:    'PAUSE BETWEEN SIGNALS',
+    combo_mode_label:     'MODE',
+    mode_fixed:           'FIXED',
+    mode_random:          'RANDOM',
+    nav_home:             'Home',
+    nav_train:            'Train',
+    nav_history:          'History',
     ios_permission_text:  'iOS requires permission for the accelerometer',
     ios_permission_btn:   '🎯 Activate motion sensor',
     ios_granted:          '✓ Sensor activated',
     ios_denied:           '✗ Permission denied — manual button will be used',
-    round_indicator:      'Round {n} of {total}',
+    round_indicator:      'ROUND {n}/{total}',
     fallback_punch:       '👊 PUNCH',
     punches:              'Punches',
-    speed_label:          'Speed (m/s²)',
-    power_label:          'Current power',
+    speed_label:          'Speed m/s',
+    power_label:          'Power',
     best_punch:           'Best punch',
     chart_last10:         'Last 10 punches (G)',
-    fallback_hit:         '👊 HIT!',
-    stimulus_idle:        'STAND BY',
-    stimulus_idle_sub:    'Waiting for round to start...',
-    stimulus_wait:        'READY',
-    stimulus_wait_sub:    'Wait for the signal...',
-    stimulus_hit:         'HIT!',
-    stimulus_miss:        'MISS',
-    stimulus_miss_sub:    'No punch detected',
-    last_reaction:        'Last reaction',
-    hits:                 'Hits',
-    misses:               'Misses',
-    best_reaction:        'Best reaction',
     rest_title:           'REST',
     next_round:           'Next: Round {n}',
     skip_rest:            'SKIP REST',
     avg_power_rest:       'Avg. power',
     session_complete:     'SESSION COMPLETE',
-    mode_striking:        '🥊 Striking Mode',
-    mode_reaction:        '🔴 Reaction Mode',
+    mode_training:        '🥊 Training',
+    mode_combo:           '⚡ Reaction Mode',
     rounds_completed:     'Rounds',
     total_punches:        'Total punches',
     avg_power_s:          'Avg. power',
@@ -203,8 +175,8 @@ const TRANSLATIONS = {
     max_speed_s:          'Max. speed',
     avg_reaction_s:       'Avg. reaction',
     best_reaction_s:      'Best reaction',
-    hits_s:               'Hits',
-    misses_s:             'Misses',
+    hits_s:               'Combos OK',
+    misses_s:             'Failed combos',
     duration_s:           'Duration',
     calories_s:           'Est. calories',
     save_session:         'SAVE SESSION',
@@ -246,12 +218,7 @@ const TRANSLATIONS = {
     rank_fast:            '🟤 Fast',
     rank_good:            '🟡 Good',
     rank_keep:            '⚪ Keep practicing',
-    rank_explosive:       '🔴 Explosive',
-    rank_strong:          '🟠 Strong',
-    rank_moderate:        '🟡 Moderate',
-    rank_soft:            '⚪ Light',
   },
-
   pt: {
     profile_subtitle:     'Configure seu perfil para começar',
     name:                 'Nome',
@@ -264,48 +231,45 @@ const TRANSLATIONS = {
     name_placeholder:     'Seu nome',
     weight_placeholder:   '70',
     age_placeholder:      '25',
-    striking_mode:        'MODO GOLPE',
-    striking_desc:        'Meça velocidade e potência',
-    reaction_mode:        'MODO REAÇÃO',
-    reaction_desc:        'Treine seu tempo de reação',
+    training_mode:        'TREINO',
+    training_desc:        'Meça velocidade e potência por rounds',
+    combo_mode:           'MODO REAÇÃO',
+    combo_desc:           'Combos com tempo de reação',
     rounds_label:         'Rounds',
     round_duration_label: 'Duração do round',
     rest_duration_label:  'Descanso entre rounds',
-    config_start:         'INICIAR SESSÃO',
+    config_start:         'INICIAR TREINO',
     config_summary:       '{r} rounds · {rd} min · {rst}s descanso · ~{total} min total',
     val_rounds:           '{n} rounds',
     val_round_duration:   '{n} min',
     val_rest_duration:    '{n} s',
+    combo_hits_label:     'GOLPES POR COMBO',
+    combo_duration_label: 'DURAÇÃO MÁXIMA DO COMBO',
+    combo_pause_label:    'PAUSA ENTRE SINAIS',
+    combo_mode_label:     'MODO',
+    mode_fixed:           'FIXO',
+    mode_random:          'ALEATÓRIO',
+    nav_home:             'Início',
+    nav_train:            'Treinar',
+    nav_history:          'Histórico',
     ios_permission_text:  'iOS requer permissão para o acelerômetro',
     ios_permission_btn:   '🎯 Ativar sensor de movimento',
     ios_granted:          '✓ Sensor ativado',
     ios_denied:           '✗ Permissão negada — botão manual será usado',
-    round_indicator:      'Round {n} de {total}',
+    round_indicator:      'ROUND {n}/{total}',
     fallback_punch:       '👊 SOCAR',
     punches:              'Golpes',
-    speed_label:          'Velocidade (m/s²)',
-    power_label:          'Potência atual',
+    speed_label:          'Velocidade m/s',
+    power_label:          'Potência',
     best_punch:           'Melhor golpe',
     chart_last10:         'Últimos 10 golpes (G)',
-    fallback_hit:         '👊 GOLPEAR!',
-    stimulus_idle:        'PREPARADO',
-    stimulus_idle_sub:    'Aguardando início do round...',
-    stimulus_wait:        'PRONTO',
-    stimulus_wait_sub:    'Aguarde o sinal...',
-    stimulus_hit:         'SOCA!',
-    stimulus_miss:        'FALHOU',
-    stimulus_miss_sub:    'Nenhum golpe detectado',
-    last_reaction:        'Última reação',
-    hits:                 'Acertos',
-    misses:               'Erros',
-    best_reaction:        'Melhor reação',
     rest_title:           'DESCANSO',
     next_round:           'Próximo: Round {n}',
     skip_rest:            'PULAR DESCANSO',
     avg_power_rest:       'Potência média',
     session_complete:     'SESSÃO COMPLETA',
-    mode_striking:        '🥊 Modo Golpe',
-    mode_reaction:        '🔴 Modo Reação',
+    mode_training:        '🥊 Treino',
+    mode_combo:           '⚡ Modo Reação',
     rounds_completed:     'Rounds',
     total_punches:        'Total de golpes',
     avg_power_s:          'Potência média',
@@ -314,8 +278,8 @@ const TRANSLATIONS = {
     max_speed_s:          'Velocidade máxima',
     avg_reaction_s:       'Reação média',
     best_reaction_s:      'Melhor reação',
-    hits_s:               'Acertos',
-    misses_s:             'Erros',
+    hits_s:               'Combos OK',
+    misses_s:             'Combos falhados',
     duration_s:           'Duração',
     calories_s:           'Calorias estimadas',
     save_session:         'SALVAR SESSÃO',
@@ -340,7 +304,7 @@ const TRANSLATIONS = {
     total_sessions:       'Sessões',
     total_punches_h:      'Total de golpes',
     total_calories_h:     'Total de calorias',
-    power_chart_title:    'Evolução da Potência Média (últimas 10)',
+    power_chart_title:    'Evolução Potência Média (últimas 10)',
     reaction_chart_title: 'Tempo de Reação (últimas 10)',
     calories_chart_title: 'Calorias por sessão (últimas 10)',
     no_sessions:          'Sem sessões ainda 🥊',
@@ -357,12 +321,7 @@ const TRANSLATIONS = {
     rank_fast:            '🟤 Rápido',
     rank_good:            '🟡 Bom',
     rank_keep:            '⚪ Continue praticando',
-    rank_explosive:       '🔴 Explosivo',
-    rank_strong:          '🟠 Forte',
-    rank_moderate:        '🟡 Moderado',
-    rank_soft:            '⚪ Suave',
   },
-
   de: {
     profile_subtitle:     'Profil einrichten um zu beginnen',
     name:                 'Name',
@@ -375,48 +334,45 @@ const TRANSLATIONS = {
     name_placeholder:     'Dein Name',
     weight_placeholder:   '70',
     age_placeholder:      '25',
-    striking_mode:        'SCHLAGMODUS',
-    striking_desc:        'Geschwindigkeit & Kraft messen',
-    reaction_mode:        'REAKTIONSMODUS',
-    reaction_desc:        'Reaktionszeit trainieren',
+    training_mode:        'TRAINING',
+    training_desc:        'Geschwindigkeit & Kraft messen',
+    combo_mode:           'REAKTIONSMODUS',
+    combo_desc:           'Kombos mit Reaktionszeit',
     rounds_label:         'Runden',
     round_duration_label: 'Rundendauer',
     rest_duration_label:  'Pause zwischen Runden',
-    config_start:         'SESSION STARTEN',
+    config_start:         'TRAINING STARTEN',
     config_summary:       '{r} Runden · {rd} min · {rst}s Pause · ~{total} min gesamt',
     val_rounds:           '{n} Runden',
     val_round_duration:   '{n} min',
     val_rest_duration:    '{n} s',
+    combo_hits_label:     'SCHLÄGE PRO KOMBO',
+    combo_duration_label: 'MAX. KOMBODAUER',
+    combo_pause_label:    'PAUSE ZWISCHEN SIGNALEN',
+    combo_mode_label:     'MODUS',
+    mode_fixed:           'FEST',
+    mode_random:          'ZUFÄLLIG',
+    nav_home:             'Start',
+    nav_train:            'Trainieren',
+    nav_history:          'Verlauf',
     ios_permission_text:  'iOS benötigt Erlaubnis für den Beschleunigungssensor',
     ios_permission_btn:   '🎯 Bewegungssensor aktivieren',
     ios_granted:          '✓ Sensor aktiviert',
     ios_denied:           '✗ Berechtigung verweigert — manueller Button wird verwendet',
-    round_indicator:      'Runde {n} von {total}',
+    round_indicator:      'RUNDE {n}/{total}',
     fallback_punch:       '👊 SCHLAGEN',
     punches:              'Schläge',
-    speed_label:          'Geschwindigkeit (m/s²)',
-    power_label:          'Aktuelle Kraft',
+    speed_label:          'Geschwindigkeit m/s',
+    power_label:          'Kraft',
     best_punch:           'Bester Schlag',
     chart_last10:         'Letzte 10 Schläge (G)',
-    fallback_hit:         '👊 ZUSCHLAGEN!',
-    stimulus_idle:        'BEREITHALTEN',
-    stimulus_idle_sub:    'Warte auf Rundenstart...',
-    stimulus_wait:        'BEREIT',
-    stimulus_wait_sub:    'Warte auf das Signal...',
-    stimulus_hit:         'SCHLAG!',
-    stimulus_miss:        'VERPASST',
-    stimulus_miss_sub:    'Kein Schlag erkannt',
-    last_reaction:        'Letzte Reaktion',
-    hits:                 'Treffer',
-    misses:               'Fehlschläge',
-    best_reaction:        'Beste Reaktion',
     rest_title:           'PAUSE',
     next_round:           'Nächste: Runde {n}',
     skip_rest:            'PAUSE ÜBERSPRINGEN',
     avg_power_rest:       'Ø Kraft',
     session_complete:     'SESSION ABGESCHLOSSEN',
-    mode_striking:        '🥊 Schlagmodus',
-    mode_reaction:        '🔴 Reaktionsmodus',
+    mode_training:        '🥊 Training',
+    mode_combo:           '⚡ Reaktionsmodus',
     rounds_completed:     'Runden',
     total_punches:        'Schläge gesamt',
     avg_power_s:          'Ø Kraft',
@@ -425,8 +381,8 @@ const TRANSLATIONS = {
     max_speed_s:          'Max. Geschwindigkeit',
     avg_reaction_s:       'Ø Reaktion',
     best_reaction_s:      'Beste Reaktion',
-    hits_s:               'Treffer',
-    misses_s:             'Fehlschläge',
+    hits_s:               'Kombos OK',
+    misses_s:             'Fehlgeschlagene Kombos',
     duration_s:           'Dauer',
     calories_s:           'Geschätzte Kalorien',
     save_session:         'SESSION SPEICHERN',
@@ -468,10 +424,6 @@ const TRANSLATIONS = {
     rank_fast:            '🟤 Schnell',
     rank_good:            '🟡 Gut',
     rank_keep:            '⚪ Weiter üben',
-    rank_explosive:       '🔴 Explosiv',
-    rank_strong:          '🟠 Stark',
-    rank_moderate:        '🟡 Moderat',
-    rank_soft:            '⚪ Leicht',
   },
 };
 
@@ -481,11 +433,17 @@ const TRANSLATIONS = {
 const APP = {
   lang: 'es',
   profile: null,
-  mode: null,           // 'striking' | 'reaction'
+  mode: null,           // 'training' | 'combo'
   config: {
     rounds: 3,
     roundDuration: 2,
     restDuration: 30,
+  },
+  comboConfig: {
+    hits: 3,            // 2-6, fixed mode or max in random
+    maxDuration: 2.0,   // seconds for the combo window (from first hit)
+    pauseBetween: 1.5,  // seconds between result and next signal
+    mode: 'fixed',      // 'fixed' | 'random'
   },
   session: {
     startTime: null,
@@ -509,27 +467,34 @@ const APP = {
     available: false,
     permitted: false,
     lastPunchAt: 0,
-    COOLDOWN: 400,
-    THRESHOLD: 2.5,
+    COOLDOWN: 200,       // ms between punches
+    THRESHOLD: 1.5,      // G-force minimum
+    _logAt: 0,           // throttle for console logging
   },
-  reaction: {
-    state: 'idle',
-    stimulusAt: null,
+  combo: {
+    state: 'idle',       // 'idle'|'wait'|'signal'|'active'|'result'
+    targetHits: 3,
+    currentHits: 0,
+    signalAt: null,
+    activeAt: null,
+    reactionMs: null,
     waitTimeout: null,
-    missTimeout: null,
+    signalTimeout: null,
+    expireTimeout: null,
+    tickInterval: null,
+    waitTickInterval: null,
+    progressInterval: null,
+    results: [],
   },
   rest: { interval: null },
   wakeLock: null,
   audioCtx: null,
-  fallbackMode: false,
   sessionSaved: false,
 };
 
 // ═══════════════════════════════════════════════════
-// I18N — TRADUCCIÓN
+// I18N
 // ═══════════════════════════════════════════════════
-
-/** Devuelve la traducción de una clave, con interpolación de parámetros */
 function t(key, params) {
   const dict = TRANSLATIONS[APP.lang] || TRANSLATIONS['es'];
   let str = dict[key] !== undefined ? dict[key] : (TRANSLATIONS['es'][key] || key);
@@ -541,28 +506,21 @@ function t(key, params) {
   return str;
 }
 
-/** Actualiza todos los elementos con data-i18n al idioma activo */
 function applyLanguage() {
   document.documentElement.lang = APP.lang;
-
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
     const val = t(key);
     if (val !== key) el.textContent = val;
   });
-
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-    const key = el.dataset.i18nPlaceholder;
-    el.placeholder = t(key);
+    el.placeholder = t(el.dataset.i18nPlaceholder);
   });
-
-  // Marcar botón activo en el selector de idioma del modal
   document.querySelectorAll('.btn-lang-sm').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === APP.lang);
   });
 }
 
-/** Locale para fechas */
 function getLocale() {
   return { es: 'es-ES', en: 'en-GB', pt: 'pt-BR', de: 'de-DE' }[APP.lang] || 'es-ES';
 }
@@ -588,7 +546,7 @@ function getAudioCtx() {
 
 function playBell(type = 'round') {
   try {
-    const ctx = getAudioCtx();
+    const ctx  = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
     const freqs    = type === 'round' ? [880, 660, 440] : [440];
     const duration = type === 'round' ? 1.8 : 0.4;
@@ -678,7 +636,7 @@ function saveSession(session) {
 // ═══════════════════════════════════════════════════
 function setupAccelerometer() {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  if (typeof DeviceMotionEvent === 'undefined') { APP.fallbackMode = true; return; }
+  if (typeof DeviceMotionEvent === 'undefined') return;
   if (isIOS && typeof DeviceMotionEvent.requestPermission === 'function') {
     document.getElementById('ios-permission-block').classList.remove('hidden');
     return;
@@ -690,8 +648,6 @@ function activateAccelerometer() {
   window.addEventListener('devicemotion', onDeviceMotion, { passive: true });
   APP.accel.available = true;
   APP.accel.permitted = true;
-  document.getElementById('btn-fallback-punch').classList.add('hidden');
-  document.getElementById('btn-fallback-hit').classList.add('hidden');
 }
 
 function onDeviceMotion(e) {
@@ -700,21 +656,29 @@ function onDeviceMotion(e) {
   const raw    = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
   const gForce = raw / 9.81;
   const now    = Date.now();
+
+  // Throttled console log (~10 Hz) for calibration
+  if (now - APP.accel._logAt > 100) {
+    APP.accel._logAt = now;
+    console.log(`[FKF] accel  raw=${raw.toFixed(2)} m/s²  g=${gForce.toFixed(2)}G  threshold=${APP.accel.THRESHOLD}G`);
+  }
+
   if (gForce > APP.accel.THRESHOLD && (now - APP.accel.lastPunchAt) > APP.accel.COOLDOWN) {
     APP.accel.lastPunchAt = now;
+    console.log(`[FKF] PUNCH  g=${gForce.toFixed(2)}G  debounce_ok  mode=${APP.mode}`);
     registerPunch(gForce, raw);
   }
 }
 
 function registerPunch(gForce, speed) {
   const punch = { g: gForce, speed: speed || gForce * 9.81, time: Date.now() };
-  vibrate([20]);
-  if (APP.mode === 'striking')       handleStrikingPunch(punch);
-  else if (APP.mode === 'reaction')  handleReactionPunch(punch);
+  vibrate([15]);
+  if (APP.mode === 'training') handleTrainingPunch(punch);
+  else if (APP.mode === 'combo') handleComboPunch(punch);
 }
 
 // ═══════════════════════════════════════════════════
-// CALORÍAS (MET)
+// CALORÍAS
 // ═══════════════════════════════════════════════════
 function calcCalories(totalPunches, avgPower, durationMin) {
   const weight      = getWeight();
@@ -785,7 +749,7 @@ function drawBarChart(canvasId, values, maxVal, colorFn) {
   values.forEach((v, i) => {
     const norm = Math.min(v / maxVal, 1);
     const bh   = Math.max(norm * (cssH - 4), 2);
-    ctx.fillStyle = colorFn ? colorFn(v) : '#00cc44';
+    ctx.fillStyle = colorFn ? colorFn(v) : '#FFE000';
     ctx.fillRect(i * bw + 2, cssH - bh, bw - 4, bh);
   });
 }
@@ -840,19 +804,19 @@ function drawLineChart(canvasId, values, maxVal, color) {
 function punchColor(g) {
   if (g > 8) return '#ff2222';
   if (g > 5) return '#ff8800';
-  if (g > 3) return '#ffcc00';
-  return '#888888';
+  if (g > 3) return '#FFE000';
+  return '#555555';
 }
 
 function flashEl(el) {
   el.classList.remove('flash');
   void el.offsetWidth;
   el.classList.add('flash');
-  setTimeout(() => el.classList.remove('flash'), 300);
+  setTimeout(() => el.classList.remove('flash'), 280);
 }
 
 // ═══════════════════════════════════════════════════
-// PANTALLA: SELECCIÓN DE IDIOMA
+// PANTALLA: IDIOMA
 // ═══════════════════════════════════════════════════
 function initLangScreen() {
   document.querySelectorAll('#screen-lang .btn-lang').forEach(btn => {
@@ -881,7 +845,6 @@ function afterLangSelected() {
 function initProfileScreen() {
   const sexBtns = document.querySelectorAll('#screen-profile .sex-btn');
   let selectedSex = 'hombre';
-
   sexBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       sexBtns.forEach(b => b.classList.remove('active'));
@@ -889,16 +852,13 @@ function initProfileScreen() {
       selectedSex = btn.dataset.sex;
     });
   });
-
   document.getElementById('btn-save-profile').addEventListener('click', () => {
     const name   = document.getElementById('input-name').value.trim();
     const weight = parseFloat(document.getElementById('input-weight').value);
     const age    = parseInt(document.getElementById('input-age').value);
-
-    if (!name)                           { alert(t('alert_enter_name')); return; }
-    if (!weight || weight < 30 || weight > 200) { alert(t('alert_weight'));       return; }
-    if (!age || age < 10 || age > 100)   { alert(t('alert_age'));           return; }
-
+    if (!name)                                { alert(t('alert_enter_name')); return; }
+    if (!weight || weight < 30 || weight > 200) { alert(t('alert_weight'));   return; }
+    if (!age || age < 10 || age > 100)         { alert(t('alert_age'));       return; }
     saveProfile({ name, weight, age, sex: selectedSex });
     showScreen('screen-menu');
     initMenuScreen();
@@ -909,31 +869,41 @@ function initProfileScreen() {
 // PANTALLA: MENÚ
 // ═══════════════════════════════════════════════════
 function initMenuScreen() {
-  document.getElementById('btn-striking-mode').onclick = () => {
-    APP.mode = 'striking';
+  document.getElementById('btn-training-mode').onclick = () => {
+    APP.mode = 'training';
     showScreen('screen-config');
     initConfigScreen();
   };
-  document.getElementById('btn-reaction-mode').onclick = () => {
-    APP.mode = 'reaction';
+  document.getElementById('btn-combo-mode').onclick = () => {
+    APP.mode = 'combo';
     showScreen('screen-config');
     initConfigScreen();
   };
-  document.getElementById('btn-history').onclick = () => {
+  document.getElementById('btn-settings').onclick = openSettingsModal;
+  document.getElementById('nav-home').onclick = () => {};
+  document.getElementById('nav-train').onclick = () => {
+    APP.mode = 'training';
+    showScreen('screen-config');
+    initConfigScreen();
+  };
+  document.getElementById('nav-history-btn').onclick = () => {
     showScreen('screen-history');
     initHistoryScreen();
   };
-  document.getElementById('btn-settings').onclick = openSettingsModal;
 }
 
 // ═══════════════════════════════════════════════════
 // PANTALLA: CONFIGURACIÓN
 // ═══════════════════════════════════════════════════
 function initConfigScreen() {
+  const isCombo = APP.mode === 'combo';
+
   document.getElementById('config-mode-title').textContent =
-    APP.mode === 'striking'
-      ? '🥊 ' + t('striking_mode')
-      : '🔴 ' + t('reaction_mode');
+    isCombo ? '⚡ ' + t('combo_mode') : '🥊 ' + t('training_mode');
+
+  document.getElementById('btn-start-session').textContent = t('config_start');
+
+  document.getElementById('combo-config-extras').classList.toggle('hidden', !isCombo);
 
   const rInput    = document.getElementById('input-rounds');
   const rdInput   = document.getElementById('input-round-duration');
@@ -945,13 +915,15 @@ function initConfigScreen() {
 
   updateConfigSummary();
 
-  rInput.addEventListener('input',    () => { APP.config.rounds        = parseInt(rInput.value);    updateConfigSummary(); });
-  rdInput.addEventListener('input',   () => { APP.config.roundDuration = parseInt(rdInput.value);   updateConfigSummary(); });
-  restInput.addEventListener('input', () => { APP.config.restDuration  = parseInt(restInput.value); updateConfigSummary(); });
+  rInput.oninput    = () => { APP.config.rounds        = parseInt(rInput.value);    updateConfigSummary(); };
+  rdInput.oninput   = () => { APP.config.roundDuration = parseInt(rdInput.value);   updateConfigSummary(); };
+  restInput.oninput = () => { APP.config.restDuration  = parseInt(restInput.value); updateConfigSummary(); };
 
   document.getElementById('btn-config-back').onclick = () => showScreen('screen-menu');
 
-  // iOS
+  if (isCombo) initComboConfigExtras();
+
+  // iOS accelerometer
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   if (isIOS && typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
     document.getElementById('ios-permission-block').classList.remove('hidden');
@@ -964,13 +936,63 @@ function initConfigScreen() {
           document.getElementById('btn-ios-permission').disabled = true;
         } else {
           document.getElementById('permission-status').textContent = t('ios_denied');
-          APP.fallbackMode = true;
         }
-      } catch (e) { APP.fallbackMode = true; }
+      } catch (e) {}
     };
   }
 
   document.getElementById('btn-start-session').onclick = startSession;
+}
+
+function initComboConfigExtras() {
+  // Stepper hits
+  const valEl = document.getElementById('val-combo-hits');
+  valEl.textContent = APP.comboConfig.hits;
+
+  document.getElementById('btn-combo-hits-minus').onclick = () => {
+    if (APP.comboConfig.hits > 2) { APP.comboConfig.hits--; valEl.textContent = APP.comboConfig.hits; }
+  };
+  document.getElementById('btn-combo-hits-plus').onclick = () => {
+    if (APP.comboConfig.hits < 6) { APP.comboConfig.hits++; valEl.textContent = APP.comboConfig.hits; }
+  };
+
+  // Duration pills
+  document.querySelectorAll('#combo-duration-pills .option-pill').forEach(btn => {
+    const val = parseFloat(btn.dataset.val);
+    btn.classList.toggle('selected', val === APP.comboConfig.maxDuration);
+    btn.onclick = () => {
+      APP.comboConfig.maxDuration = val;
+      document.querySelectorAll('#combo-duration-pills .option-pill').forEach(b =>
+        b.classList.toggle('selected', b === btn));
+    };
+  });
+
+  // Pause pills
+  document.querySelectorAll('#combo-pause-pills .option-pill').forEach(btn => {
+    const val = parseFloat(btn.dataset.val);
+    btn.classList.toggle('selected', val === APP.comboConfig.pauseBetween);
+    btn.onclick = () => {
+      APP.comboConfig.pauseBetween = val;
+      document.querySelectorAll('#combo-pause-pills .option-pill').forEach(b =>
+        b.classList.toggle('selected', b === btn));
+    };
+  });
+
+  // Mode toggle
+  const btnFixed  = document.getElementById('btn-combo-fixed');
+  const btnRandom = document.getElementById('btn-combo-random');
+  btnFixed.classList.toggle('active',  APP.comboConfig.mode === 'fixed');
+  btnRandom.classList.toggle('active', APP.comboConfig.mode === 'random');
+  btnFixed.onclick = () => {
+    APP.comboConfig.mode = 'fixed';
+    btnFixed.classList.add('active');
+    btnRandom.classList.remove('active');
+  };
+  btnRandom.onclick = () => {
+    APP.comboConfig.mode = 'random';
+    btnRandom.classList.add('active');
+    btnFixed.classList.remove('active');
+  };
 }
 
 function updateConfigSummary() {
@@ -979,7 +1001,7 @@ function updateConfigSummary() {
   const rst = APP.config.restDuration;
   const total = Math.round(r * rd + ((r - 1) * rst / 60));
 
-  document.getElementById('val-rounds').textContent        = t('val_rounds',        { n: r });
+  document.getElementById('val-rounds').textContent         = t('val_rounds',        { n: r });
   document.getElementById('val-round-duration').textContent = t('val_round_duration', { n: rd });
   document.getElementById('val-rest-duration').textContent  = t('val_rest_duration',  { n: rst });
   document.getElementById('config-summary').textContent     = t('config_summary', { r, rd, rst, total });
@@ -1000,7 +1022,7 @@ function startSession() {
   };
   APP.sessionSaved = false;
   acquireWakeLock();
-  if (!APP.accel.available && !APP.fallbackMode) setupAccelerometer();
+  if (!APP.accel.available) setupAccelerometer();
   startRound(1);
 }
 
@@ -1018,21 +1040,22 @@ function startRound(roundNum) {
   };
   vibrate([100, 50, 100]);
   playBell('round');
-  if (APP.mode === 'striking') {
-    showStrikingScreen(roundNum);
+
+  if (APP.mode === 'training') {
+    showTrainingScreen(roundNum);
     startRoundTimer(() => endRound());
   } else {
-    showReactionScreen(roundNum);
+    showComboScreen(roundNum);
     startRoundTimer(() => endRound());
-    startReactionCycle();
+    startComboWait();
   }
 }
 
 function startRoundTimer(onEnd) {
   APP.round.timerInterval = setInterval(() => {
     APP.round.secondsLeft--;
-    if (APP.mode === 'striking') updateStrikingTimer();
-    else                         updateReactionTimer();
+    if (APP.mode === 'training') updateTrainingTimer();
+    else                         updateComboTimer();
     if (APP.round.secondsLeft <= 0) {
       clearInterval(APP.round.timerInterval);
       onEnd();
@@ -1042,7 +1065,7 @@ function startRoundTimer(onEnd) {
 
 function endRound() {
   clearInterval(APP.round.timerInterval);
-  if (APP.mode === 'reaction') stopReactionCycle();
+  if (APP.mode === 'combo') stopComboCycle();
 
   APP.session.roundData.push({ ...APP.round });
   APP.session.allPunches.push(...APP.round.punches);
@@ -1061,24 +1084,21 @@ function endRound() {
 }
 
 // ═══════════════════════════════════════════════════
-// MODO GOLPEO
+// MODO ENTRENAMIENTO
 // ═══════════════════════════════════════════════════
-function showStrikingScreen(roundNum) {
-  showScreen('screen-striking');
-  document.getElementById('strike-round-indicator').textContent =
+function showTrainingScreen(roundNum) {
+  showScreen('screen-training');
+  document.getElementById('training-round-indicator').textContent =
     t('round_indicator', { n: roundNum, total: APP.config.rounds });
-  updateStrikingTimer();
-  resetStrikingMetrics();
-  drawStrikingChart();
+  updateTrainingTimer();
+  resetTrainingMetrics();
+  drawTrainingChart();
 
-  if (APP.fallbackMode || !APP.accel.available) {
-    document.getElementById('btn-fallback-punch').classList.remove('hidden');
-  }
   document.getElementById('btn-fallback-punch').onclick = () => {
-    const g = 2.5 + Math.random() * 3;
+    const g = 2.0 + Math.random() * 3;
     registerPunch(g, g * 9.81);
   };
-  document.getElementById('btn-strike-stop').onclick = () => {
+  document.getElementById('btn-training-stop').onclick = () => {
     if (confirm(t('confirm_stop'))) {
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
@@ -1087,8 +1107,8 @@ function showStrikingScreen(roundNum) {
   };
 }
 
-function updateStrikingTimer() {
-  const el = document.getElementById('strike-timer');
+function updateTrainingTimer() {
+  const el = document.getElementById('training-timer');
   const s  = APP.round.secondsLeft;
   el.textContent = fmtTime(s);
   el.classList.remove('warning', 'danger');
@@ -1096,57 +1116,52 @@ function updateStrikingTimer() {
   else if (s <= 30) el.classList.add('warning');
 }
 
-function resetStrikingMetrics() {
-  document.getElementById('strike-punch-count').textContent = '0';
-  document.getElementById('strike-speed').textContent       = '0.0';
-  document.getElementById('strike-power').textContent       = '0.0G';
-  document.getElementById('strike-best').textContent        = '0.0G';
+function resetTrainingMetrics() {
+  document.getElementById('training-punch-count').textContent = '0';
+  document.getElementById('training-speed').textContent       = '0.0';
+  document.getElementById('training-power').textContent       = '0.0G';
+  document.getElementById('training-best').textContent        = '0.0G';
 }
 
-function handleStrikingPunch(punch) {
+function handleTrainingPunch(punch) {
   APP.round.punches.push(punch);
-  const countEl = document.getElementById('strike-punch-count');
+  const countEl = document.getElementById('training-punch-count');
   countEl.textContent = APP.round.punches.length;
   flashEl(countEl);
-  document.getElementById('strike-speed').textContent = punch.speed.toFixed(1);
-  document.getElementById('strike-power').textContent = punch.g.toFixed(1) + 'G';
+  document.getElementById('training-speed').textContent = punch.speed.toFixed(1);
+  document.getElementById('training-power').textContent = punch.g.toFixed(1) + 'G';
   const bestG = Math.max(...APP.round.punches.map(p => p.g));
-  document.getElementById('strike-best').textContent = bestG.toFixed(1) + 'G';
-  drawStrikingChart();
+  document.getElementById('training-best').textContent  = bestG.toFixed(1) + 'G';
+  drawTrainingChart();
 }
 
-function drawStrikingChart() {
+function drawTrainingChart() {
   const last10 = APP.round.punches.slice(-10).map(p => p.g);
   while (last10.length < 10) last10.unshift(0);
-  drawBarChart('strike-chart', last10, 12, punchColor);
+  drawBarChart('training-chart', last10, 12, punchColor);
 }
 
 // ═══════════════════════════════════════════════════
-// MODO REACCIÓN
+// MODO COMBO (REACCIÓN)
 // ═══════════════════════════════════════════════════
-function showReactionScreen(roundNum) {
-  showScreen('screen-reaction');
-  document.getElementById('reaction-round-indicator').textContent =
+function showComboScreen(roundNum) {
+  showScreen('screen-combo');
+  document.getElementById('combo-round-indicator').textContent =
     t('round_indicator', { n: roundNum, total: APP.config.rounds });
-  updateReactionTimer();
-  setReactionState('idle');
-  document.getElementById('reaction-last-time').textContent = '—';
-  document.getElementById('reaction-hits').textContent      = '0';
-  document.getElementById('reaction-misses').textContent    = '0';
-  document.getElementById('reaction-best').textContent      = '—';
+  updateComboTimer();
 
-  if (APP.fallbackMode || !APP.accel.available) {
-    document.getElementById('btn-fallback-hit').classList.remove('hidden');
-  }
-  document.getElementById('btn-fallback-hit').onclick = () => {
-    if (APP.reaction.state === 'stimulus') {
-      const g = 2.5 + Math.random() * 3;
-      registerPunch(g, g * 9.81);
-    }
+  // Fallback buttons
+  const fallbackHandler = () => {
+    const g = 2.0 + Math.random() * 3;
+    registerPunch(g, g * 9.81);
   };
-  document.getElementById('btn-reaction-stop').onclick = () => {
+  document.getElementById('btn-fallback-wait').onclick   = fallbackHandler;
+  document.getElementById('btn-fallback-signal').onclick = fallbackHandler;
+  document.getElementById('btn-fallback-active').onclick = fallbackHandler;
+
+  document.getElementById('btn-combo-stop').onclick = () => {
     if (confirm(t('confirm_stop'))) {
-      stopReactionCycle();
+      stopComboCycle();
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
       showScreen('screen-menu');
@@ -1154,103 +1169,217 @@ function showReactionScreen(roundNum) {
   };
 }
 
-function updateReactionTimer() {
-  const el = document.getElementById('reaction-timer');
+function updateComboTimer() {
+  const el = document.getElementById('combo-session-timer');
   const s  = APP.round.secondsLeft;
   el.textContent = fmtTime(s);
-  el.classList.remove('warning', 'danger');
-  if (s <= 10)      el.classList.add('danger');
-  else if (s <= 30) el.classList.add('warning');
 }
 
-function setReactionState(state, subtext) {
-  const stim = document.getElementById('reaction-stimulus');
-  const text = document.getElementById('stimulus-text');
-  const sub  = document.getElementById('stimulus-sub');
-  APP.reaction.state = state;
-  stim.className = 'reaction-stimulus';
-  switch (state) {
-    case 'idle':
-      stim.classList.add('state-wait');
-      text.textContent = t('stimulus_idle');
-      sub.textContent  = t('stimulus_idle_sub');
-      break;
-    case 'waiting':
-      stim.classList.add('state-wait');
-      text.textContent = t('stimulus_wait');
-      sub.textContent  = t('stimulus_wait_sub');
-      break;
-    case 'stimulus':
-      stim.classList.add('state-hit');
-      text.textContent = t('stimulus_hit');
-      sub.textContent  = '';
-      vibrate([30]);
-      break;
-    case 'result':
-      stim.classList.add('state-result');
-      text.textContent = subtext || '—';
-      sub.textContent  = '';
-      break;
-    case 'miss':
-      stim.classList.add('state-miss');
-      text.textContent = t('stimulus_miss');
-      sub.textContent  = t('stimulus_miss_sub');
-      vibrate([50, 30, 50]);
-      break;
-  }
+function showComboPanel(name) {
+  ['wait', 'signal', 'active', 'result'].forEach(p => {
+    document.getElementById('combo-panel-' + p).classList.toggle('hidden', p !== name);
+  });
 }
 
-function startReactionCycle() {
+function getComboTarget() {
+  if (APP.comboConfig.mode === 'fixed') return APP.comboConfig.hits;
+  return 2 + Math.floor(Math.random() * Math.max(1, APP.comboConfig.hits - 1));
+}
+
+// ─── ESPERA: antes de la señal ───────────────────
+function startComboWait() {
   if (APP.round.secondsLeft <= 0) return;
-  scheduleNextStimulus();
+
+  const target  = getComboTarget();
+  APP.combo.targetHits  = target;
+  APP.combo.currentHits = 0;
+  APP.combo.reactionMs  = null;
+  APP.combo.state       = 'wait';
+
+  document.getElementById('wait-hits-text').textContent =
+    target + (APP.lang === 'de' ? ' SCHLÄGE' : APP.lang === 'en' ? ' HITS' : APP.lang === 'pt' ? ' GOLPES' : ' GOLPES');
+  document.getElementById('wait-max-time').textContent =
+    APP.comboConfig.maxDuration.toFixed(1) + 's MÁXIMO';
+
+  showComboPanel('wait');
+
+  const pauseMs = APP.comboConfig.pauseBetween * 1000;
+  let remaining = APP.comboConfig.pauseBetween;
+
+  clearInterval(APP.combo.waitTickInterval);
+  APP.combo.waitTickInterval = setInterval(() => {
+    remaining -= 0.1;
+    document.getElementById('wait-countdown-text').textContent =
+      'Siguiente señal en ' + Math.max(0, remaining).toFixed(1) + 's';
+    if (remaining <= 0) clearInterval(APP.combo.waitTickInterval);
+  }, 100);
+
+  document.getElementById('wait-countdown-text').textContent =
+    'Siguiente señal en ' + remaining.toFixed(1) + 's';
+
+  APP.combo.waitTimeout = setTimeout(() => {
+    clearInterval(APP.combo.waitTickInterval);
+    if (APP.round.secondsLeft > 0) showComboSignal();
+  }, pauseMs);
 }
 
-function stopReactionCycle() {
-  clearTimeout(APP.reaction.waitTimeout);
-  clearTimeout(APP.reaction.missTimeout);
-  APP.reaction.state = 'idle';
-}
+// ─── SEÑAL: fondo rojo, texto HIT ─────────────────
+function showComboSignal() {
+  APP.combo.state    = 'signal';
+  APP.combo.signalAt = Date.now();
+  APP.combo.currentHits = 0;
 
-function scheduleNextStimulus() {
-  if (APP.round.secondsLeft <= 0) return;
-  const delay = 1500 + Math.random() * 3500;
-  APP.reaction.waitTimeout = setTimeout(() => {
-    if (APP.round.secondsLeft <= 0) return;
-    showStimulus();
-  }, delay);
-  setReactionState('waiting');
-}
+  document.getElementById('signal-counter').textContent =
+    '0/' + APP.combo.targetHits;
+  showComboPanel('signal');
+  vibrate([30]);
+  playBeep(880, 0.12);
 
-function showStimulus() {
-  APP.reaction.stimulusAt = Date.now();
-  setReactionState('stimulus');
-  APP.reaction.missTimeout = setTimeout(() => {
-    if (APP.reaction.state === 'stimulus') {
-      APP.round.misses++;
-      document.getElementById('reaction-misses').textContent = APP.round.misses;
-      setReactionState('miss');
-      setTimeout(() => {
-        if (APP.round.secondsLeft > 0) scheduleNextStimulus();
-      }, 800);
+  // If no first hit within 3s → fail (no reaction)
+  APP.combo.signalTimeout = setTimeout(() => {
+    if (APP.combo.state === 'signal') {
+      endCombo(false, true); // failed, no hits
     }
   }, 3000);
 }
 
-function handleReactionPunch(punch) {
-  if (APP.reaction.state !== 'stimulus') return;
-  clearTimeout(APP.reaction.missTimeout);
-  const reactionMs = Date.now() - APP.reaction.stimulusAt;
-  APP.round.hits++;
-  APP.round.reactionTimes.push(reactionMs);
-  APP.round.punches.push(punch);
-  document.getElementById('reaction-hits').textContent      = APP.round.hits;
-  document.getElementById('reaction-last-time').textContent = reactionMs + ' ms';
-  const best = Math.min(...APP.round.reactionTimes);
-  document.getElementById('reaction-best').textContent = best + ' ms';
-  setReactionState('result', reactionMs + ' ms · ' + reactionRank(reactionMs));
-  setTimeout(() => {
-    if (APP.round.secondsLeft > 0) scheduleNextStimulus();
-  }, 1000);
+// ─── ACTIVO: cuenta de golpes ─────────────────────
+function handleComboPunch(punch) {
+  if (APP.combo.state === 'signal') {
+    clearTimeout(APP.combo.signalTimeout);
+    APP.combo.reactionMs  = Date.now() - APP.combo.signalAt;
+    APP.combo.activeAt    = Date.now();
+    APP.combo.currentHits = 1;
+    APP.combo.state       = 'active';
+    APP.round.punches.push(punch);
+    APP.round.reactionTimes.push(APP.combo.reactionMs);
+
+    showComboPanel('active');
+    document.getElementById('active-reaction').textContent =
+      (APP.combo.reactionMs / 1000).toFixed(2) + 's';
+    document.getElementById('active-power').textContent   = punch.g.toFixed(1) + 'G';
+    document.getElementById('active-speed').textContent   = punch.speed.toFixed(1);
+    updateActiveCounter();
+    startComboTimer();
+    return;
+  }
+
+  if (APP.combo.state === 'active') {
+    APP.combo.currentHits++;
+    APP.round.punches.push(punch);
+
+    const pw = parseFloat(document.getElementById('active-power').textContent) || 0;
+    if (punch.g > pw) document.getElementById('active-power').textContent = punch.g.toFixed(1) + 'G';
+    document.getElementById('active-speed').textContent = punch.speed.toFixed(1);
+
+    updateActiveCounter();
+
+    if (APP.combo.currentHits >= APP.combo.targetHits) {
+      endCombo(true, false);
+    }
+  }
+}
+
+function updateActiveCounter() {
+  const el  = document.getElementById('active-counter');
+  const pct = (APP.combo.currentHits / APP.combo.targetHits) * 100;
+  el.textContent = APP.combo.currentHits + '/' + APP.combo.targetHits;
+  document.getElementById('active-progress-bar').style.width = pct + '%';
+  flashEl(el);
+}
+
+function startComboTimer() {
+  const maxMs = APP.comboConfig.maxDuration * 1000;
+  const timeEl = document.getElementById('active-time-remaining');
+
+  clearInterval(APP.combo.tickInterval);
+  APP.combo.tickInterval = setInterval(() => {
+    if (APP.combo.state !== 'active') { clearInterval(APP.combo.tickInterval); return; }
+    const elapsed   = Date.now() - APP.combo.activeAt;
+    const remaining = Math.max(0, maxMs - elapsed);
+    timeEl.textContent = (remaining / 1000).toFixed(1) + 's';
+    timeEl.classList.toggle('urgent', remaining < 600);
+    if (remaining <= 0) {
+      clearInterval(APP.combo.tickInterval);
+      if (APP.combo.state === 'active') endCombo(false, false);
+    }
+  }, 50);
+
+  APP.combo.expireTimeout = setTimeout(() => {
+    if (APP.combo.state === 'active') endCombo(false, false);
+  }, maxMs + 50);
+}
+
+// ─── RESULTADO ────────────────────────────────────
+function endCombo(ok, noHits) {
+  clearTimeout(APP.combo.signalTimeout);
+  clearTimeout(APP.combo.expireTimeout);
+  clearInterval(APP.combo.tickInterval);
+  clearInterval(APP.combo.waitTickInterval);
+
+  APP.combo.state = 'result';
+
+  const duration = APP.combo.activeAt
+    ? ((Date.now() - APP.combo.activeAt) / 1000)
+    : 0;
+
+  APP.combo.results.push({
+    ok, hits: APP.combo.currentHits, target: APP.combo.targetHits,
+    reaction: APP.combo.reactionMs, duration,
+  });
+
+  if (ok) APP.round.hits++;
+  else    APP.round.misses++;
+
+  const verdictEl = document.getElementById('result-verdict');
+  verdictEl.textContent = ok ? 'OK' : 'FALLO';
+  verdictEl.className   = 'result-verdict ' + (ok ? 'ok' : 'fail');
+
+  const why = noHits ? ' SIN REACCIÓN' : (ok ? ' COMPLETADO' : ' INCOMPLETO');
+  document.getElementById('result-count').textContent =
+    APP.combo.currentHits + '/' + APP.combo.targetHits + why;
+
+  document.getElementById('result-reaction').textContent =
+    APP.combo.reactionMs ? (APP.combo.reactionMs / 1000).toFixed(2) + 's' : '—';
+  document.getElementById('result-duration').textContent =
+    duration > 0 ? duration.toFixed(2) + 's' : '—';
+
+  showComboPanel('result');
+
+  if (ok)     vibrate([20, 30, 20]);
+  else        vibrate([50, 30, 50]);
+
+  if (APP.round.secondsLeft > 0) {
+    const pauseMs = APP.comboConfig.pauseBetween * 1000;
+    document.getElementById('result-next-label').textContent =
+      'Siguiente señal en ' + APP.comboConfig.pauseBetween.toFixed(1) + 's';
+
+    const progressEl = document.getElementById('result-progress-bar');
+    progressEl.style.width = '0%';
+    const startAt = Date.now();
+
+    clearInterval(APP.combo.progressInterval);
+    APP.combo.progressInterval = setInterval(() => {
+      const elapsed = Date.now() - startAt;
+      progressEl.style.width = Math.min(100, (elapsed / pauseMs) * 100) + '%';
+      if (elapsed >= pauseMs) {
+        clearInterval(APP.combo.progressInterval);
+        if (APP.round.secondsLeft > 0) startComboWait();
+      }
+    }, 50);
+  } else {
+    document.getElementById('result-next-label').textContent = '';
+  }
+}
+
+function stopComboCycle() {
+  clearTimeout(APP.combo.waitTimeout);
+  clearTimeout(APP.combo.signalTimeout);
+  clearTimeout(APP.combo.expireTimeout);
+  clearInterval(APP.combo.tickInterval);
+  clearInterval(APP.combo.waitTickInterval);
+  clearInterval(APP.combo.progressInterval);
+  APP.combo.state = 'idle';
 }
 
 // ═══════════════════════════════════════════════════
@@ -1300,21 +1429,21 @@ function renderRestStats() {
       <div class="rest-stat-label">${t('avg_power_rest')}</div>
     </div>`;
 
-  if (APP.mode === 'reaction') {
+  if (APP.mode === 'combo') {
     html += `
       <div class="rest-stat-item">
         <div class="rest-stat-value">${hits}</div>
-        <div class="rest-stat-label">${t('hits')}</div>
+        <div class="rest-stat-label">${t('hits_s')}</div>
       </div>
       <div class="rest-stat-item">
         <div class="rest-stat-value">${misses}</div>
-        <div class="rest-stat-label">${t('misses')}</div>
+        <div class="rest-stat-label">${t('misses_s')}</div>
       </div>`;
     if (best !== null) {
       html += `
       <div class="rest-stat-item">
-        <div class="rest-stat-value">${best}ms</div>
-        <div class="rest-stat-label">${t('best_reaction')}</div>
+        <div class="rest-stat-value">${(best / 1000).toFixed(2)}s</div>
+        <div class="rest-stat-label">${t('best_reaction_s')}</div>
       </div>`;
     }
   }
@@ -1329,24 +1458,24 @@ function showSummaryScreen() {
   releaseWakeLock();
   showScreen('screen-summary');
 
-  const sess       = APP.session;
-  const punches    = sess.allPunches;
-  const endTime    = Date.now();
-  const durMs      = endTime - sess.startTime;
-  const durMin     = durMs / 60000;
-  const durSec     = Math.floor(durMs / 1000);
-  const total      = punches.length;
-  const avgPower   = total ? punches.reduce((a, p) => a + p.g, 0) / total : 0;
-  const maxPower   = total ? Math.max(...punches.map(p => p.g)) : 0;
-  const avgSpeed   = total ? punches.reduce((a, p) => a + p.speed, 0) / total : 0;
-  const maxSpeed   = total ? Math.max(...punches.map(p => p.speed)) : 0;
-  const rTimes     = sess.reactionTimes;
-  const avgReact   = rTimes.length ? Math.round(rTimes.reduce((a, v) => a + v, 0) / rTimes.length) : null;
-  const bestReact  = rTimes.length ? Math.min(...rTimes) : null;
-  const calories   = calcCalories(total, avgPower, durMin);
+  const sess     = APP.session;
+  const punches  = sess.allPunches;
+  const endTime  = Date.now();
+  const durMs    = endTime - sess.startTime;
+  const durMin   = durMs / 60000;
+  const durSec   = Math.floor(durMs / 1000);
+  const total    = punches.length;
+  const avgPower = total ? punches.reduce((a, p) => a + p.g, 0) / total : 0;
+  const maxPower = total ? Math.max(...punches.map(p => p.g)) : 0;
+  const avgSpeed = total ? punches.reduce((a, p) => a + p.speed, 0) / total : 0;
+  const maxSpeed = total ? Math.max(...punches.map(p => p.speed)) : 0;
+  const rTimes   = sess.reactionTimes;
+  const avgReact = rTimes.length ? Math.round(rTimes.reduce((a, v) => a + v, 0) / rTimes.length) : null;
+  const bestReact = rTimes.length ? Math.min(...rTimes) : null;
+  const calories  = calcCalories(total, avgPower, durMin);
 
   document.getElementById('summary-date').textContent  = fmtDate(endTime);
-  document.getElementById('summary-mode').textContent  = APP.mode === 'striking' ? t('mode_striking') : t('mode_reaction');
+  document.getElementById('summary-mode').textContent  = APP.mode === 'training' ? t('mode_training') : t('mode_combo');
   document.getElementById('sum-rounds').textContent    = APP.config.rounds;
   document.getElementById('sum-punches').textContent   = total;
   document.getElementById('sum-avg-power').textContent = avgPower.toFixed(1) + 'G';
@@ -1357,13 +1486,14 @@ function showSummaryScreen() {
   document.getElementById('sum-calories').textContent  = calories + ' kcal';
   document.getElementById('summary-message').textContent = getCalorieMessage(calories);
 
-  ['sum-reaction-row', 'sum-best-reaction-row', 'sum-hits-row', 'sum-misses-row'].forEach(id => {
-    document.getElementById(id).classList.toggle('hidden', APP.mode !== 'reaction');
+  const comboRows = ['sum-reaction-row', 'sum-best-reaction-row', 'sum-hits-row', 'sum-misses-row'];
+  comboRows.forEach(id => {
+    document.getElementById(id).classList.toggle('hidden', APP.mode !== 'combo');
   });
 
-  if (APP.mode === 'reaction') {
-    document.getElementById('sum-avg-reaction').textContent  = avgReact  !== null ? avgReact + ' ms'  : '—';
-    document.getElementById('sum-best-reaction').textContent = bestReact !== null ? bestReact + ' ms' : '—';
+  if (APP.mode === 'combo') {
+    document.getElementById('sum-avg-reaction').textContent  = avgReact  !== null ? (avgReact / 1000).toFixed(2) + 's'  : '—';
+    document.getElementById('sum-best-reaction').textContent = bestReact !== null ? (bestReact / 1000).toFixed(2) + 's' : '—';
     document.getElementById('sum-hits').textContent   = sess.hits;
     document.getElementById('sum-misses').textContent = sess.misses;
   }
@@ -1382,7 +1512,6 @@ function showSummaryScreen() {
   const saveBtn = document.getElementById('btn-save-session');
   saveBtn.textContent = t('save_session');
   saveBtn.disabled = false;
-
   saveBtn.onclick = () => {
     if (!APP.sessionSaved) {
       saveSession(sessionData);
@@ -1405,8 +1534,8 @@ function buildComparison(totalPunches, avgPower, bestReaction) {
   const parts = [];
 
   const pd = totalPunches - (prev.totalPunches || 0);
-  if (pd > 0)        parts.push(t('diff_punches_up',   { n: pd }));
-  else if (pd < 0)   parts.push(t('diff_punches_down', { n: Math.abs(pd) }));
+  if (pd > 0)       parts.push(t('diff_punches_up',   { n: pd }));
+  else if (pd < 0)  parts.push(t('diff_punches_down', { n: Math.abs(pd) }));
 
   const wd = avgPower - (prev.avgPower || 0);
   if (Math.abs(wd) > 0.1) {
@@ -1415,7 +1544,7 @@ function buildComparison(totalPunches, avgPower, bestReaction) {
       : t('diff_power_down', { n: Math.abs(wd).toFixed(1) }));
   }
 
-  if (APP.mode === 'reaction' && bestReaction !== null && prev.bestReaction) {
+  if (APP.mode === 'combo' && bestReaction !== null && prev.bestReaction) {
     const rd = bestReaction - prev.bestReaction;
     if (Math.abs(rd) > 5) {
       parts.push(rd < 0
@@ -1435,9 +1564,9 @@ function initHistoryScreen() {
   const sessions = getSessions();
 
   if (!sessions.length) {
-    document.getElementById('hist-best-reaction').textContent  = '—';
-    document.getElementById('hist-best-power').textContent     = '—';
-    document.getElementById('hist-most-punches').textContent   = '—';
+    ['hist-best-reaction', 'hist-best-power', 'hist-most-punches'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
     document.getElementById('hist-total-sessions').textContent = '0';
     document.getElementById('hist-total-punches').textContent  = '0';
     document.getElementById('hist-total-calories').textContent = '0';
@@ -1450,20 +1579,19 @@ function initHistoryScreen() {
   const bestPower  = Math.max(...sessions.map(s => s.maxPower || 0));
   const mostPunch  = Math.max(...sessions.map(s => s.totalPunches || 0));
 
-  document.getElementById('hist-best-reaction').textContent  = bestReact !== null ? bestReact + ' ms' : '—';
+  document.getElementById('hist-best-reaction').textContent  = bestReact !== null ? (bestReact / 1000).toFixed(2) + 's' : '—';
   document.getElementById('hist-best-power').textContent     = bestPower.toFixed(1) + 'G';
   document.getElementById('hist-most-punches').textContent   = mostPunch;
   document.getElementById('hist-total-sessions').textContent = sessions.length;
   document.getElementById('hist-total-punches').textContent  = sessions.reduce((a, s) => a + (s.totalPunches || 0), 0);
   document.getElementById('hist-total-calories').textContent = sessions.reduce((a, s) => a + (s.calories || 0), 0) + ' kcal';
-
   document.getElementById('hist-streak').textContent = getStreakText(calcStreak(sessions));
 
   const last10 = sessions.slice(-10);
   drawLineChart('hist-power-chart',
     last10.map(s => s.avgPower || 0),
     Math.max(...last10.map(s => s.avgPower || 0), 5),
-    '#ff8800');
+    '#FFE000');
 
   const rSessions = last10.filter(s => s.avgReaction);
   if (rSessions.length > 1) {
@@ -1507,15 +1635,11 @@ function openSettingsModal() {
   document.getElementById('settings-name').value   = APP.profile.name;
   document.getElementById('settings-weight').value = APP.profile.weight;
   document.getElementById('settings-age').value    = APP.profile.age;
-
   document.getElementById('settings-sex-hombre').classList.toggle('active', APP.profile.sex === 'hombre');
   document.getElementById('settings-sex-mujer').classList.toggle('active',  APP.profile.sex !== 'hombre');
-
-  // Marcar idioma activo
   document.querySelectorAll('.btn-lang-sm').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === APP.lang);
   });
-
   document.getElementById('modal-settings').classList.remove('hidden');
 }
 
@@ -1524,21 +1648,17 @@ function closeSettingsModal() {
 }
 
 function initSettingsModal() {
-  // Sex toggle
   const btnH = document.getElementById('settings-sex-hombre');
   const btnM = document.getElementById('settings-sex-mujer');
   btnH.addEventListener('click', () => { btnH.classList.add('active');    btnM.classList.remove('active'); });
   btnM.addEventListener('click', () => { btnM.classList.add('active');    btnH.classList.remove('active'); });
 
-  // Cambio de idioma instantáneo
   document.querySelectorAll('.btn-lang-sm').forEach(btn => {
     btn.addEventListener('click', () => {
       if (btn.dataset.lang === APP.lang) return;
       APP.lang = btn.dataset.lang;
       localStorage.setItem('fkf_lang', APP.lang);
       applyLanguage();
-      // Actualizar valores de config si están visibles
-      updateConfigSummaryIfVisible();
     });
   });
 
@@ -1550,24 +1670,12 @@ function initSettingsModal() {
     const weight = parseFloat(document.getElementById('settings-weight').value);
     const age    = parseInt(document.getElementById('settings-age').value);
     const sex    = btnH.classList.contains('active') ? 'hombre' : 'mujer';
-
-    if (!name)                           { alert(t('alert_enter_name')); return; }
-    if (!weight || weight < 30 || weight > 200) { alert(t('alert_weight_s'));   return; }
-    if (!age || age < 10 || age > 100)   { alert(t('alert_age_s'));       return; }
-
+    if (!name)                                { alert(t('alert_enter_name')); return; }
+    if (!weight || weight < 30 || weight > 200) { alert(t('alert_weight_s'));  return; }
+    if (!age || age < 10 || age > 100)         { alert(t('alert_age_s'));      return; }
     saveProfile({ name, weight, age, sex });
     closeSettingsModal();
   };
-}
-
-function updateConfigSummaryIfVisible() {
-  if (!document.getElementById('screen-config').classList.contains('hidden')) {
-    updateConfigSummary();
-    document.getElementById('config-mode-title').textContent =
-      APP.mode === 'striking'
-        ? '🥊 ' + t('striking_mode')
-        : '🔴 ' + t('reaction_mode');
-  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -1577,22 +1685,18 @@ function init() {
   initSettingsModal();
 
   const savedLang = localStorage.getItem('fkf_lang');
-
   if (savedLang) {
-    // Idioma ya elegido: saltar pantalla de idioma
     APP.lang = savedLang;
     applyLanguage();
     afterLangSelected();
   } else {
-    // Primera vez: mostrar selector de idioma
     showScreen('screen-lang');
     initLangScreen();
   }
 
-  // Detectar disponibilidad del acelerómetro (no-iOS)
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  if (!isIOS && typeof DeviceMotionEvent === 'undefined') {
-    APP.fallbackMode = true;
+  if (!isIOS && typeof DeviceMotionEvent !== 'undefined') {
+    activateAccelerometer();
   }
 }
 
