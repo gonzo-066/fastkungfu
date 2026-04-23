@@ -1,10 +1,11 @@
-const CACHE_NAME = 'fastkungfu-v1';
+const CACHE_NAME = 'fastkungfu-v3';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './app.js',
-  './manifest.json'
+  './manifest.json',
+  './assets/LOGO_FASTKUNGFU.png'
 ];
 
 self.addEventListener('install', e => {
