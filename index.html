@@ -140,7 +140,19 @@
         <div class="slider-range"><span>15 s</span><span>90 s</span></div>
       </div>
 
-      <!-- EXTRAS COMBO (oculto en modo entrenamiento) -->
+      <!-- SUBMODE TOGGLE (solo en modo reacción) -->
+      <div id="reaction-submode-block" class="hidden">
+        <div class="config-divider"></div>
+        <div class="config-item">
+          <span class="config-section-label" data-i18n="reaction_submode_label">SUBMODO</span>
+          <div class="mode-toggle">
+            <button class="mode-toggle-btn" id="btn-submode-simple" data-i18n="submode_simple">GOLPE SIMPLE</button>
+            <button class="mode-toggle-btn active" id="btn-submode-combo" data-i18n="submode_combo">MODO COMBO</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXTRAS COMBO (oculto en modo entrenamiento y en submode simple) -->
       <div id="combo-config-extras" class="hidden">
         <div class="config-divider"></div>
 
@@ -235,6 +247,54 @@
 
     <button class="btn-fallback" id="btn-fallback-punch" data-i18n="fallback_punch">👊 GOLPEAR</button>
   </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: MODO REACCIÓN SIMPLE
+════════════════════════════════════ -->
+<div id="screen-reaction" class="screen hidden">
+
+  <!-- Header fijo (round + timer + stop) -->
+  <div class="combo-header" id="reaction-header">
+    <span class="round-badge" id="reaction-round-indicator">ROUND 1/3</span>
+    <span class="combo-session-timer" id="reaction-session-timer">2:00</span>
+    <button class="btn-stop" id="btn-reaction-stop">■</button>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="reaction-content">
+    <!-- Estímulo central -->
+    <div class="reaction-stimulus-wrap">
+      <div class="reaction-stimulus state-wait" id="reaction-stimulus">
+        <div class="stimulus-icon" id="stimulus-icon">⏳</div>
+        <div class="stimulus-text" id="stimulus-text">Prepárate</div>
+        <div class="stimulus-sub" id="stimulus-sub"></div>
+      </div>
+    </div>
+
+    <!-- 4 métricas -->
+    <div class="reaction-metrics">
+      <div class="metric-card">
+        <div class="metric-value" id="reaction-last">—</div>
+        <div class="metric-label" data-i18n="last_reaction">Última reacción</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value green" id="reaction-hits">0</div>
+        <div class="metric-label" data-i18n="hits">Aciertos</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value red" id="reaction-misses">0</div>
+        <div class="metric-label" data-i18n="misses">Fallos</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="reaction-best">—</div>
+        <div class="metric-label" data-i18n="best_reaction">Mejor reacción</div>
+      </div>
+    </div>
+
+    <button class="btn-fallback" id="btn-fallback-reaction" data-i18n="fallback_punch">👊 GOLPEAR</button>
+  </div>
+
 </div>
 
 <!-- ═══════════════════════════════════
@@ -385,6 +445,14 @@
         <div class="summary-item hidden" id="sum-misses-row">
           <div class="summary-value red" id="sum-misses">0</div>
           <div class="summary-label" data-i18n="misses_s">Combos fallidos</div>
+        </div>
+        <div class="summary-item hidden" id="sum-combo-pct-row">
+          <div class="summary-value green" id="sum-combo-pct">—</div>
+          <div class="summary-label" data-i18n="combo_pct_s">% Combos válidos</div>
+        </div>
+        <div class="summary-item hidden" id="sum-best-duration-row">
+          <div class="summary-value" id="sum-best-duration">—</div>
+          <div class="summary-label" data-i18n="best_combo_duration_s">Mejor duración combo</div>
         </div>
         <div class="summary-item">
           <div class="summary-value" id="sum-duration">0:00</div>

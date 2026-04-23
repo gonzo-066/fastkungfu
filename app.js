@@ -115,6 +115,21 @@ const TRANSLATIONS = {
     rank_fast:            '🟤 Rápido',
     rank_good:            '🟡 Bueno',
     rank_keep:            '⚪ Sigue practicando',
+    reaction_submode_label: 'SUBMODO',
+    submode_simple:       'GOLPE SIMPLE',
+    submode_combo:        'MODO COMBO',
+    last_reaction:        'Última reacción',
+    hits:                 'Aciertos',
+    misses:               'Fallos',
+    best_reaction:        'Mejor reacción',
+    combo_pct_s:          '% Combos válidos',
+    best_combo_duration_s:'Mejor duración combo',
+    stimulus_wait:        'Prepárate',
+    stimulus_hit:         '¡HIT!',
+    stimulus_miss:        'FALLO',
+    mode_reaction:        '⚡ Reacción Simple',
+    hits_simple_s:        'Aciertos',
+    misses_simple_s:      'Fallos',
   },
   en: {
     profile_subtitle:     'Set up your profile to start',
@@ -218,6 +233,21 @@ const TRANSLATIONS = {
     rank_fast:            '🟤 Fast',
     rank_good:            '🟡 Good',
     rank_keep:            '⚪ Keep practicing',
+    reaction_submode_label: 'SUBMODE',
+    submode_simple:       'SINGLE HIT',
+    submode_combo:        'COMBO MODE',
+    last_reaction:        'Last reaction',
+    hits:                 'Hits',
+    misses:               'Misses',
+    best_reaction:        'Best reaction',
+    combo_pct_s:          '% Valid combos',
+    best_combo_duration_s:'Best combo duration',
+    stimulus_wait:        'Get ready',
+    stimulus_hit:         'HIT!',
+    stimulus_miss:        'MISS',
+    mode_reaction:        '⚡ Simple Reaction',
+    hits_simple_s:        'Hits',
+    misses_simple_s:      'Misses',
   },
   pt: {
     profile_subtitle:     'Configure seu perfil para começar',
@@ -321,6 +351,21 @@ const TRANSLATIONS = {
     rank_fast:            '🟤 Rápido',
     rank_good:            '🟡 Bom',
     rank_keep:            '⚪ Continue praticando',
+    reaction_submode_label: 'SUBMODO',
+    submode_simple:       'GOLPE SIMPLES',
+    submode_combo:        'MODO COMBO',
+    last_reaction:        'Última reação',
+    hits:                 'Acertos',
+    misses:               'Erros',
+    best_reaction:        'Melhor reação',
+    combo_pct_s:          '% Combos válidos',
+    best_combo_duration_s:'Melhor duração combo',
+    stimulus_wait:        'Prepara-te',
+    stimulus_hit:         'HIT!',
+    stimulus_miss:        'FALHOU',
+    mode_reaction:        '⚡ Reação Simples',
+    hits_simple_s:        'Acertos',
+    misses_simple_s:      'Erros',
   },
   de: {
     profile_subtitle:     'Profil einrichten um zu beginnen',
@@ -424,6 +469,21 @@ const TRANSLATIONS = {
     rank_fast:            '🟤 Schnell',
     rank_good:            '🟡 Gut',
     rank_keep:            '⚪ Weiter üben',
+    reaction_submode_label: 'UNTERMODUS',
+    submode_simple:       'EINZELSCHLAG',
+    submode_combo:        'KOMBO-MODUS',
+    last_reaction:        'Letzte Reaktion',
+    hits:                 'Treffer',
+    misses:               'Fehler',
+    best_reaction:        'Beste Reaktion',
+    combo_pct_s:          '% gültige Kombos',
+    best_combo_duration_s:'Beste Kombodauer',
+    stimulus_wait:        'Bereitmachen',
+    stimulus_hit:         'SCHLAG!',
+    stimulus_miss:        'FEHLER',
+    mode_reaction:        '⚡ Einzel-Reaktion',
+    hits_simple_s:        'Treffer',
+    misses_simple_s:      'Fehler',
   },
 };
 
@@ -444,6 +504,7 @@ const APP = {
     maxDuration: 2.0,   // seconds for the combo window (from first hit)
     pauseBetween: 1.5,  // seconds between result and next signal
     mode: 'fixed',      // 'fixed' | 'random'
+    submode: 'combo',   // 'simple' | 'combo'
   },
   session: {
     startTime: null,
@@ -487,6 +548,12 @@ const APP = {
     waitTickInterval: null,
     progressInterval: null,
     results: [],
+  },
+  reaction: {
+    state: 'idle',      // 'idle' | 'wait' | 'hit' | 'result' | 'miss'
+    stimulusAt: null,
+    waitTimeout: null,
+    missTimeout: null,
   },
   rest: { interval: null },
   wakeLock: null,
@@ -666,7 +733,7 @@ function onDeviceMotion(e) {
   }
 
   // Use shorter debounce within active combo so rapid successive hits all register
-  const cooldown = (APP.mode === 'combo' && APP.combo.state === 'active')
+  const cooldown = (APP.mode === 'combo' && APP.comboConfig.submode === 'combo' && APP.combo.state === 'active')
     ? APP.accel.COMBO_HIT_COOLDOWN
     : APP.accel.COOLDOWN;
 
@@ -680,8 +747,9 @@ function onDeviceMotion(e) {
 function registerPunch(gForce, speed) {
   const punch = { g: gForce, speed: speed || gForce * 9.81, time: Date.now() };
   vibrate([15]);
-  if (APP.mode === 'training') handleTrainingPunch(punch);
-  else if (APP.mode === 'combo') handleComboPunch(punch);
+  if (APP.mode === 'training')                              handleTrainingPunch(punch);
+  else if (APP.comboConfig.submode === 'simple')            handleReactionPunch(punch);
+  else                                                      handleComboPunch(punch);
 }
 
 // ═══════════════════════════════════════════════════
@@ -904,13 +972,15 @@ function initMenuScreen() {
 // ═══════════════════════════════════════════════════
 function initConfigScreen() {
   const isCombo = APP.mode === 'combo';
+  const isComboSubmode = isCombo && APP.comboConfig.submode === 'combo';
 
   document.getElementById('config-mode-title').textContent =
     isCombo ? '⚡ ' + t('combo_mode') : '🥊 ' + t('training_mode');
 
   document.getElementById('btn-start-session').textContent = t('config_start');
 
-  document.getElementById('combo-config-extras').classList.toggle('hidden', !isCombo);
+  document.getElementById('reaction-submode-block').classList.toggle('hidden', !isCombo);
+  document.getElementById('combo-config-extras').classList.toggle('hidden', !isComboSubmode);
 
   const rInput    = document.getElementById('input-rounds');
   const rdInput   = document.getElementById('input-round-duration');
@@ -928,7 +998,8 @@ function initConfigScreen() {
 
   document.getElementById('btn-config-back').onclick = () => showScreen('screen-menu');
 
-  if (isCombo) initComboConfigExtras();
+  if (isCombo) initReactionSubmodeBlock();
+  if (isComboSubmode) initComboConfigExtras();
 
   // iOS accelerometer
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -949,6 +1020,29 @@ function initConfigScreen() {
   }
 
   document.getElementById('btn-start-session').onclick = startSession;
+}
+
+function initReactionSubmodeBlock() {
+  const btnSimple = document.getElementById('btn-submode-simple');
+  const btnCombo  = document.getElementById('btn-submode-combo');
+
+  btnSimple.classList.toggle('active', APP.comboConfig.submode === 'simple');
+  btnCombo.classList.toggle('active',  APP.comboConfig.submode === 'combo');
+
+  btnSimple.onclick = () => {
+    APP.comboConfig.submode = 'simple';
+    btnSimple.classList.add('active');
+    btnCombo.classList.remove('active');
+    document.getElementById('combo-config-extras').classList.add('hidden');
+  };
+
+  btnCombo.onclick = () => {
+    APP.comboConfig.submode = 'combo';
+    btnCombo.classList.add('active');
+    btnSimple.classList.remove('active');
+    document.getElementById('combo-config-extras').classList.remove('hidden');
+    initComboConfigExtras();
+  };
 }
 
 function initComboConfigExtras() {
@@ -1027,6 +1121,7 @@ function startSession() {
     hits: 0,
     misses: 0,
   };
+  APP.combo.results = [];
   APP.sessionSaved = false;
   acquireWakeLock();
   if (!APP.accel.available) setupAccelerometer();
@@ -1051,6 +1146,10 @@ function startRound(roundNum) {
   if (APP.mode === 'training') {
     showTrainingScreen(roundNum);
     startRoundTimer(() => endRound());
+  } else if (APP.comboConfig.submode === 'simple') {
+    showReactionScreen(roundNum);
+    startRoundTimer(() => endRound());
+    startReactionWait();
   } else {
     showComboScreen(roundNum);
     startRoundTimer(() => endRound());
@@ -1061,8 +1160,9 @@ function startRound(roundNum) {
 function startRoundTimer(onEnd) {
   APP.round.timerInterval = setInterval(() => {
     APP.round.secondsLeft--;
-    if (APP.mode === 'training') updateTrainingTimer();
-    else                         updateComboTimer();
+    if (APP.mode === 'training')                   updateTrainingTimer();
+    else if (APP.comboConfig.submode === 'simple') updateReactionTimer();
+    else                                           updateComboTimer();
     if (APP.round.secondsLeft <= 0) {
       clearInterval(APP.round.timerInterval);
       onEnd();
@@ -1072,7 +1172,10 @@ function startRoundTimer(onEnd) {
 
 function endRound() {
   clearInterval(APP.round.timerInterval);
-  if (APP.mode === 'combo') stopComboCycle();
+  if (APP.mode === 'combo') {
+    if (APP.comboConfig.submode === 'simple') stopReactionCycle();
+    else stopComboCycle();
+  }
 
   APP.session.roundData.push({ ...APP.round });
   APP.session.allPunches.push(...APP.round.punches);
@@ -1393,6 +1496,115 @@ function stopComboCycle() {
 }
 
 // ═══════════════════════════════════════════════════
+// MODO REACCIÓN SIMPLE
+// ═══════════════════════════════════════════════════
+function showReactionScreen(roundNum) {
+  showScreen('screen-reaction');
+  document.getElementById('reaction-round-indicator').textContent =
+    t('round_indicator', { n: roundNum, total: APP.config.rounds });
+  updateReactionTimer();
+  resetReactionMetrics();
+
+  document.getElementById('btn-fallback-reaction').onclick = () => {
+    const g = 2.0 + Math.random() * 3;
+    registerPunch(g, g * 9.81);
+  };
+  document.getElementById('btn-reaction-stop').onclick = () => {
+    if (confirm(t('confirm_stop'))) {
+      stopReactionCycle();
+      clearInterval(APP.round.timerInterval);
+      releaseWakeLock();
+      showScreen('screen-menu');
+    }
+  };
+}
+
+function updateReactionTimer() {
+  const el = document.getElementById('reaction-session-timer');
+  el.textContent = fmtTime(APP.round.secondsLeft);
+}
+
+function resetReactionMetrics() {
+  document.getElementById('reaction-last').textContent   = '—';
+  document.getElementById('reaction-hits').textContent   = '0';
+  document.getElementById('reaction-misses').textContent = '0';
+  document.getElementById('reaction-best').textContent   = '—';
+}
+
+function setReactionStimulus(state, icon, text, sub) {
+  const el = document.getElementById('reaction-stimulus');
+  el.className = 'reaction-stimulus ' + state;
+  document.getElementById('stimulus-icon').textContent = icon;
+  document.getElementById('stimulus-text').textContent = text;
+  document.getElementById('stimulus-sub').textContent  = sub || '';
+}
+
+function startReactionWait() {
+  if (APP.round.secondsLeft <= 0) return;
+  APP.reaction.state = 'wait';
+  setReactionStimulus('state-wait', '⏳', t('stimulus_wait'), '');
+  const delay = 1000 + Math.random() * 2000;
+  APP.reaction.waitTimeout = setTimeout(() => {
+    if (APP.round.secondsLeft > 0) showReactionStimulus();
+  }, delay);
+}
+
+function showReactionStimulus() {
+  APP.reaction.state     = 'hit';
+  APP.reaction.stimulusAt = Date.now();
+  setReactionStimulus('state-hit', '⚡', t('stimulus_hit'), '');
+  vibrate([30]);
+  playBeep(880, 0.12);
+  APP.reaction.missTimeout = setTimeout(() => {
+    if (APP.reaction.state === 'hit') missReaction();
+  }, 1000);
+}
+
+function missReaction() {
+  clearTimeout(APP.reaction.missTimeout);
+  APP.reaction.state = 'miss';
+  APP.round.misses++;
+  setReactionStimulus('state-miss', '✗', t('stimulus_miss'), '');
+  vibrate([80]);
+  updateReactionMetricsUI();
+  if (APP.round.secondsLeft > 0) {
+    setTimeout(() => startReactionWait(), 1500);
+  }
+}
+
+function handleReactionPunch(punch) {
+  if (APP.reaction.state !== 'hit') return;
+  clearTimeout(APP.reaction.missTimeout);
+  const reactionMs = Date.now() - APP.reaction.stimulusAt;
+  APP.reaction.state = 'result';
+  APP.round.hits++;
+  APP.round.punches.push(punch);
+  APP.round.reactionTimes.push(reactionMs);
+  setReactionStimulus('state-result-ok', '✓', reactionMs + 'ms', reactionRank(reactionMs));
+  vibrate([20, 30, 20]);
+  updateReactionMetricsUI();
+  if (APP.round.secondsLeft > 0) {
+    setTimeout(() => startReactionWait(), 1500);
+  }
+}
+
+function updateReactionMetricsUI() {
+  const rTimes  = APP.round.reactionTimes;
+  const last    = rTimes.length ? rTimes[rTimes.length - 1] : null;
+  const best    = rTimes.length ? Math.min(...rTimes) : null;
+  document.getElementById('reaction-last').textContent   = last !== null ? last + 'ms' : '—';
+  document.getElementById('reaction-hits').textContent   = APP.round.hits;
+  document.getElementById('reaction-misses').textContent = APP.round.misses;
+  document.getElementById('reaction-best').textContent   = best !== null ? best + 'ms' : '—';
+}
+
+function stopReactionCycle() {
+  clearTimeout(APP.reaction.waitTimeout);
+  clearTimeout(APP.reaction.missTimeout);
+  APP.reaction.state = 'idle';
+}
+
+// ═══════════════════════════════════════════════════
 // DESCANSO
 // ═══════════════════════════════════════════════════
 function showRestScreen(doneRound, nextRound) {
@@ -1440,10 +1652,11 @@ function renderRestStats() {
     </div>`;
 
   if (APP.mode === 'combo') {
+    const isSimple = APP.comboConfig.submode === 'simple';
     html += `
       <div class="rest-stat-item">
         <div class="rest-stat-value">${hits}</div>
-        <div class="rest-stat-label">${t('hits_s')}</div>
+        <div class="rest-stat-label">${t(isSimple ? 'hits_s' : 'hits_s')}</div>
       </div>
       <div class="rest-stat-item">
         <div class="rest-stat-value">${misses}</div>
@@ -1484,8 +1697,12 @@ function showSummaryScreen() {
   const bestReact = rTimes.length ? Math.min(...rTimes) : null;
   const calories  = calcCalories(total, avgPower, durMin);
 
+  const isComboSubmode = APP.mode === 'combo' && APP.comboConfig.submode === 'combo';
+  const modeLabel = APP.mode === 'training' ? t('mode_training')
+    : APP.comboConfig.submode === 'simple' ? t('mode_reaction') : t('mode_combo');
+
   document.getElementById('summary-date').textContent  = fmtDate(endTime);
-  document.getElementById('summary-mode').textContent  = APP.mode === 'training' ? t('mode_training') : t('mode_combo');
+  document.getElementById('summary-mode').textContent  = modeLabel;
   document.getElementById('sum-rounds').textContent    = APP.config.rounds;
   document.getElementById('sum-punches').textContent   = total;
   document.getElementById('sum-avg-power').textContent = avgPower.toFixed(1) + 'G';
@@ -1500,6 +1717,8 @@ function showSummaryScreen() {
   comboRows.forEach(id => {
     document.getElementById(id).classList.toggle('hidden', APP.mode !== 'combo');
   });
+  document.getElementById('sum-combo-pct-row').classList.toggle('hidden', !isComboSubmode);
+  document.getElementById('sum-best-duration-row').classList.toggle('hidden', !isComboSubmode);
 
   if (APP.mode === 'combo') {
     document.getElementById('sum-avg-reaction').textContent  = avgReact  !== null ? (avgReact / 1000).toFixed(2) + 's'  : '—';
@@ -1508,15 +1727,38 @@ function showSummaryScreen() {
     document.getElementById('sum-misses').textContent = sess.misses;
   }
 
+  if (isComboSubmode) {
+    const results  = APP.combo.results;
+    const totalC   = results.length;
+    const okC      = results.filter(r => r.ok).length;
+    const comboPct = totalC > 0 ? Math.round((okC / totalC) * 100) : 0;
+    const durs     = results.filter(r => r.ok && r.duration > 0).map(r => r.duration);
+    const bestDur  = durs.length ? Math.min(...durs) : null;
+    document.getElementById('sum-combo-pct').textContent      = comboPct + '%';
+    document.getElementById('sum-best-duration').textContent  = bestDur !== null ? bestDur.toFixed(2) + 's' : '—';
+  }
+
   document.getElementById('summary-comparison').textContent =
     buildComparison(total, avgPower, bestReact);
 
+  const comboResults = APP.combo.results;
+  const comboPctSave = isComboSubmode && comboResults.length
+    ? Math.round((comboResults.filter(r => r.ok).length / comboResults.length) * 100)
+    : null;
+  const bestDurSave = isComboSubmode
+    ? (comboResults.filter(r => r.ok && r.duration > 0).map(r => r.duration).reduce(
+        (min, v) => v < min ? v : min, Infinity) || null)
+    : null;
+
   const sessionData = {
-    ts: endTime, mode: APP.mode, rounds: APP.config.rounds,
+    ts: endTime, mode: APP.mode, submode: APP.comboConfig.submode,
+    rounds: APP.config.rounds,
     totalPunches: total, avgPower, maxPower, avgSpeed, maxSpeed,
     avgReaction: avgReact, bestReaction: bestReact,
     hits: sess.hits, misses: sess.misses,
     calories, durationSec: durSec,
+    comboPct: comboPctSave,
+    bestComboDuration: bestDurSave === Infinity ? null : bestDurSave,
   };
 
   const saveBtn = document.getElementById('btn-save-session');
