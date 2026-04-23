@@ -467,9 +467,10 @@ const APP = {
     available: false,
     permitted: false,
     lastPunchAt: 0,
-    COOLDOWN: 200,       // ms between punches
-    THRESHOLD: 1.5,      // G-force minimum
-    _logAt: 0,           // throttle for console logging
+    COOLDOWN: 150,            // ms debounce — training mode & signal phase
+    COMBO_HIT_COOLDOWN: 80,   // ms debounce — within active combo (rapid succession)
+    THRESHOLD: 1.2,           // G-force minimum
+    _logAt: 0,
   },
   combo: {
     state: 'idle',       // 'idle'|'wait'|'signal'|'active'|'result'
@@ -477,6 +478,7 @@ const APP = {
     currentHits: 0,
     signalAt: null,
     activeAt: null,
+    lastHitAt: null,     // timestamp of each hit — used for accurate combo duration
     reactionMs: null,
     waitTimeout: null,
     signalTimeout: null,
@@ -660,12 +662,17 @@ function onDeviceMotion(e) {
   // Throttled console log (~10 Hz) for calibration
   if (now - APP.accel._logAt > 100) {
     APP.accel._logAt = now;
-    console.log(`[FKF] accel  raw=${raw.toFixed(2)} m/s²  g=${gForce.toFixed(2)}G  threshold=${APP.accel.THRESHOLD}G`);
+    console.log(`[FKF] accel  g=${gForce.toFixed(2)}G  state=${APP.mode}/${APP.combo.state}  thr=${APP.accel.THRESHOLD}G`);
   }
 
-  if (gForce > APP.accel.THRESHOLD && (now - APP.accel.lastPunchAt) > APP.accel.COOLDOWN) {
+  // Use shorter debounce within active combo so rapid successive hits all register
+  const cooldown = (APP.mode === 'combo' && APP.combo.state === 'active')
+    ? APP.accel.COMBO_HIT_COOLDOWN
+    : APP.accel.COOLDOWN;
+
+  if (gForce > APP.accel.THRESHOLD && (now - APP.accel.lastPunchAt) > cooldown) {
     APP.accel.lastPunchAt = now;
-    console.log(`[FKF] PUNCH  g=${gForce.toFixed(2)}G  debounce_ok  mode=${APP.mode}`);
+    console.log(`[FKF] PUNCH  g=${gForce.toFixed(2)}G  cooldown=${cooldown}ms  mode=${APP.mode}  combo=${APP.combo.state}  hits=${APP.combo.currentHits}/${APP.combo.targetHits}`);
     registerPunch(gForce, raw);
   }
 }
@@ -1247,8 +1254,10 @@ function showComboSignal() {
 function handleComboPunch(punch) {
   if (APP.combo.state === 'signal') {
     clearTimeout(APP.combo.signalTimeout);
-    APP.combo.reactionMs  = Date.now() - APP.combo.signalAt;
-    APP.combo.activeAt    = Date.now();
+    const hitAt           = Date.now();
+    APP.combo.reactionMs  = hitAt - APP.combo.signalAt;
+    APP.combo.activeAt    = hitAt;
+    APP.combo.lastHitAt   = hitAt;
     APP.combo.currentHits = 1;
     APP.combo.state       = 'active';
     APP.round.punches.push(punch);
@@ -1266,6 +1275,7 @@ function handleComboPunch(punch) {
 
   if (APP.combo.state === 'active') {
     APP.combo.currentHits++;
+    APP.combo.lastHitAt = Date.now();   // capture exact moment of each hit
     APP.round.punches.push(punch);
 
     const pw = parseFloat(document.getElementById('active-power').textContent) || 0;
@@ -1319,9 +1329,9 @@ function endCombo(ok, noHits) {
 
   APP.combo.state = 'result';
 
-  const duration = APP.combo.activeAt
-    ? ((Date.now() - APP.combo.activeAt) / 1000)
-    : 0;
+  // For completed combos use exact last-hit timestamp; for timeouts use now
+  const endAt    = (ok && APP.combo.lastHitAt) ? APP.combo.lastHitAt : Date.now();
+  const duration = APP.combo.activeAt ? ((endAt - APP.combo.activeAt) / 1000) : 0;
 
   APP.combo.results.push({
     ok, hits: APP.combo.currentHits, target: APP.combo.targetHits,
