@@ -1026,23 +1026,17 @@ function initReactionSubmodeBlock() {
   const btnSimple = document.getElementById('btn-submode-simple');
   const btnCombo  = document.getElementById('btn-submode-combo');
 
-  btnSimple.classList.toggle('active', APP.comboConfig.submode === 'simple');
-  btnCombo.classList.toggle('active',  APP.comboConfig.submode === 'combo');
-
-  btnSimple.onclick = () => {
-    APP.comboConfig.submode = 'simple';
-    btnSimple.classList.add('active');
-    btnCombo.classList.remove('active');
-    document.getElementById('combo-config-extras').classList.add('hidden');
+  const setActive = (submode) => {
+    btnSimple.classList.toggle('active', submode === 'simple');
+    btnCombo.classList.toggle('active',  submode === 'combo');
+    document.getElementById('combo-config-extras').classList.toggle('hidden', submode !== 'combo');
+    if (submode === 'combo') initComboConfigExtras();
   };
 
-  btnCombo.onclick = () => {
-    APP.comboConfig.submode = 'combo';
-    btnCombo.classList.add('active');
-    btnSimple.classList.remove('active');
-    document.getElementById('combo-config-extras').classList.remove('hidden');
-    initComboConfigExtras();
-  };
+  setActive(APP.comboConfig.submode);
+
+  btnSimple.onclick = () => { APP.comboConfig.submode = 'simple'; setActive('simple'); };
+  btnCombo.onclick  = () => { APP.comboConfig.submode = 'combo';  setActive('combo');  };
 }
 
 function initComboConfigExtras() {

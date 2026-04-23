@@ -1556,6 +1556,65 @@ canvas {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
 /* ═══════════════════════════════════
+   SUBMODE SELECTOR CARDS
+════════════════════════════════════ */
+.submode-cards {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.submode-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 10px;
+  background: var(--bg3);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.submode-card.active {
+  border-color: var(--yellow);
+  background: #1A1500;
+  color: var(--yellow);
+}
+
+.submode-card:active {
+  transform: scale(0.97);
+}
+
+.submode-card-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.submode-card-title {
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.submode-card-desc {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  letter-spacing: 0.2px;
+  line-height: 1.3;
+}
+
+.submode-card.active .submode-card-desc {
+  color: rgba(255, 224, 0, 0.6);
+}
+
+/* ═══════════════════════════════════
    REACTION SIMPLE SCREEN
 ════════════════════════════════════ */
 #screen-reaction {

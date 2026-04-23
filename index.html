@@ -112,6 +112,26 @@
 
     <div class="config-body">
 
+      <!-- TIPO DE ENTRENAMIENTO (solo en Modo Reacción) -->
+      <div id="reaction-submode-block" class="hidden">
+        <div class="config-item">
+          <span class="config-section-label">TIPO DE ENTRENAMIENTO</span>
+          <div class="submode-cards">
+            <button class="submode-card" id="btn-submode-simple">
+              <span class="submode-card-icon">⚡</span>
+              <span class="submode-card-title">GOLPE SIMPLE</span>
+              <span class="submode-card-desc">Señal → 1 golpe → mide reacción</span>
+            </button>
+            <button class="submode-card" id="btn-submode-combo">
+              <span class="submode-card-icon">🥊</span>
+              <span class="submode-card-title">MODO COMBO</span>
+              <span class="submode-card-desc">Señal → serie de golpes</span>
+            </button>
+          </div>
+        </div>
+        <div class="config-divider"></div>
+      </div>
+
       <!-- COMÚN: Rounds, Duración, Descanso -->
       <div class="config-item">
         <div class="config-label-row">
@@ -138,18 +158,6 @@
         </div>
         <input type="range" id="input-rest-duration" min="15" max="90" value="30" step="5" class="slider" />
         <div class="slider-range"><span>15 s</span><span>90 s</span></div>
-      </div>
-
-      <!-- SUBMODE TOGGLE (solo en modo reacción) -->
-      <div id="reaction-submode-block" class="hidden">
-        <div class="config-divider"></div>
-        <div class="config-item">
-          <span class="config-section-label" data-i18n="reaction_submode_label">SUBMODO</span>
-          <div class="mode-toggle">
-            <button class="mode-toggle-btn" id="btn-submode-simple" data-i18n="submode_simple">GOLPE SIMPLE</button>
-            <button class="mode-toggle-btn active" id="btn-submode-combo" data-i18n="submode_combo">MODO COMBO</button>
-          </div>
-        </div>
       </div>
 
       <!-- EXTRAS COMBO (oculto en modo entrenamiento y en submode simple) -->
