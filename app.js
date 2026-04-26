@@ -130,6 +130,41 @@ const TRANSLATIONS = {
     mode_reaction:        '⚡ Reacción Simple',
     hits_simple_s:        'Aciertos',
     misses_simple_s:      'Fallos',
+    calib_menu_btn:       'CALIBRAR DISPOSITIVO',
+    calib_title:          'CALIBRAR DISPOSITIVO',
+    calib_desc:           'Dar 3 golpes de distinta intensidad para medir tu umbral de detección y tiempo de rebote.',
+    calib_start:          'COMENZAR CALIBRACIÓN',
+    step:                 'PASO',
+    calib_step_instruction: 'Presiona LISTO, luego da el golpe',
+    calib_press_ready:    'Presiona LISTO cuando estés preparado',
+    calib_ready_btn:      'LISTO',
+    calib_listening:      'ESCUCHANDO...',
+    calib_detecting:      'Esperando golpe...',
+    calib_next_step:      'SIGUIENTE PASO',
+    calib_see_results:    'VER RESULTADOS',
+    calib_results_title:  'CALIBRACIÓN COMPLETADA',
+    calib_threshold:      'Umbral',
+    calib_debounce:       'Debounce',
+    calib_save:           'GUARDAR CALIBRACIÓN',
+    calib_again:          'RECALIBRAR',
+    calib_notice:         'Calibra tu dispositivo para mayor precisión',
+    calib_notice_btn:     'CALIBRAR',
+    sound_label:          'SONIDO',
+    sound_on:             'ACTIVADO',
+    sound_off:            'SILENCIADO',
+    submode_colors:       'MODO COLORES',
+    submode_colors_desc:  'Reacciona al color de pantalla',
+    color_labels_label:   'ETIQUETAS DE COLOR',
+    color_order_label:    'ORDEN DE COLORES',
+    color_yellow_ph:      'Ej: Piernas',
+    color_red_ph:         'Ej: Torso',
+    color_blue_ph:        'Ej: Cara',
+    voice_ok:             '¡Bien!',
+    voice_master:         '¡Maestro!',
+    voice_fail:           '¡Sigue intentando!',
+    voice_session_done:   '¡Sesión completada!',
+    mode_colors:          '🎨 Modo Colores',
+    color_stats_title:    'Estadísticas por color',
   },
   en: {
     profile_subtitle:     'Set up your profile to start',
@@ -248,6 +283,41 @@ const TRANSLATIONS = {
     mode_reaction:        '⚡ Simple Reaction',
     hits_simple_s:        'Hits',
     misses_simple_s:      'Misses',
+    calib_menu_btn:       'CALIBRATE DEVICE',
+    calib_title:          'CALIBRATE DEVICE',
+    calib_desc:           'Throw 3 punches of different intensity to measure your detection threshold and debounce time.',
+    calib_start:          'START CALIBRATION',
+    step:                 'STEP',
+    calib_step_instruction: 'Press READY, then throw the punch',
+    calib_press_ready:    'Press READY when you\'re set',
+    calib_ready_btn:      'READY',
+    calib_listening:      'LISTENING...',
+    calib_detecting:      'Waiting for punch...',
+    calib_next_step:      'NEXT STEP',
+    calib_see_results:    'SEE RESULTS',
+    calib_results_title:  'CALIBRATION COMPLETE',
+    calib_threshold:      'Threshold',
+    calib_debounce:       'Debounce',
+    calib_save:           'SAVE CALIBRATION',
+    calib_again:          'RECALIBRATE',
+    calib_notice:         'Calibrate your device for better precision',
+    calib_notice_btn:     'CALIBRATE',
+    sound_label:          'SOUND',
+    sound_on:             'ON',
+    sound_off:            'MUTED',
+    submode_colors:       'COLOR MODE',
+    submode_colors_desc:  'React to the screen color',
+    color_labels_label:   'COLOR LABELS',
+    color_order_label:    'COLOR ORDER',
+    color_yellow_ph:      'e.g. Legs',
+    color_red_ph:         'e.g. Torso',
+    color_blue_ph:        'e.g. Head',
+    voice_ok:             'Good!',
+    voice_master:         'Master!',
+    voice_fail:           'Keep trying!',
+    voice_session_done:   'Session complete!',
+    mode_colors:          '🎨 Color Mode',
+    color_stats_title:    'Stats by color',
   },
   pt: {
     profile_subtitle:     'Configure seu perfil para começar',
@@ -366,6 +436,41 @@ const TRANSLATIONS = {
     mode_reaction:        '⚡ Reação Simples',
     hits_simple_s:        'Acertos',
     misses_simple_s:      'Erros',
+    calib_menu_btn:       'CALIBRAR DISPOSITIVO',
+    calib_title:          'CALIBRAR DISPOSITIVO',
+    calib_desc:           'Dar 3 socos de intensidades diferentes para medir seu limiar de detecção e tempo de rejeição.',
+    calib_start:          'INICIAR CALIBRAÇÃO',
+    step:                 'PASSO',
+    calib_step_instruction: 'Pressione PRONTO, depois dê o soco',
+    calib_press_ready:    'Pressione PRONTO quando estiver preparado',
+    calib_ready_btn:      'PRONTO',
+    calib_listening:      'OUVINDO...',
+    calib_detecting:      'Aguardando soco...',
+    calib_next_step:      'PRÓXIMO PASSO',
+    calib_see_results:    'VER RESULTADOS',
+    calib_results_title:  'CALIBRAÇÃO CONCLUÍDA',
+    calib_threshold:      'Limiar',
+    calib_debounce:       'Debounce',
+    calib_save:           'SALVAR CALIBRAÇÃO',
+    calib_again:          'RECALIBRAR',
+    calib_notice:         'Calibre seu dispositivo para maior precisão',
+    calib_notice_btn:     'CALIBRAR',
+    sound_label:          'SOM',
+    sound_on:             'ATIVADO',
+    sound_off:            'SILENCIADO',
+    submode_colors:       'MODO CORES',
+    submode_colors_desc:  'Reaja à cor da tela',
+    color_labels_label:   'RÓTULOS DE COR',
+    color_order_label:    'ORDEM DAS CORES',
+    color_yellow_ph:      'Ex: Pernas',
+    color_red_ph:         'Ex: Tronco',
+    color_blue_ph:        'Ex: Cabeça',
+    voice_ok:             'Muito bem!',
+    voice_master:         'Mestre!',
+    voice_fail:           'Continue tentando!',
+    voice_session_done:   'Sessão completa!',
+    mode_colors:          '🎨 Modo Cores',
+    color_stats_title:    'Estatísticas por cor',
   },
   de: {
     profile_subtitle:     'Profil einrichten um zu beginnen',
@@ -484,6 +589,41 @@ const TRANSLATIONS = {
     mode_reaction:        '⚡ Einzel-Reaktion',
     hits_simple_s:        'Treffer',
     misses_simple_s:      'Fehler',
+    calib_menu_btn:       'GERÄT KALIBRIEREN',
+    calib_title:          'GERÄT KALIBRIEREN',
+    calib_desc:           '3 Schläge unterschiedlicher Intensität ausführen, um Schwellenwert und Entprellzeit zu messen.',
+    calib_start:          'KALIBRIERUNG STARTEN',
+    step:                 'SCHRITT',
+    calib_step_instruction: 'BEREIT drücken, dann schlagen',
+    calib_press_ready:    'BEREIT drücken, wenn du bereit bist',
+    calib_ready_btn:      'BEREIT',
+    calib_listening:      'HÖRE ZU...',
+    calib_detecting:      'Warte auf Schlag...',
+    calib_next_step:      'NÄCHSTER SCHRITT',
+    calib_see_results:    'ERGEBNISSE ANZEIGEN',
+    calib_results_title:  'KALIBRIERUNG ABGESCHLOSSEN',
+    calib_threshold:      'Schwellenwert',
+    calib_debounce:       'Entprellzeit',
+    calib_save:           'KALIBRIERUNG SPEICHERN',
+    calib_again:          'NEU KALIBRIEREN',
+    calib_notice:         'Kalibriere dein Gerät für bessere Präzision',
+    calib_notice_btn:     'KALIBRIEREN',
+    sound_label:          'TON',
+    sound_on:             'AN',
+    sound_off:            'STUMM',
+    submode_colors:       'FARBMODUS',
+    submode_colors_desc:  'Reagiere auf die Bildschirmfarbe',
+    color_labels_label:   'FARBBESCHRIFTUNGEN',
+    color_order_label:    'FARBREIHENFOLGE',
+    color_yellow_ph:      'z.B. Beine',
+    color_red_ph:         'z.B. Rumpf',
+    color_blue_ph:        'z.B. Kopf',
+    voice_ok:             'Gut!',
+    voice_master:         'Meister!',
+    voice_fail:           'Weiter üben!',
+    voice_session_done:   'Training abgeschlossen!',
+    mode_colors:          '🎨 Farbmodus',
+    color_stats_title:    'Statistik nach Farbe',
   },
 };
 
@@ -559,6 +699,30 @@ const APP = {
   wakeLock: null,
   audioCtx: null,
   sessionSaved: false,
+  soundEnabled: true,
+  colorConfig: { yellow: '', red: '', blue: '', order: 'random' },
+  colorMode: {
+    state: 'idle',
+    currentColor: null,
+    stimulusAt: null,
+    waitTimeout: null,
+    missTimeout: null,
+    results: [],
+    fixedIndex: 0,
+  },
+  calib: {
+    step: 0,
+    state: 'idle',
+    data: [],
+    listener: null,
+    captureTimer: null,
+    graphData: [],
+    graphInterval: null,
+    peakG: 0,
+    triggerAt: null,
+    ringEnd: null,
+    fromScreen: 'screen-menu',
+  },
 };
 
 // ═══════════════════════════════════════════════════
@@ -614,6 +778,7 @@ function getAudioCtx() {
 }
 
 function playBell(type = 'round') {
+  if (!APP.soundEnabled) return;
   try {
     const ctx  = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
@@ -637,6 +802,7 @@ function playBell(type = 'round') {
 }
 
 function playBeep(freq = 1200, dur = 0.08) {
+  if (!APP.soundEnabled) return;
   try {
     const ctx  = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
@@ -747,8 +913,10 @@ function onDeviceMotion(e) {
 function registerPunch(gForce, speed) {
   const punch = { g: gForce, speed: speed || gForce * 9.81, time: Date.now() };
   vibrate([15]);
+  playPunchThud();
   if (APP.mode === 'training')                              handleTrainingPunch(punch);
   else if (APP.comboConfig.submode === 'simple')            handleReactionPunch(punch);
+  else if (APP.comboConfig.submode === 'colors')            handleColorsPunch(punch);
   else                                                      handleComboPunch(punch);
 }
 
@@ -955,6 +1123,7 @@ function initMenuScreen() {
     initConfigScreen();
   };
   document.getElementById('btn-settings').onclick = openSettingsModal;
+  document.getElementById('btn-calibrate-menu').onclick = () => showCalibrationScreen('screen-menu');
   document.getElementById('nav-home').onclick = () => {};
   document.getElementById('nav-train').onclick = () => {
     APP.mode = 'training';
@@ -971,8 +1140,9 @@ function initMenuScreen() {
 // PANTALLA: CONFIGURACIÓN
 // ═══════════════════════════════════════════════════
 function initConfigScreen() {
-  const isCombo = APP.mode === 'combo';
+  const isCombo        = APP.mode === 'combo';
   const isComboSubmode = isCombo && APP.comboConfig.submode === 'combo';
+  const isColorsSubmode = isCombo && APP.comboConfig.submode === 'colors';
 
   document.getElementById('config-mode-title').textContent =
     isCombo ? '⚡ ' + t('combo_mode') : '🥊 ' + t('training_mode');
@@ -981,6 +1151,14 @@ function initConfigScreen() {
 
   document.getElementById('reaction-submode-block').classList.toggle('hidden', !isCombo);
   document.getElementById('combo-config-extras').classList.toggle('hidden', !isComboSubmode);
+  document.getElementById('color-mode-config').classList.toggle('hidden', !isColorsSubmode);
+
+  // Calibration notice
+  const hasCalib = !!localStorage.getItem('fkf_calibration');
+  const calibNotice = document.getElementById('calib-notice');
+  if (calibNotice) calibNotice.classList.toggle('hidden', hasCalib);
+  const calibFromConfig = document.getElementById('btn-calibrate-from-config');
+  if (calibFromConfig) calibFromConfig.onclick = () => showCalibrationScreen('screen-config');
 
   const rInput    = document.getElementById('input-rounds');
   const rdInput   = document.getElementById('input-round-duration');
@@ -1025,18 +1203,23 @@ function initConfigScreen() {
 function initReactionSubmodeBlock() {
   const btnSimple = document.getElementById('btn-submode-simple');
   const btnCombo  = document.getElementById('btn-submode-combo');
+  const btnColors = document.getElementById('btn-submode-colors');
 
   const setActive = (submode) => {
     btnSimple.classList.toggle('active', submode === 'simple');
     btnCombo.classList.toggle('active',  submode === 'combo');
+    btnColors.classList.toggle('active', submode === 'colors');
     document.getElementById('combo-config-extras').classList.toggle('hidden', submode !== 'combo');
-    if (submode === 'combo') initComboConfigExtras();
+    document.getElementById('color-mode-config').classList.toggle('hidden', submode !== 'colors');
+    if (submode === 'combo')   initComboConfigExtras();
+    if (submode === 'colors')  initColorModeConfig();
   };
 
   setActive(APP.comboConfig.submode);
 
   btnSimple.onclick = () => { APP.comboConfig.submode = 'simple'; setActive('simple'); };
   btnCombo.onclick  = () => { APP.comboConfig.submode = 'combo';  setActive('combo');  };
+  btnColors.onclick = () => { APP.comboConfig.submode = 'colors'; setActive('colors'); };
 }
 
 function initComboConfigExtras() {
@@ -1144,6 +1327,10 @@ function startRound(roundNum) {
     showReactionScreen(roundNum);
     startRoundTimer(() => endRound());
     startReactionWait();
+  } else if (APP.comboConfig.submode === 'colors') {
+    showColorsScreen(roundNum);
+    startRoundTimer(() => endRound());
+    startColorsWait();
   } else {
     showComboScreen(roundNum);
     startRoundTimer(() => endRound());
@@ -1154,9 +1341,10 @@ function startRound(roundNum) {
 function startRoundTimer(onEnd) {
   APP.round.timerInterval = setInterval(() => {
     APP.round.secondsLeft--;
-    if (APP.mode === 'training')                   updateTrainingTimer();
-    else if (APP.comboConfig.submode === 'simple') updateReactionTimer();
-    else                                           updateComboTimer();
+    if (APP.mode === 'training')                     updateTrainingTimer();
+    else if (APP.comboConfig.submode === 'simple')   updateReactionTimer();
+    else if (APP.comboConfig.submode === 'colors')   updateColorsTimer();
+    else                                             updateComboTimer();
     if (APP.round.secondsLeft <= 0) {
       clearInterval(APP.round.timerInterval);
       onEnd();
@@ -1167,8 +1355,9 @@ function startRoundTimer(onEnd) {
 function endRound() {
   clearInterval(APP.round.timerInterval);
   if (APP.mode === 'combo') {
-    if (APP.comboConfig.submode === 'simple') stopReactionCycle();
-    else stopComboCycle();
+    if (APP.comboConfig.submode === 'simple')       stopReactionCycle();
+    else if (APP.comboConfig.submode === 'colors')  stopColorsCycle();
+    else                                            stopComboCycle();
   }
 
   APP.session.roundData.push({ ...APP.round });
@@ -1198,6 +1387,8 @@ function showTrainingScreen(roundNum) {
   resetTrainingMetrics();
   drawTrainingChart();
 
+  document.getElementById('btn-mute-training').onclick = toggleSound;
+  updateMuteButtons();
   document.getElementById('btn-fallback-punch').onclick = () => {
     const g = 2.0 + Math.random() * 3;
     registerPunch(g, g * 9.81);
@@ -1263,6 +1454,8 @@ function showComboScreen(roundNum) {
   document.getElementById('btn-fallback-signal').onclick = fallbackHandler;
   document.getElementById('btn-fallback-active').onclick = fallbackHandler;
 
+  document.getElementById('btn-mute-combo').onclick = toggleSound;
+  updateMuteButtons();
   document.getElementById('btn-combo-stop').onclick = () => {
     if (confirm(t('confirm_stop'))) {
       stopComboCycle();
@@ -1453,8 +1646,15 @@ function endCombo(ok, noHits) {
 
   showComboPanel('result');
 
-  if (ok)     vibrate([20, 30, 20]);
-  else        vibrate([50, 30, 50]);
+  if (ok) {
+    vibrate([20, 30, 20]);
+    playComboOk();
+    speakVoice(t('voice_ok'));
+  } else {
+    vibrate([50, 30, 50]);
+    playComboFail();
+    speakVoice(t('voice_fail'));
+  }
 
   if (APP.round.secondsLeft > 0) {
     const pauseMs = APP.comboConfig.pauseBetween * 1000;
@@ -1499,6 +1699,8 @@ function showReactionScreen(roundNum) {
   updateReactionTimer();
   resetReactionMetrics();
 
+  document.getElementById('btn-mute-reaction').onclick = toggleSound;
+  updateMuteButtons();
   document.getElementById('btn-fallback-reaction').onclick = () => {
     const g = 2.0 + Math.random() * 3;
     registerPunch(g, g * 9.81);
@@ -1560,6 +1762,7 @@ function missReaction() {
   APP.round.misses++;
   setReactionStimulus('state-miss', '✗', t('stimulus_miss'), '');
   vibrate([80]);
+  speakVoice(t('voice_fail'));
   updateReactionMetricsUI();
   if (APP.round.secondsLeft > 0) {
     setTimeout(() => startReactionWait(), 1500);
@@ -1576,6 +1779,8 @@ function handleReactionPunch(punch) {
   APP.round.reactionTimes.push(reactionMs);
   setReactionStimulus('state-result-ok', '✓', reactionMs + 'ms', reactionRank(reactionMs));
   vibrate([20, 30, 20]);
+  if (reactionMs < 200) speakVoice(t('voice_master'));
+  else speakVoice(t('voice_ok'));
   updateReactionMetricsUI();
   if (APP.round.secondsLeft > 0) {
     setTimeout(() => startReactionWait(), 1500);
@@ -1620,7 +1825,8 @@ function showRestScreen(doneRound, nextRound) {
     const el = document.getElementById('rest-countdown');
     el.textContent = seconds;
     el.classList.toggle('ending', seconds <= 5);
-    if (seconds <= 3) { vibrate([50]); playBeep(600, 0.05); }
+    if (seconds <= 3 && seconds > 0) { vibrate([50]); playBeep(600, 0.05); }
+    if (seconds > 0 && seconds % 10 === 0) playRestBeep();
     if (seconds <= 0) startNext();
   }, 1000);
 }
@@ -1691,9 +1897,12 @@ function showSummaryScreen() {
   const bestReact = rTimes.length ? Math.min(...rTimes) : null;
   const calories  = calcCalories(total, avgPower, durMin);
 
-  const isComboSubmode = APP.mode === 'combo' && APP.comboConfig.submode === 'combo';
+  const isComboSubmode  = APP.mode === 'combo' && APP.comboConfig.submode === 'combo';
+  const isColorsSubmode = APP.mode === 'combo' && APP.comboConfig.submode === 'colors';
   const modeLabel = APP.mode === 'training' ? t('mode_training')
-    : APP.comboConfig.submode === 'simple' ? t('mode_reaction') : t('mode_combo');
+    : APP.comboConfig.submode === 'simple'  ? t('mode_reaction')
+    : APP.comboConfig.submode === 'colors'  ? t('mode_colors')
+    : t('mode_combo');
 
   document.getElementById('summary-date').textContent  = fmtDate(endTime);
   document.getElementById('summary-mode').textContent  = modeLabel;
@@ -1706,6 +1915,7 @@ function showSummaryScreen() {
   document.getElementById('sum-duration').textContent  = fmtTime(durSec);
   document.getElementById('sum-calories').textContent  = calories + ' kcal';
   document.getElementById('summary-message').textContent = getCalorieMessage(calories);
+  speakVoice(t('voice_session_done'));
 
   const comboRows = ['sum-reaction-row', 'sum-best-reaction-row', 'sum-hits-row', 'sum-misses-row'];
   comboRows.forEach(id => {
@@ -1734,6 +1944,34 @@ function showSummaryScreen() {
 
   document.getElementById('summary-comparison').textContent =
     buildComparison(total, avgPower, bestReact);
+
+  // Color stats section
+  const colorStatsEl = document.getElementById('sum-color-stats');
+  if (colorStatsEl) colorStatsEl.remove();
+  if (isColorsSubmode && APP.colorMode.results.length) {
+    const colorResults = APP.colorMode.results;
+    const colorDefs = [
+      { id: 'yellow', hex: '#FFE000', label: APP.colorConfig.yellow || 'AMARILLO' },
+      { id: 'red',    hex: '#CC0000', label: APP.colorConfig.red    || 'ROJO' },
+      { id: 'blue',   hex: '#0066CC', label: APP.colorConfig.blue   || 'AZUL' },
+    ];
+    const rows = colorDefs.map(c => {
+      const items = colorResults.filter(r => r.color === c.id);
+      if (!items.length) return '';
+      const avgR = Math.round(items.reduce((a, r) => a + r.reactionMs, 0) / items.length);
+      const avgP = (items.reduce((a, r) => a + r.power, 0) / items.length).toFixed(1);
+      return `<div class="color-stat-row">
+        <span class="color-stat-swatch" style="background:${c.hex}"></span>
+        <span class="color-stat-name">${c.label}</span>
+        <span class="color-stat-values">${avgR}ms · ${avgP}G</span>
+      </div>`;
+    }).join('');
+    const div = document.createElement('div');
+    div.id = 'sum-color-stats';
+    div.className = 'color-stats-section';
+    div.innerHTML = `<div class="color-stats-title">${t('color_stats_title')}</div><div class="color-stats-grid">${rows}</div>`;
+    document.querySelector('.summary-body').appendChild(div);
+  }
 
   const comboResults = APP.combo.results;
   const comboPctSave = isComboSubmode && comboResults.length
@@ -1886,6 +2124,7 @@ function openSettingsModal() {
   document.querySelectorAll('.btn-lang-sm').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === APP.lang);
   });
+  updateMuteButtons();
   document.getElementById('modal-settings').classList.remove('hidden');
 }
 
@@ -1910,6 +2149,11 @@ function initSettingsModal() {
 
   document.getElementById('btn-close-settings').onclick = closeSettingsModal;
   document.getElementById('modal-overlay').onclick      = closeSettingsModal;
+  document.getElementById('btn-sound-toggle').onclick   = toggleSound;
+  document.getElementById('btn-calibrate-settings').onclick = () => {
+    closeSettingsModal();
+    showCalibrationScreen('screen-menu');
+  };
 
   document.getElementById('btn-save-settings').onclick = () => {
     const name   = document.getElementById('settings-name').value.trim();
@@ -1928,6 +2172,9 @@ function initSettingsModal() {
 // INICIALIZACIÓN
 // ═══════════════════════════════════════════════════
 function init() {
+  loadSoundPref();
+  loadCalibration();
+  loadColorConfig();
   initSettingsModal();
 
   const savedLang = localStorage.getItem('fkf_lang');
@@ -1944,6 +2191,529 @@ function init() {
   if (!isIOS && typeof DeviceMotionEvent !== 'undefined') {
     activateAccelerometer();
   }
+}
+
+// ═══════════════════════════════════════════════════
+// SONIDO — SISTEMA EXTENDIDO
+// ═══════════════════════════════════════════════════
+function loadSoundPref() {
+  const val = localStorage.getItem('fkf_sound');
+  APP.soundEnabled = val === null ? true : val === '1';
+}
+
+function saveSoundPref() {
+  localStorage.setItem('fkf_sound', APP.soundEnabled ? '1' : '0');
+}
+
+function toggleSound() {
+  APP.soundEnabled = !APP.soundEnabled;
+  saveSoundPref();
+  updateMuteButtons();
+}
+
+function updateMuteButtons() {
+  const icon = APP.soundEnabled ? '🔊' : '🔇';
+  document.querySelectorAll('.mute-btn').forEach(btn => {
+    btn.textContent = icon;
+    btn.classList.toggle('muted', !APP.soundEnabled);
+  });
+  const toggleBtn = document.getElementById('btn-sound-toggle');
+  if (toggleBtn) {
+    toggleBtn.textContent = APP.soundEnabled ? ('🔊 ' + t('sound_on')) : ('🔇 ' + t('sound_off'));
+    toggleBtn.classList.toggle('muted', !APP.soundEnabled);
+  }
+}
+
+function playPunchThud() {
+  if (!APP.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(110, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(55, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.32, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+    osc.start(); osc.stop(ctx.currentTime + 0.22);
+  } catch(e) {}
+}
+
+function playComboOk() {
+  if (!APP.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    [440, 554, 659, 880].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      const t0 = ctx.currentTime + i * 0.09;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.26, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.22);
+      osc.start(t0); osc.stop(t0 + 0.28);
+    });
+  } catch(e) {}
+}
+
+function playComboFail() {
+  if (!APP.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    [440, 330, 220].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sawtooth';
+      const t0 = ctx.currentTime + i * 0.1;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.2, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.28);
+      osc.start(t0); osc.stop(t0 + 0.32);
+    });
+  } catch(e) {}
+}
+
+function playRestBeep() {
+  if (!APP.soundEnabled) return;
+  playBeep(440, 0.07);
+}
+
+function speakVoice(text) {
+  if (!APP.soundEnabled) return;
+  if (!window.speechSynthesis) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = { es: 'es-ES', en: 'en-GB', pt: 'pt-BR', de: 'de-DE' }[APP.lang] || 'es-ES';
+    utter.rate  = 1.1;
+    utter.volume = 0.85;
+    window.speechSynthesis.speak(utter);
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════
+// CALIBRACIÓN DE DISPOSITIVO
+// ═══════════════════════════════════════════════════
+const CALIB_STEPS = [
+  { key: 'suave',  label: { es: 'GOLPE SUAVE',  en: 'SOFT PUNCH',   pt: 'GOLPE LEVE',   de: 'LEICHTER SCHLAG' }, bg: '#001533' },
+  { key: 'medio',  label: { es: 'GOLPE MEDIO',  en: 'MEDIUM PUNCH', pt: 'GOLPE MÉDIO',  de: 'MITTLERER SCHLAG' }, bg: '#1a1100' },
+  { key: 'fuerte', label: { es: 'GOLPE FUERTE', en: 'HARD PUNCH',   pt: 'GOLPE FORTE',  de: 'HARTER SCHLAG' }, bg: '#001500' },
+];
+
+function loadCalibration() {
+  const raw = localStorage.getItem('fkf_calibration');
+  if (!raw) return false;
+  try {
+    const c = JSON.parse(raw);
+    APP.accel.THRESHOLD = c.threshold;
+    APP.accel.COOLDOWN  = c.debounce;
+    APP.accel.COMBO_HIT_COOLDOWN = Math.max(55, c.debounce - 45);
+    return true;
+  } catch(e) { return false; }
+}
+
+function saveCalibration(threshold, debounce) {
+  localStorage.setItem('fkf_calibration', JSON.stringify({ threshold, debounce, at: Date.now() }));
+  APP.accel.THRESHOLD = threshold;
+  APP.accel.COOLDOWN  = debounce;
+  APP.accel.COMBO_HIT_COOLDOWN = Math.max(55, debounce - 45);
+}
+
+function showCalibrationScreen(fromScreen) {
+  APP.calib.fromScreen = fromScreen || 'screen-menu';
+  APP.calib.step  = 0;
+  APP.calib.state = 'idle';
+  APP.calib.data  = [];
+  showScreen('screen-calibration');
+  document.getElementById('btn-calib-back').onclick = () => showScreen(APP.calib.fromScreen);
+  renderCalibIntro();
+}
+
+function renderCalibIntro() {
+  const content = document.getElementById('calib-content');
+  content.style.background = '';
+  content.innerHTML = `
+    <div class="calib-intro">
+      <div class="calib-intro-icon">🎯</div>
+      <h3 class="calib-title">${t('calib_title')}</h3>
+      <p class="calib-desc">${t('calib_desc')}</p>
+      <div class="calib-steps-preview">
+        <div class="calib-preview-step" style="background:#001533">${CALIB_STEPS[0].label[APP.lang]||CALIB_STEPS[0].label.es}</div>
+        <div class="calib-preview-step" style="background:#1a1100">${CALIB_STEPS[1].label[APP.lang]||CALIB_STEPS[1].label.es}</div>
+        <div class="calib-preview-step" style="background:#001500">${CALIB_STEPS[2].label[APP.lang]||CALIB_STEPS[2].label.es}</div>
+      </div>
+      <button class="btn-primary btn-calib-ready" id="btn-calib-start">${t('calib_start')}</button>
+    </div>`;
+  document.getElementById('btn-calib-start').onclick = () => renderCalibStep(1);
+}
+
+function renderCalibStep(stepNum) {
+  APP.calib.step  = stepNum;
+  APP.calib.state = 'ready';
+  APP.calib.peakG = 0;
+  APP.calib.triggerAt = null;
+  APP.calib.ringEnd   = null;
+  APP.calib.graphData = [];
+  stopCalibListener();
+
+  const step  = CALIB_STEPS[stepNum - 1];
+  const label = step.label[APP.lang] || step.label.es;
+  const content = document.getElementById('calib-content');
+  content.style.background = step.bg;
+
+  content.innerHTML = `
+    <div class="calib-step-inner">
+      <div class="calib-step-num">${t('step')} ${stepNum}/3</div>
+      <div class="calib-step-label">${label}</div>
+      <div class="calib-step-instruction">${t('calib_step_instruction')}</div>
+      <canvas id="calib-graph"></canvas>
+      <div class="calib-step-status" id="calib-status">${t('calib_press_ready')}</div>
+      <button class="btn-primary btn-calib-ready" id="btn-calib-ready">${t('calib_ready_btn')}</button>
+    </div>`;
+
+  document.getElementById('btn-calib-ready').onclick = () => activateCalibListening(stepNum);
+}
+
+function activateCalibListening(stepNum) {
+  const btn  = document.getElementById('btn-calib-ready');
+  const stat = document.getElementById('calib-status');
+  if (btn)  { btn.disabled = true; btn.textContent = t('calib_listening'); }
+  if (stat) stat.textContent = t('calib_detecting');
+
+  APP.calib.state     = 'listening';
+  APP.calib.peakG     = 0;
+  APP.calib.triggerAt = null;
+  APP.calib.ringEnd   = null;
+  APP.calib.graphData = [];
+  stopCalibListener();
+
+  clearInterval(APP.calib.graphInterval);
+  APP.calib.graphInterval = setInterval(drawCalibGraph, 50);
+
+  const TRIG_G = 1.6;
+  const RING_G = 1.2;
+
+  APP.calib.listener = (e) => {
+    const acc = e.accelerationIncludingGravity;
+    if (!acc) return;
+    const g = Math.sqrt((acc.x||0)**2 + (acc.y||0)**2 + (acc.z||0)**2) / 9.81;
+    const now = Date.now();
+
+    APP.calib.graphData.push(g);
+    if (APP.calib.graphData.length > 80) APP.calib.graphData.shift();
+
+    if (!APP.calib.triggerAt && g > TRIG_G) APP.calib.triggerAt = now;
+
+    if (APP.calib.triggerAt) {
+      if (g > APP.calib.peakG) APP.calib.peakG = g;
+      if (g > RING_G)          APP.calib.ringEnd = now;
+      if (now - APP.calib.triggerAt > 2000) finishCalibStep(stepNum);
+    }
+  };
+
+  window.addEventListener('devicemotion', APP.calib.listener, { passive: true });
+
+  APP.calib.captureTimer = setTimeout(() => {
+    if (APP.calib.state === 'listening') finishCalibStep(stepNum);
+  }, 12000);
+}
+
+function stopCalibListener() {
+  if (APP.calib.listener) {
+    window.removeEventListener('devicemotion', APP.calib.listener);
+    APP.calib.listener = null;
+  }
+  clearTimeout(APP.calib.captureTimer);
+  clearInterval(APP.calib.graphInterval);
+}
+
+function finishCalibStep(stepNum) {
+  if (APP.calib.state !== 'listening') return;
+  APP.calib.state = 'captured';
+  stopCalibListener();
+
+  const peakG  = APP.calib.peakG  || 1.8;
+  const ringMs = (APP.calib.triggerAt && APP.calib.ringEnd)
+    ? Math.max(60, APP.calib.ringEnd - APP.calib.triggerAt)
+    : 120;
+  APP.calib.data.push({ peakG, ringMs });
+
+  const stat = document.getElementById('calib-status');
+  if (stat) stat.textContent = `✓ ${peakG.toFixed(2)}G`;
+
+  const btn = document.getElementById('btn-calib-ready');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = stepNum < 3 ? t('calib_next_step') : t('calib_see_results');
+    btn.onclick = () => stepNum < 3 ? renderCalibStep(stepNum + 1) : showCalibResults();
+  }
+}
+
+function drawCalibGraph() {
+  const canvas = document.getElementById('calib-graph');
+  if (!canvas) { clearInterval(APP.calib.graphInterval); return; }
+  const dpr  = window.devicePixelRatio || 1;
+  const cssW = Math.min(300, (canvas.parentElement?.clientWidth || 300) - 32);
+  const cssH = 80;
+  canvas.width  = cssW * dpr;
+  canvas.height = cssH * dpr;
+  canvas.style.width  = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, cssW, cssH);
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.fillRect(0, 0, cssW, cssH);
+
+  const maxG = 15;
+  const y12  = cssH - (1.2 / maxG) * cssH;
+  ctx.strokeStyle = 'rgba(255,200,0,0.35)';
+  ctx.lineWidth   = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(0, y12); ctx.lineTo(cssW, y12); ctx.stroke();
+  ctx.setLineDash([]);
+
+  const data = APP.calib.graphData;
+  if (data.length < 2) return;
+  ctx.beginPath();
+  data.forEach((g, i) => {
+    const x = (i / (data.length - 1)) * cssW;
+    const y = cssH - Math.min(1, g / maxG) * cssH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#FFE000';
+  ctx.lineWidth   = 2;
+  ctx.lineJoin    = 'round';
+  ctx.stroke();
+}
+
+function showCalibResults() {
+  const data = APP.calib.data;
+  if (!data.length) return;
+
+  const peakSuave = data[0]?.peakG || 1.8;
+  const avgRing   = data.reduce((a, d) => a + d.ringMs, 0) / data.length;
+  const threshold = Math.round(peakSuave * 0.6 * 100) / 100;
+  const debounce  = Math.round(avgRing + 50);
+
+  const content = document.getElementById('calib-content');
+  content.style.background = '';
+  const stepsHtml = data.map((d, i) => {
+    const lbl = CALIB_STEPS[i]?.label[APP.lang] || CALIB_STEPS[i]?.label.es || '';
+    return `<div class="calib-step-dot">${lbl}: ${d.peakG.toFixed(2)}G</div>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="calib-results">
+      <div class="calib-results-icon">✓</div>
+      <h3 class="calib-title">${t('calib_results_title')}</h3>
+      <div class="calib-result-values">
+        <div class="calib-result-row">
+          <span class="calib-result-label">${t('calib_threshold')}</span>
+          <span class="calib-result-value">${threshold.toFixed(2)}G</span>
+        </div>
+        <div class="calib-result-row">
+          <span class="calib-result-label">${t('calib_debounce')}</span>
+          <span class="calib-result-value">${debounce}ms</span>
+        </div>
+      </div>
+      <div class="calib-step-data">${stepsHtml}</div>
+      <button class="btn-primary btn-calib-ready" id="btn-calib-save">${t('calib_save')}</button>
+      <button class="btn-secondary" id="btn-calib-again">${t('calib_again')}</button>
+    </div>`;
+
+  document.getElementById('btn-calib-save').onclick = () => {
+    saveCalibration(threshold, debounce);
+    const notice = document.getElementById('calib-notice');
+    if (notice) notice.classList.add('hidden');
+    showScreen(APP.calib.fromScreen || 'screen-menu');
+    if (APP.calib.fromScreen === 'screen-menu') initMenuScreen();
+  };
+  document.getElementById('btn-calib-again').onclick = () => {
+    APP.calib.data = [];
+    renderCalibIntro();
+  };
+}
+
+// ═══════════════════════════════════════════════════
+// MODO COLORES — CONFIG
+// ═══════════════════════════════════════════════════
+function loadColorConfig() {
+  const raw = localStorage.getItem('fkf_color_config');
+  if (raw) {
+    try { APP.colorConfig = { ...APP.colorConfig, ...JSON.parse(raw) }; } catch(e) {}
+  }
+}
+
+function saveColorConfig() {
+  localStorage.setItem('fkf_color_config', JSON.stringify(APP.colorConfig));
+}
+
+function initColorModeConfig() {
+  const yEl = document.getElementById('color-label-yellow');
+  const rEl = document.getElementById('color-label-red');
+  const bEl = document.getElementById('color-label-blue');
+  if (yEl) { yEl.value = APP.colorConfig.yellow; yEl.oninput = () => { APP.colorConfig.yellow = yEl.value; saveColorConfig(); }; }
+  if (rEl) { rEl.value = APP.colorConfig.red;    rEl.oninput = () => { APP.colorConfig.red    = rEl.value; saveColorConfig(); }; }
+  if (bEl) { bEl.value = APP.colorConfig.blue;   bEl.oninput = () => { APP.colorConfig.blue   = bEl.value; saveColorConfig(); }; }
+
+  const btnRandom = document.getElementById('btn-colors-order-random');
+  const btnFixed  = document.getElementById('btn-colors-order-fixed');
+  const setOrder = (order) => {
+    APP.colorConfig.order = order;
+    saveColorConfig();
+    btnRandom.classList.toggle('active', order === 'random');
+    btnFixed.classList.toggle('active',  order === 'fixed');
+  };
+  setOrder(APP.colorConfig.order || 'random');
+  if (btnRandom) btnRandom.onclick = () => setOrder('random');
+  if (btnFixed)  btnFixed.onclick  = () => setOrder('fixed');
+}
+
+// ═══════════════════════════════════════════════════
+// MODO COLORES — ENTRENAMIENTO
+// ═══════════════════════════════════════════════════
+const COLOR_DEFS = {
+  yellow: { hex: '#FFE000', text: '#000000' },
+  red:    { hex: '#CC0000', text: '#FFFFFF' },
+  blue:   { hex: '#0066CC', text: '#FFFFFF' },
+};
+
+function showColorsScreen(roundNum) {
+  showScreen('screen-colors');
+  document.getElementById('colors-round-indicator').textContent =
+    t('round_indicator', { n: roundNum, total: APP.config.rounds });
+  updateColorsTimer();
+
+  APP.colorMode.results    = [];
+  APP.colorMode.fixedIndex = 0;
+
+  document.getElementById('btn-mute-colors').onclick = toggleSound;
+  updateMuteButtons();
+
+  document.getElementById('btn-fallback-colors').onclick = () => {
+    const g = 2.0 + Math.random() * 3;
+    registerPunch(g, g * 9.81);
+  };
+  document.getElementById('btn-colors-stop').onclick = () => {
+    if (confirm(t('confirm_stop'))) {
+      stopColorsCycle();
+      clearInterval(APP.round.timerInterval);
+      releaseWakeLock();
+      showScreen('screen-menu');
+    }
+  };
+  setColorsStage(null);
+}
+
+function updateColorsTimer() {
+  const el = document.getElementById('colors-session-timer');
+  if (el) el.textContent = fmtTime(APP.round.secondsLeft);
+}
+
+function setColorsStage(colorId, textOverride) {
+  const stage  = document.getElementById('colors-stage');
+  const textEl = document.getElementById('colors-center-text');
+  if (!stage || !textEl) return;
+  if (!colorId) {
+    stage.style.background  = '#0A0A0A';
+    textEl.textContent      = '';
+    textEl.style.color      = '#FFFFFF';
+    return;
+  }
+  const def   = COLOR_DEFS[colorId];
+  stage.style.background  = def.hex;
+  textEl.textContent      = textOverride !== undefined ? textOverride : (APP.colorConfig[colorId] || colorId.toUpperCase());
+  textEl.style.color      = def.text;
+}
+
+function startColorsWait() {
+  if (APP.round.secondsLeft <= 0) return;
+  APP.colorMode.state = 'wait';
+  setColorsStage(null);
+  const pauseMs = APP.comboConfig.pauseBetween * 1000;
+  APP.colorMode.waitTimeout = setTimeout(() => {
+    if (APP.round.secondsLeft > 0) showColorsStimulus();
+  }, pauseMs);
+}
+
+function getNextColor() {
+  const colors = ['yellow', 'red', 'blue'];
+  if (APP.colorConfig.order === 'fixed') {
+    return colors[(APP.colorMode.fixedIndex++) % 3];
+  }
+  return colors[Math.floor(Math.random() * 3)];
+}
+
+function showColorsStimulus() {
+  if (APP.round.secondsLeft <= 0) return;
+  const colorId = getNextColor();
+  APP.colorMode.currentColor = colorId;
+  APP.colorMode.state        = 'active';
+  APP.colorMode.stimulusAt   = Date.now();
+
+  setColorsStage(colorId);
+  vibrate([25]);
+  playBeep(660, 0.06);
+
+  const exposureMs = 1000 + Math.random() * 2000;
+  APP.colorMode.missTimeout = setTimeout(() => {
+    if (APP.colorMode.state === 'active') missColors();
+  }, exposureMs);
+}
+
+function missColors() {
+  clearTimeout(APP.colorMode.missTimeout);
+  APP.colorMode.state = 'miss';
+  APP.round.misses++;
+
+  const stage  = document.getElementById('colors-stage');
+  const textEl = document.getElementById('colors-center-text');
+  if (stage)  stage.style.background = '#1a0000';
+  if (textEl) { textEl.textContent = '✗'; textEl.style.color = '#FF5555'; }
+
+  vibrate([80]);
+  speakVoice(t('voice_fail'));
+
+  setTimeout(() => {
+    if (APP.round.secondsLeft > 0) startColorsWait();
+  }, 800);
+}
+
+function handleColorsPunch(punch) {
+  if (APP.colorMode.state !== 'active') return;
+  clearTimeout(APP.colorMode.missTimeout);
+  const reactionMs = Date.now() - APP.colorMode.stimulusAt;
+  APP.colorMode.state = 'result';
+  APP.round.hits++;
+  APP.round.punches.push(punch);
+  APP.round.reactionTimes.push(reactionMs);
+
+  APP.colorMode.results.push({ color: APP.colorMode.currentColor, reactionMs, power: punch.g });
+
+  const def = COLOR_DEFS[APP.colorMode.currentColor];
+  const textEl = document.getElementById('colors-center-text');
+  if (textEl) { textEl.textContent = reactionMs + 'ms'; textEl.style.color = def.text; }
+
+  vibrate([20, 20, 20]);
+  if (reactionMs < 200) speakVoice(t('voice_master'));
+  else speakVoice(t('voice_ok'));
+
+  setTimeout(() => {
+    if (APP.round.secondsLeft > 0) startColorsWait();
+  }, 900);
+}
+
+function stopColorsCycle() {
+  clearTimeout(APP.colorMode.waitTimeout);
+  clearTimeout(APP.colorMode.missTimeout);
+  APP.colorMode.state = 'idle';
 }
 
 document.addEventListener('DOMContentLoaded', init);

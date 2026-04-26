@@ -1556,6 +1556,483 @@ canvas {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
 /* ═══════════════════════════════════
+   HEADER ACTIONS (mute + stop)
+════════════════════════════════════ */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mute-btn {
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 1.2rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0;
+  text-transform: none;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.mute-btn:active {
+  background: var(--bg3);
+  transform: scale(0.92);
+}
+
+.mute-btn.muted {
+  color: #444;
+}
+
+/* ═══════════════════════════════════
+   SETTINGS — SOUND ROW
+════════════════════════════════════ */
+.settings-sound-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.settings-sound-label {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-weight: 600;
+}
+
+.sound-toggle-btn {
+  background: var(--bg4);
+  border: 2px solid var(--border);
+  color: var(--text);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 1rem;
+  text-transform: none;
+  letter-spacing: 0;
+  transition: all 0.15s;
+  font-weight: 700;
+}
+
+.sound-toggle-btn.muted {
+  border-color: #333;
+  color: #555;
+}
+
+.sound-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.btn-calibrate-settings {
+  width: 100%;
+  margin-top: 0;
+  font-size: 0.95rem;
+  padding: 12px;
+}
+
+/* ═══════════════════════════════════
+   MENU — CALIBRAR BUTTON
+════════════════════════════════════ */
+.btn-calibrate-menu {
+  width: 100%;
+  padding: 14px 20px;
+  background: transparent;
+  border: 1px solid #333;
+  color: var(--text-dim);
+  border-radius: 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-align: center;
+  transition: all 0.15s;
+  text-transform: none;
+}
+
+.btn-calibrate-menu:active {
+  border-color: var(--yellow);
+  color: var(--yellow);
+  background: rgba(255,224,0,0.05);
+}
+
+/* ═══════════════════════════════════
+   SUBMODE CARDS — 3 columnas
+════════════════════════════════════ */
+.submode-cards {
+  flex-wrap: wrap;
+}
+
+.submode-cards .submode-card {
+  min-width: calc(50% - 5px);
+  flex: 1 1 calc(50% - 5px);
+}
+
+/* ═══════════════════════════════════
+   COLOR MODE CONFIG
+════════════════════════════════════ */
+.color-labels-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.color-label-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.12);
+}
+
+.color-label-input {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 1rem;
+  padding: 10px 14px;
+  font-family: var(--font);
+  font-weight: 600;
+  transition: border-color 0.2s;
+}
+
+.color-label-input:focus {
+  outline: none;
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 2px rgba(255, 224, 0, 0.12);
+}
+
+/* ═══════════════════════════════════
+   CALIBRACIÓN NOTICE
+════════════════════════════════════ */
+.calib-notice {
+  background: rgba(255, 224, 0, 0.06);
+  border: 1px solid rgba(255, 224, 0, 0.25);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: rgba(255, 224, 0, 0.7);
+}
+
+.btn-calib-link {
+  background: transparent;
+  border: 1px solid rgba(255, 224, 0, 0.4);
+  color: var(--yellow);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════
+   PANTALLA CALIBRACIÓN
+════════════════════════════════════ */
+.calib-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: background 0.4s;
+}
+
+.calib-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 16px;
+  text-align: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.calib-intro-icon {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.calib-title {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--yellow);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.calib-desc {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+.calib-steps-preview {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+}
+
+.calib-preview-step {
+  flex: 1;
+  padding: 10px 4px;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-align: center;
+  color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.calib-step-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 16px;
+  flex: 1;
+  text-align: center;
+  justify-content: center;
+}
+
+.calib-step-num {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.calib-step-label {
+  font-size: clamp(2rem, 12vw, 3.5rem);
+  font-weight: 900;
+  color: #FFFFFF;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 30px rgba(255,255,255,0.2);
+  line-height: 1;
+}
+
+.calib-step-instruction {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.4;
+}
+
+.calib-step-status {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.7);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  min-height: 24px;
+}
+
+.btn-calib-ready {
+  width: 100%;
+  max-width: 280px;
+  padding: 16px;
+  font-size: 1.1rem;
+  background: var(--yellow);
+  color: #000;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(255, 224, 0, 0.3);
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.btn-calib-ready:disabled {
+  background: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.4);
+  box-shadow: none;
+}
+
+#calib-graph {
+  border-radius: 10px;
+  width: 100%;
+  max-width: 300px;
+  height: 80px;
+}
+
+.calib-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 16px;
+  text-align: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.calib-results-icon {
+  font-size: 3.5rem;
+  color: var(--yellow);
+  line-height: 1;
+}
+
+.calib-result-values {
+  background: rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 16px 20px;
+  width: 100%;
+  max-width: 280px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.calib-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.calib-result-label {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+
+.calib-result-value {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--yellow);
+  font-variant-numeric: tabular-nums;
+}
+
+.calib-step-data {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.4);
+  line-height: 1.8;
+}
+
+/* ═══════════════════════════════════
+   PANTALLA MODO COLORES
+════════════════════════════════════ */
+#screen-colors {
+  overflow: hidden;
+}
+
+.colors-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0A0A0A;
+  transition: background 0.12s ease;
+  z-index: 1;
+}
+
+.colors-center-text {
+  font-size: clamp(2.8rem, 14vw, 6rem);
+  font-weight: 900;
+  text-align: center;
+  padding: 20px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  line-height: 1.1;
+  text-shadow: 0 2px 24px rgba(0,0,0,0.25);
+  z-index: 2;
+  max-width: 90vw;
+}
+
+.btn-fallback-colors {
+  position: absolute;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  width: calc(100% - 32px);
+  max-width: 320px;
+  background: rgba(0,0,0,0.5);
+  border-color: rgba(255,255,255,0.2);
+  backdrop-filter: blur(8px);
+}
+
+/* ═══════════════════════════════════
+   SUMMARY — COLOR STATS
+════════════════════════════════════ */
+.color-stats-section {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 12px;
+  margin-top: 4px;
+}
+
+.color-stats-title {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.color-stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.color-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-stat-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.color-stat-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.color-stat-values {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════════════════════════
    SUBMODE SELECTOR CARDS
 ════════════════════════════════════ */
 .submode-cards {

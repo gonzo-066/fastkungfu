@@ -81,6 +81,9 @@
         <span class="mode-label" data-i18n="combo_mode">MODO REACCIÓN</span>
         <span class="mode-desc" data-i18n="combo_desc">Combos con tiempo de reacción</span>
       </button>
+      <button class="btn-calibrate-menu" id="btn-calibrate-menu">
+        🎯 <span data-i18n="calib_menu_btn">CALIBRAR DISPOSITIVO</span>
+      </button>
     </div>
   </div>
   <nav class="bottom-nav">
@@ -126,6 +129,11 @@
               <span class="submode-card-icon">🥊</span>
               <span class="submode-card-title">MODO COMBO</span>
               <span class="submode-card-desc">Señal → serie de golpes</span>
+            </button>
+            <button class="submode-card" id="btn-submode-colors">
+              <span class="submode-card-icon">🎨</span>
+              <span class="submode-card-title" data-i18n="submode_colors">MODO COLORES</span>
+              <span class="submode-card-desc" data-i18n="submode_colors_desc">Reacciona al color de pantalla</span>
             </button>
           </div>
         </div>
@@ -204,7 +212,43 @@
       </div>
       <!-- /EXTRAS COMBO -->
 
+      <!-- CONFIG MODO COLORES -->
+      <div id="color-mode-config" class="hidden">
+        <div class="config-divider"></div>
+        <div class="config-item">
+          <span class="config-section-label" data-i18n="color_labels_label">ETIQUETAS DE COLOR</span>
+          <div class="color-labels-grid">
+            <div class="color-label-row">
+              <span class="color-swatch" style="background:#FFE000;"></span>
+              <input type="text" class="color-label-input" id="color-label-yellow" maxlength="20" data-i18n-placeholder="color_yellow_ph">
+            </div>
+            <div class="color-label-row">
+              <span class="color-swatch" style="background:#CC0000;"></span>
+              <input type="text" class="color-label-input" id="color-label-red" maxlength="20" data-i18n-placeholder="color_red_ph">
+            </div>
+            <div class="color-label-row">
+              <span class="color-swatch" style="background:#0066CC;"></span>
+              <input type="text" class="color-label-input" id="color-label-blue" maxlength="20" data-i18n-placeholder="color_blue_ph">
+            </div>
+          </div>
+        </div>
+        <div class="config-item">
+          <span class="config-section-label" data-i18n="color_order_label">ORDEN DE COLORES</span>
+          <div class="mode-toggle">
+            <button class="mode-toggle-btn active" id="btn-colors-order-random" data-i18n="mode_random">ALEATORIO</button>
+            <button class="mode-toggle-btn" id="btn-colors-order-fixed" data-i18n="mode_fixed">FIJO</button>
+          </div>
+        </div>
+      </div>
+      <!-- /CONFIG MODO COLORES -->
+
       <div class="config-summary" id="config-summary"></div>
+
+      <!-- Aviso calibración -->
+      <div id="calib-notice" class="calib-notice hidden">
+        <span data-i18n="calib_notice">Calibra tu dispositivo para mayor precisión</span>
+        <button class="btn-calib-link" id="btn-calibrate-from-config" data-i18n="calib_notice_btn">CALIBRAR AHORA</button>
+      </div>
 
       <div id="ios-permission-block" class="ios-permission hidden">
         <p data-i18n="ios_permission_text">iOS requiere permiso para el acelerómetro</p>
@@ -224,7 +268,10 @@
   <div class="screen-inner">
     <div class="workout-topbar">
       <span class="round-badge" id="training-round-indicator">ROUND 1/3</span>
-      <button class="btn-stop" id="btn-training-stop">■</button>
+      <div class="header-actions">
+        <button class="mute-btn" id="btn-mute-training">🔊</button>
+        <button class="btn-stop" id="btn-training-stop">■</button>
+      </div>
     </div>
 
     <div class="timer-big" id="training-timer">2:00</div>
@@ -266,7 +313,10 @@
   <div class="combo-header" id="reaction-header">
     <span class="round-badge" id="reaction-round-indicator">ROUND 1/3</span>
     <span class="combo-session-timer" id="reaction-session-timer">2:00</span>
-    <button class="btn-stop" id="btn-reaction-stop">■</button>
+    <div class="header-actions">
+      <button class="mute-btn" id="btn-mute-reaction">🔊</button>
+      <button class="btn-stop" id="btn-reaction-stop">■</button>
+    </div>
   </div>
 
   <!-- Contenido principal -->
@@ -314,7 +364,10 @@
   <div class="combo-header" id="combo-header">
     <span class="round-badge" id="combo-round-indicator">ROUND 1/3</span>
     <span class="combo-session-timer" id="combo-session-timer">2:00</span>
-    <button class="btn-stop" id="btn-combo-stop">■</button>
+    <div class="header-actions">
+      <button class="mute-btn" id="btn-mute-combo">🔊</button>
+      <button class="btn-stop" id="btn-combo-stop">■</button>
+    </div>
   </div>
 
   <!-- PANEL 1: ESPERA -->
@@ -582,8 +635,54 @@
         <button class="btn-lang-sm" data-lang="de">🇩🇪 DE</button>
       </div>
     </div>
+    <div class="settings-sound-row">
+      <span class="settings-sound-label" data-i18n="sound_label">SONIDO</span>
+      <button class="sound-toggle-btn" id="btn-sound-toggle">🔊</button>
+    </div>
+    <button class="btn-secondary btn-calibrate-settings" id="btn-calibrate-settings">🎯 <span data-i18n="calib_menu_btn">CALIBRAR DISPOSITIVO</span></button>
     <button class="btn-primary" id="btn-save-settings" data-i18n="save_settings">GUARDAR</button>
   </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: CALIBRACIÓN DE DISPOSITIVO
+════════════════════════════════════ -->
+<div id="screen-calibration" class="screen hidden">
+  <div class="screen-inner">
+    <div class="topbar">
+      <button class="icon-btn" id="btn-calib-back">←</button>
+      <h2 data-i18n="calib_title">CALIBRAR DISPOSITIVO</h2>
+      <div></div>
+    </div>
+    <div id="calib-content" class="calib-content">
+      <!-- Contenido dinámico inyectado por JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: MODO COLORES
+════════════════════════════════════ -->
+<div id="screen-colors" class="screen hidden">
+
+  <!-- Header fijo -->
+  <div class="combo-header" id="colors-header">
+    <span class="round-badge" id="colors-round-indicator">ROUND 1/3</span>
+    <span class="combo-session-timer" id="colors-session-timer">2:00</span>
+    <div class="header-actions">
+      <button class="mute-btn" id="btn-mute-colors">🔊</button>
+      <button class="btn-stop" id="btn-colors-stop">■</button>
+    </div>
+  </div>
+
+  <!-- Stage: pantalla completa de color -->
+  <div class="colors-stage" id="colors-stage">
+    <div class="colors-center-text" id="colors-center-text"></div>
+  </div>
+
+  <!-- Botón fallback (sobre el stage) -->
+  <button class="btn-fallback btn-fallback-colors" id="btn-fallback-colors">👊 GOLPEAR</button>
+
 </div>
 
 <script src="app.js"></script>
