@@ -165,6 +165,7 @@ const TRANSLATIONS = {
     voice_session_done:   '¡Sesión completada!',
     mode_colors:          '🎨 Modo Colores',
     color_stats_title:    'Estadísticas por color',
+    help_title:           'AYUDA',
   },
   en: {
     profile_subtitle:     'Set up your profile to start',
@@ -318,6 +319,7 @@ const TRANSLATIONS = {
     voice_session_done:   'Session complete!',
     mode_colors:          '🎨 Color Mode',
     color_stats_title:    'Stats by color',
+    help_title:           'HELP',
   },
   pt: {
     profile_subtitle:     'Configure seu perfil para começar',
@@ -471,6 +473,7 @@ const TRANSLATIONS = {
     voice_session_done:   'Sessão completa!',
     mode_colors:          '🎨 Modo Cores',
     color_stats_title:    'Estatísticas por cor',
+    help_title:           'AJUDA',
   },
   de: {
     profile_subtitle:     'Profil einrichten um zu beginnen',
@@ -624,6 +627,7 @@ const TRANSLATIONS = {
     voice_session_done:   'Training abgeschlossen!',
     mode_colors:          '🎨 Farbmodus',
     color_stats_title:    'Statistik nach Farbe',
+    help_title:           'HILFE',
   },
 };
 
@@ -1124,6 +1128,7 @@ function initMenuScreen() {
   };
   document.getElementById('btn-settings').onclick = openSettingsModal;
   document.getElementById('btn-calibrate-menu').onclick = () => showCalibrationScreen('screen-menu');
+  document.getElementById('btn-help').onclick = () => { showScreen('screen-help'); initHelpScreen(); };
   document.getElementById('nav-home').onclick = () => {};
   document.getElementById('nav-train').onclick = () => {
     APP.mode = 'training';
@@ -2240,6 +2245,495 @@ function init() {
   if (!isIOS && typeof DeviceMotionEvent !== 'undefined') {
     activateAccelerometer();
   }
+}
+
+// ═══════════════════════════════════════════════════
+// AYUDA — CONTENIDO POR IDIOMA
+// ═══════════════════════════════════════════════════
+const HELP_SECTIONS = {
+  es: [
+    {
+      icon: '🥊', title: '¿Qué es FastKungFu?',
+      html: `<p>FastKungFu convierte tu móvil en un medidor de golpes para entrenamiento de <strong>boxeo, kickboxing, artes marciales</strong> o saco de arena.</p>
+<p>Mide en tiempo real la <strong>potencia</strong> (G), <strong>velocidad</strong> (m/s) y <strong>tiempo de reacción</strong> de tus golpes, y guarda el historial de sesiones para que puedas ver tu progreso.</p>`
+    },
+    {
+      icon: '📱', title: '¿Cómo funciona el sensor?',
+      html: `<p>El móvil usa su <strong>acelerómetro</strong> para detectar la vibración del impacto cuando golpeas el saco.</p>
+<ul>
+  <li>Coloca el móvil <strong>sobre el saco</strong> o sujétalo con una goma elástica.</li>
+  <li><strong>No lo tengas en la mano</strong> mientras golpeas.</li>
+  <li>Cuanto más firme esté el móvil, más precisas son las lecturas.</li>
+  <li>Si cuenta golpes de más, usa la <strong>Calibración</strong> para ajustar el umbral.</li>
+  <li>En iOS debes dar <strong>permiso al sensor de movimiento</strong> la primera vez.</li>
+</ul>`
+    },
+    {
+      icon: '🥊', title: 'Modo Entrenamiento',
+      html: `<p>Registra todos los golpes durante rounds configurables (1–12 rounds, 1–5 min).</p>
+<ul>
+  <li><strong>Golpes</strong> — total de impactos en el round.</li>
+  <li><strong>Potencia (G)</strong> — fuerza del impacto. Más G = golpe más duro.</li>
+  <li><strong>Velocidad (m/s)</strong> — velocidad de impacto estimada.</li>
+  <li><strong>Mejor golpe</strong> — la G máxima registrada en el round.</li>
+</ul>
+<p>La gráfica muestra los últimos 10 golpes en orden cronológico.</p>`
+    },
+    {
+      icon: '🔴', title: 'Modo Reacción — Golpe Simple',
+      html: `<p>Aparece una señal <strong>⚡</strong> tras un delay aleatorio (1–3 s). Golpea lo antes posible.</p>
+<p>El <strong>tiempo de reacción</strong> mide el intervalo desde que aparece la señal hasta que se detecta el golpe. Cuanto más bajo, mejor.</p>
+<ul>
+  <li><strong>⚫ Maestro</strong> — menos de 200 ms</li>
+  <li><strong>🟤 Rápido</strong> — menos de 350 ms</li>
+  <li><strong>🟡 Bueno</strong> — menos de 600 ms</li>
+  <li><strong>⚪ Sigue practicando</strong> — 600 ms o más</li>
+</ul>
+<p>Si no golpeas en 1 segundo, cuenta como fallo.</p>`
+    },
+    {
+      icon: '🥊', title: 'Modo Combo',
+      html: `<p>La señal <strong>HIT</strong> aparece en rojo y debes completar una serie de N golpes dentro del tiempo máximo.</p>
+<ul>
+  <li>El <strong>primer golpe</strong> marca tu tiempo de reacción.</li>
+  <li>El <strong>último golpe</strong> marca la duración total del combo.</li>
+  <li><strong>Modo Fijo</strong> — siempre el mismo número de golpes por combo.</li>
+  <li><strong>Modo Aleatorio</strong> — el número varía en cada señal.</li>
+  <li>Combo <strong>válido</strong> = todos los golpes completados antes del límite de tiempo.</li>
+  <li>Combo <strong>fallido</strong> = tiempo agotado antes de completar los golpes.</li>
+</ul>`
+    },
+    {
+      icon: '🎨', title: 'Modo Colores',
+      html: `<p>La pantalla se ilumina en un color (<strong>amarillo, rojo o azul</strong>) y debes reaccionar golpeando.</p>
+<p>En la configuración puedes asignar a cada color un texto libre: una <strong>zona del cuerpo, una técnica</strong> o cualquier cosa.</p>
+<ul>
+  <li>Ejemplo: 🟡 Amarillo = Piernas · 🔴 Rojo = Torso · 🔵 Azul = Cara</li>
+  <li><strong>Orden aleatorio</strong> — los colores aparecen en orden imprevisible.</li>
+  <li><strong>Orden fijo</strong> — ciclo amarillo → rojo → azul repetido.</li>
+</ul>
+<p>En el resumen verás el tiempo de reacción medio y potencia media por cada color.</p>`
+    },
+    {
+      icon: '🎯', title: 'Calibración del dispositivo',
+      html: `<p>La calibración ajusta el <strong>umbral de detección</strong> y el <strong>tiempo de rebote</strong> a tu saco y estilo de golpeo.</p>
+<p><strong>¿Cuándo calibrar?</strong></p>
+<ul>
+  <li>La primera vez que uses la app.</li>
+  <li>Si cambias de saco o muñeco.</li>
+  <li>Si cuenta golpes de más o de menos.</li>
+</ul>
+<p><strong>Cómo calibrar:</strong> Menú principal → CALIBRAR DISPOSITIVO (o desde Ajustes). Da 3 golpes de intensidad creciente (suave, medio, fuerte). La app calcula el umbral automáticamente y lo guarda.</p>`
+    },
+    {
+      icon: '📊', title: 'Analíticas e Historial',
+      html: `<p>Cada sesión guardada incluye: golpes totales, potencia media y máxima, velocidad media, tiempo de reacción, calorías estimadas y duración.</p>
+<p>En el <strong>Historial</strong> (icono 📊) verás:</p>
+<ul>
+  <li><strong>Récords históricos</strong> — mejor reacción, mayor potencia, más golpes en una sesión.</li>
+  <li><strong>Totales acumulados</strong> — sesiones, golpes históricos, calorías totales.</li>
+  <li><strong>Racha</strong> — días consecutivos entrenando.</li>
+  <li><strong>Gráficas</strong> — evolución de potencia, reacción y calorías en las últimas 10 sesiones.</li>
+</ul>`
+    },
+    {
+      icon: '🔊', title: 'Sonidos y voz',
+      html: `<p>Activa o desactiva el sonido desde <strong>Ajustes ⚙️</strong> o con el botón <strong>🔊/🔇</strong> en cualquier pantalla de sesión.</p>
+<ul>
+  <li>🔔 <strong>Campana</strong> — inicio y fin de round.</li>
+  <li>💥 <strong>Thud</strong> — cada golpe detectado.</li>
+  <li>🎵 <strong>Escala ascendente</strong> — combo completado correctamente.</li>
+  <li>📉 <strong>Escala descendente</strong> — combo fallido o tiempo agotado.</li>
+  <li>🔔 <strong>Beep suave</strong> — cada 10 s durante el descanso.</li>
+  <li>🗣️ <strong>Voz</strong> — anuncia resultados en tu idioma (¡Bien! / ¡Maestro! / ¡Sigue intentando!).</li>
+</ul>`
+    },
+    {
+      icon: '❓', title: 'Preguntas frecuentes',
+      html: `
+<p class="help-faq-q">¿Por qué cuenta golpes de más?</p>
+<p class="help-faq-a">El umbral de detección es muy bajo. Ve a <strong>Calibrar dispositivo</strong> para ajustarlo a tu golpe y tu saco.</p>
+<p class="help-faq-q">¿Funciona sin internet?</p>
+<p class="help-faq-a">Sí. FastKungFu es una <strong>PWA</strong> (Progressive Web App) que funciona completamente offline una vez cargada.</p>
+<p class="help-faq-q">¿Puedo usarla en iOS?</p>
+<p class="help-faq-a">Sí. La primera vez debes dar permiso al <strong>sensor de movimiento</strong> en la pantalla de configuración.</p>
+<p class="help-faq-q">¿Se guardan mis datos en la nube?</p>
+<p class="help-faq-a">No. Todo se guarda <strong>solo en tu móvil</strong>. Nunca se envía nada a ningún servidor.</p>`
+    },
+  ],
+  en: [
+    {
+      icon: '🥊', title: 'What is FastKungFu?',
+      html: `<p>FastKungFu turns your phone into a punch tracker for <strong>boxing, kickboxing, martial arts</strong> or bag training.</p>
+<p>It measures <strong>power</strong> (G), <strong>speed</strong> (m/s) and <strong>reaction time</strong> in real time, and saves session history so you can track your progress.</p>`
+    },
+    {
+      icon: '📱', title: 'How does the sensor work?',
+      html: `<p>The phone uses its <strong>accelerometer</strong> to detect impact vibrations when you punch the bag.</p>
+<ul>
+  <li>Place the phone <strong>on the bag</strong> or secure it with an elastic band.</li>
+  <li><strong>Do not hold it in your hand</strong> while punching.</li>
+  <li>The more securely it is fixed, the more accurate the readings.</li>
+  <li>If too many punches are counted, use <strong>Calibration</strong> to adjust the threshold.</li>
+  <li>On iOS you must grant <strong>motion sensor permission</strong> the first time.</li>
+</ul>`
+    },
+    {
+      icon: '🥊', title: 'Training Mode',
+      html: `<p>Records all punches during configurable rounds (1–12 rounds, 1–5 min).</p>
+<ul>
+  <li><strong>Punches</strong> — total impacts in the round.</li>
+  <li><strong>Power (G)</strong> — impact force. Higher G = harder punch.</li>
+  <li><strong>Speed (m/s)</strong> — estimated impact speed.</li>
+  <li><strong>Best punch</strong> — maximum G recorded in the round.</li>
+</ul>
+<p>The chart shows the last 10 punches in chronological order.</p>`
+    },
+    {
+      icon: '🔴', title: 'Reaction Mode — Single Hit',
+      html: `<p>A <strong>⚡</strong> signal appears after a random delay (1–3 s). Hit as fast as you can.</p>
+<p><strong>Reaction time</strong> measures the interval from signal appearance to punch detection. Lower is better.</p>
+<ul>
+  <li><strong>⚫ Master</strong> — under 200 ms</li>
+  <li><strong>🟤 Fast</strong> — under 350 ms</li>
+  <li><strong>🟡 Good</strong> — under 600 ms</li>
+  <li><strong>⚪ Keep practicing</strong> — 600 ms or more</li>
+</ul>
+<p>If you don't punch within 1 second, it counts as a miss.</p>`
+    },
+    {
+      icon: '🥊', title: 'Combo Mode',
+      html: `<p>The <strong>HIT</strong> signal appears in red and you must complete a series of N punches within the max time.</p>
+<ul>
+  <li>The <strong>first punch</strong> marks your reaction time.</li>
+  <li>The <strong>last punch</strong> marks the total combo duration.</li>
+  <li><strong>Fixed mode</strong> — always the same number of hits per combo.</li>
+  <li><strong>Random mode</strong> — the number varies each signal.</li>
+  <li><strong>Valid combo</strong> = all hits completed before the time limit.</li>
+  <li><strong>Failed combo</strong> = time ran out before completing the hits.</li>
+</ul>`
+    },
+    {
+      icon: '🎨', title: 'Color Mode',
+      html: `<p>The screen lights up in a color (<strong>yellow, red or blue</strong>) and you must react by hitting.</p>
+<p>In the config you can assign each color a custom label: a <strong>body zone, a technique</strong> or anything you like.</p>
+<ul>
+  <li>Example: 🟡 Yellow = Legs · 🔴 Red = Torso · 🔵 Blue = Head</li>
+  <li><strong>Random order</strong> — colors appear unpredictably.</li>
+  <li><strong>Fixed order</strong> — cycles yellow → red → blue.</li>
+</ul>
+<p>The summary shows average reaction time and power per color.</p>`
+    },
+    {
+      icon: '🎯', title: 'Device Calibration',
+      html: `<p>Calibration adjusts the <strong>detection threshold</strong> and <strong>debounce time</strong> to your bag and punching style.</p>
+<p><strong>When to calibrate:</strong></p>
+<ul>
+  <li>The first time you use the app.</li>
+  <li>When switching bags or dummies.</li>
+  <li>If too many or too few hits are counted.</li>
+</ul>
+<p><strong>How to calibrate:</strong> Main menu → CALIBRATE DEVICE (or from Settings). Throw 3 punches of increasing intensity (soft, medium, hard). The app calculates the threshold automatically and saves it.</p>`
+    },
+    {
+      icon: '📊', title: 'Analytics & History',
+      html: `<p>Each saved session includes: total punches, avg and max power, avg speed, reaction time, estimated calories and duration.</p>
+<p>The <strong>History</strong> screen (📊 icon) shows:</p>
+<ul>
+  <li><strong>All-time records</strong> — best reaction, max power, most punches in a session.</li>
+  <li><strong>Cumulative totals</strong> — sessions, total punches, total calories.</li>
+  <li><strong>Streak</strong> — consecutive training days.</li>
+  <li><strong>Charts</strong> — power, reaction and calorie trends for the last 10 sessions.</li>
+</ul>`
+    },
+    {
+      icon: '🔊', title: 'Sounds & Voice',
+      html: `<p>Toggle sound from <strong>Settings ⚙️</strong> or with the <strong>🔊/🔇</strong> button on any session screen.</p>
+<ul>
+  <li>🔔 <strong>Bell</strong> — round start and end.</li>
+  <li>💥 <strong>Thud</strong> — every detected punch.</li>
+  <li>🎵 <strong>Ascending scale</strong> — combo completed correctly.</li>
+  <li>📉 <strong>Descending scale</strong> — combo failed or timed out.</li>
+  <li>🔔 <strong>Soft beep</strong> — every 10 s during rest.</li>
+  <li>🗣️ <strong>Voice</strong> — announces results in your language (Good! / Master! / Keep trying!).</li>
+</ul>`
+    },
+    {
+      icon: '❓', title: 'Frequently Asked Questions',
+      html: `
+<p class="help-faq-q">Why does it count too many punches?</p>
+<p class="help-faq-a">The detection threshold is too low. Go to <strong>Calibrate device</strong> to tune it for your punch and bag.</p>
+<p class="help-faq-q">Does it work without internet?</p>
+<p class="help-faq-a">Yes. FastKungFu is a <strong>PWA</strong> (Progressive Web App) that works fully offline once loaded.</p>
+<p class="help-faq-q">Can I use it on iOS?</p>
+<p class="help-faq-a">Yes. The first time you must grant <strong>motion sensor permission</strong> in the config screen.</p>
+<p class="help-faq-q">Is my data saved to the cloud?</p>
+<p class="help-faq-a">No. Everything is stored <strong>only on your phone</strong>. Nothing is ever sent to any server.</p>`
+    },
+  ],
+  pt: [
+    {
+      icon: '🥊', title: 'O que é FastKungFu?',
+      html: `<p>FastKungFu transforma seu celular em um medidor de golpes para treino de <strong>boxe, kickboxing, artes marciais</strong> ou saco de pancadas.</p>
+<p>Mede em tempo real a <strong>potência</strong> (G), <strong>velocidade</strong> (m/s) e <strong>tempo de reação</strong> dos seus golpes, e salva o histórico de sessões para acompanhar seu progresso.</p>`
+    },
+    {
+      icon: '📱', title: 'Como funciona o sensor?',
+      html: `<p>O celular usa seu <strong>acelerômetro</strong> para detectar vibrações de impacto quando você soca o saco.</p>
+<ul>
+  <li>Coloque o celular <strong>sobre o saco</strong> ou fixe com elástico.</li>
+  <li><strong>Não segure na mão</strong> enquanto soca.</li>
+  <li>Quanto mais firme estiver fixado, mais precisas as leituras.</li>
+  <li>Se contar golpes em excesso, use a <strong>Calibração</strong> para ajustar o limiar.</li>
+  <li>No iOS você deve conceder <strong>permissão ao sensor de movimento</strong> na primeira vez.</li>
+</ul>`
+    },
+    {
+      icon: '🥊', title: 'Modo Treino',
+      html: `<p>Registra todos os golpes durante rounds configuráveis (1–12 rounds, 1–5 min).</p>
+<ul>
+  <li><strong>Golpes</strong> — total de impactos no round.</li>
+  <li><strong>Potência (G)</strong> — força do impacto. Mais G = golpe mais forte.</li>
+  <li><strong>Velocidade (m/s)</strong> — velocidade estimada do impacto.</li>
+  <li><strong>Melhor golpe</strong> — G máxima registrada no round.</li>
+</ul>
+<p>O gráfico mostra os últimos 10 golpes em ordem cronológica.</p>`
+    },
+    {
+      icon: '🔴', title: 'Modo Reação — Golpe Simples',
+      html: `<p>Um sinal <strong>⚡</strong> aparece após atraso aleatório (1–3 s). Soque o mais rápido possível.</p>
+<p>O <strong>tempo de reação</strong> mede o intervalo do sinal até o golpe detectado. Quanto menor, melhor.</p>
+<ul>
+  <li><strong>⚫ Mestre</strong> — menos de 200 ms</li>
+  <li><strong>🟤 Rápido</strong> — menos de 350 ms</li>
+  <li><strong>🟡 Bom</strong> — menos de 600 ms</li>
+  <li><strong>⚪ Continue praticando</strong> — 600 ms ou mais</li>
+</ul>
+<p>Se não socar em 1 segundo, conta como erro.</p>`
+    },
+    {
+      icon: '🥊', title: 'Modo Combo',
+      html: `<p>O sinal <strong>HIT</strong> aparece em vermelho e você deve completar uma série de N golpes dentro do tempo máximo.</p>
+<ul>
+  <li>O <strong>primeiro golpe</strong> marca seu tempo de reação.</li>
+  <li>O <strong>último golpe</strong> marca a duração total do combo.</li>
+  <li><strong>Modo Fixo</strong> — sempre o mesmo número de golpes por combo.</li>
+  <li><strong>Modo Aleatório</strong> — o número varia a cada sinal.</li>
+  <li>Combo <strong>válido</strong> = todos os golpes antes do limite de tempo.</li>
+  <li>Combo <strong>falho</strong> = tempo esgotado antes de completar os golpes.</li>
+</ul>`
+    },
+    {
+      icon: '🎨', title: 'Modo Cores',
+      html: `<p>A tela acende em uma cor (<strong>amarelo, vermelho ou azul</strong>) e você deve reagir socando.</p>
+<p>Na configuração pode atribuir a cada cor um rótulo livre: <strong>zona do corpo, técnica</strong> ou qualquer coisa.</p>
+<ul>
+  <li>Exemplo: 🟡 Amarelo = Pernas · 🔴 Vermelho = Tronco · 🔵 Azul = Cabeça</li>
+  <li><strong>Ordem aleatória</strong> — cores aparecem de forma imprevisível.</li>
+  <li><strong>Ordem fixa</strong> — ciclo amarelo → vermelho → azul.</li>
+</ul>
+<p>O resumo mostra tempo de reação médio e potência média por cor.</p>`
+    },
+    {
+      icon: '🎯', title: 'Calibração do dispositivo',
+      html: `<p>A calibração ajusta o <strong>limiar de detecção</strong> e o <strong>tempo de rejeição</strong> ao seu saco e estilo de golpe.</p>
+<p><strong>Quando calibrar:</strong></p>
+<ul>
+  <li>Na primeira vez que usar o app.</li>
+  <li>Ao trocar de saco ou manequim.</li>
+  <li>Se contar golpes em excesso ou de menos.</li>
+</ul>
+<p><strong>Como calibrar:</strong> Menu principal → CALIBRAR DISPOSITIVO (ou em Configurações). Dê 3 socos de intensidade crescente (leve, médio, forte). O app calcula o limiar automaticamente e salva.</p>`
+    },
+    {
+      icon: '📊', title: 'Análises e Histórico',
+      html: `<p>Cada sessão salva inclui: golpes totais, potência média e máxima, velocidade média, tempo de reação, calorias estimadas e duração.</p>
+<p>O <strong>Histórico</strong> (ícone 📊) mostra:</p>
+<ul>
+  <li><strong>Recordes históricos</strong> — melhor reação, maior potência, mais golpes em uma sessão.</li>
+  <li><strong>Totais acumulados</strong> — sessões, golpes históricos, calorias totais.</li>
+  <li><strong>Sequência</strong> — dias consecutivos de treino.</li>
+  <li><strong>Gráficos</strong> — evolução de potência, reação e calorias nas últimas 10 sessões.</li>
+</ul>`
+    },
+    {
+      icon: '🔊', title: 'Sons e voz',
+      html: `<p>Ative ou desative o som em <strong>Configurações ⚙️</strong> ou com o botão <strong>🔊/🔇</strong> em qualquer tela de sessão.</p>
+<ul>
+  <li>🔔 <strong>Campainha</strong> — início e fim do round.</li>
+  <li>💥 <strong>Thud</strong> — cada golpe detectado.</li>
+  <li>🎵 <strong>Escala ascendente</strong> — combo concluído corretamente.</li>
+  <li>📉 <strong>Escala descendente</strong> — combo falhou ou tempo esgotado.</li>
+  <li>🔔 <strong>Bipe suave</strong> — a cada 10 s durante o descanso.</li>
+  <li>🗣️ <strong>Voz</strong> — anuncia resultados no seu idioma.</li>
+</ul>`
+    },
+    {
+      icon: '❓', title: 'Perguntas frequentes',
+      html: `
+<p class="help-faq-q">Por que conta golpes demais?</p>
+<p class="help-faq-a">O limiar de detecção está muito baixo. Vá em <strong>Calibrar dispositivo</strong> para ajustá-lo ao seu golpe e saco.</p>
+<p class="help-faq-q">Funciona sem internet?</p>
+<p class="help-faq-a">Sim. FastKungFu é um <strong>PWA</strong> que funciona completamente offline após o primeiro carregamento.</p>
+<p class="help-faq-q">Posso usar no iOS?</p>
+<p class="help-faq-a">Sim. Na primeira vez, conceda <strong>permissão ao sensor de movimento</strong> na tela de configuração.</p>
+<p class="help-faq-q">Meus dados ficam na nuvem?</p>
+<p class="help-faq-a">Não. Tudo é guardado <strong>apenas no seu celular</strong>. Nada é enviado a nenhum servidor.</p>`
+    },
+  ],
+  de: [
+    {
+      icon: '🥊', title: 'Was ist FastKungFu?',
+      html: `<p>FastKungFu verwandelt dein Smartphone in einen Schlag-Tracker für <strong>Boxen, Kickboxen, Kampfsport</strong> oder Sandsack-Training.</p>
+<p>Misst in Echtzeit <strong>Kraft</strong> (G), <strong>Geschwindigkeit</strong> (m/s) und <strong>Reaktionszeit</strong> deiner Schläge und speichert den Session-Verlauf.</p>`
+    },
+    {
+      icon: '📱', title: 'Wie funktioniert der Sensor?',
+      html: `<p>Das Smartphone nutzt seinen <strong>Beschleunigungssensor</strong>, um Erschütterungen beim Schlag zu erkennen.</p>
+<ul>
+  <li>Lege das Smartphone <strong>auf den Sack</strong> oder befestige es mit einem Gummiband.</li>
+  <li><strong>Halte es nicht in der Hand</strong> beim Schlagen.</li>
+  <li>Je fester es befestigt ist, desto genauer die Messungen.</li>
+  <li>Bei zu vielen Fehlschlägen nutze die <strong>Kalibrierung</strong> zur Anpassung des Schwellenwerts.</li>
+  <li>Auf iOS muss beim ersten Mal die <strong>Bewegungssensor-Berechtigung</strong> erteilt werden.</li>
+</ul>`
+    },
+    {
+      icon: '🥊', title: 'Trainingsmodus',
+      html: `<p>Zeichnet alle Schläge in konfigurierbaren Runden auf (1–12 Runden, 1–5 Min).</p>
+<ul>
+  <li><strong>Schläge</strong> — Gesamtanzahl in der Runde.</li>
+  <li><strong>Kraft (G)</strong> — Aufprallkraft. Mehr G = härterer Schlag.</li>
+  <li><strong>Geschwindigkeit (m/s)</strong> — geschätzte Aufprallgeschwindigkeit.</li>
+  <li><strong>Bester Schlag</strong> — maximales G in der Runde.</li>
+</ul>
+<p>Das Diagramm zeigt die letzten 10 Schläge in chronologischer Reihenfolge.</p>`
+    },
+    {
+      icon: '🔴', title: 'Reaktionsmodus — Einzelschlag',
+      html: `<p>Ein <strong>⚡</strong>-Signal erscheint nach zufälliger Verzögerung (1–3 s). Schlage so schnell wie möglich.</p>
+<p>Die <strong>Reaktionszeit</strong> misst den Abstand vom Signal bis zum erkannten Schlag. Niedriger = besser.</p>
+<ul>
+  <li><strong>⚫ Meister</strong> — unter 200 ms</li>
+  <li><strong>🟤 Schnell</strong> — unter 350 ms</li>
+  <li><strong>🟡 Gut</strong> — unter 600 ms</li>
+  <li><strong>⚪ Weiter üben</strong> — 600 ms oder mehr</li>
+</ul>
+<p>Kein Schlag innerhalb 1 Sekunde zählt als Fehler.</p>`
+    },
+    {
+      icon: '🥊', title: 'Kombo-Modus',
+      html: `<p>Das <strong>HIT</strong>-Signal erscheint rot und du musst N Schläge innerhalb der Maximalzeit ausführen.</p>
+<ul>
+  <li>Der <strong>erste Schlag</strong> markiert die Reaktionszeit.</li>
+  <li>Der <strong>letzte Schlag</strong> markiert die Gesamtkombodauer.</li>
+  <li><strong>Fest</strong> — immer gleiche Schlaganzahl pro Kombo.</li>
+  <li><strong>Zufällig</strong> — Anzahl variiert je Signal.</li>
+  <li>Gültige <strong>Kombo</strong> = alle Schläge vor dem Zeitlimit.</li>
+  <li>Fehlgeschlagene <strong>Kombo</strong> = Zeit abgelaufen.</li>
+</ul>`
+    },
+    {
+      icon: '🎨', title: 'Farbmodus',
+      html: `<p>Der Bildschirm leuchtet in einer Farbe (<strong>gelb, rot oder blau</strong>) auf und du musst durch Schlagen reagieren.</p>
+<p>In der Konfiguration kannst du jeder Farbe einen eigenen Text zuweisen: <strong>Körperzone, Technik</strong> oder beliebig.</p>
+<ul>
+  <li>Beispiel: 🟡 Gelb = Beine · 🔴 Rot = Rumpf · 🔵 Blau = Kopf</li>
+  <li><strong>Zufällige Reihenfolge</strong> — Farben erscheinen unvorhersehbar.</li>
+  <li><strong>Feste Reihenfolge</strong> — Zyklus gelb → rot → blau.</li>
+</ul>
+<p>Die Zusammenfassung zeigt Ø-Reaktionszeit und Ø-Kraft pro Farbe.</p>`
+    },
+    {
+      icon: '🎯', title: 'Gerätekalibrierung',
+      html: `<p>Die Kalibrierung passt den <strong>Erkennungsschwellenwert</strong> und die <strong>Entprellzeit</strong> an deinen Sack und Schlagstil an.</p>
+<p><strong>Wann kalibrieren:</strong></p>
+<ul>
+  <li>Beim ersten Mal.</li>
+  <li>Beim Wechsel des Sacks oder der Puppe.</li>
+  <li>Bei zu vielen oder zu wenigen erkannten Schlägen.</li>
+</ul>
+<p><strong>Wie kalibrieren:</strong> Hauptmenü → GERÄT KALIBRIEREN (oder Einstellungen). Schlage 3 Mal mit zunehmender Intensität (leicht, mittel, stark). Die App berechnet den Schwellenwert automatisch.</p>`
+    },
+    {
+      icon: '📊', title: 'Statistiken & Verlauf',
+      html: `<p>Jede gespeicherte Session enthält: Gesamtschläge, Ø und Max-Kraft, Ø-Geschwindigkeit, Reaktionszeit, geschätzte Kalorien und Dauer.</p>
+<p>Der <strong>Verlauf</strong> (📊-Symbol) zeigt:</p>
+<ul>
+  <li><strong>Allzeit-Rekorde</strong> — beste Reaktion, Max-Kraft, meiste Schläge in einer Session.</li>
+  <li><strong>Kumulierte Gesamtwerte</strong> — Sessions, Gesamtschläge, Gesamtkalorien.</li>
+  <li><strong>Serie</strong> — aufeinanderfolgende Trainingstage.</li>
+  <li><strong>Diagramme</strong> — Entwicklung von Kraft, Reaktion und Kalorien der letzten 10 Sessions.</li>
+</ul>`
+    },
+    {
+      icon: '🔊', title: 'Töne & Stimme',
+      html: `<p>Ton ein-/ausschalten über <strong>Einstellungen ⚙️</strong> oder die <strong>🔊/🔇</strong>-Schaltfläche auf jedem Session-Bildschirm.</p>
+<ul>
+  <li>🔔 <strong>Glocke</strong> — Rundenstart und -ende.</li>
+  <li>💥 <strong>Dumpfer Ton</strong> — jeder erkannte Schlag.</li>
+  <li>🎵 <strong>Aufsteigende Skala</strong> — Kombo erfolgreich abgeschlossen.</li>
+  <li>📉 <strong>Absteigende Skala</strong> — Kombo fehlgeschlagen oder Zeit abgelaufen.</li>
+  <li>🔔 <strong>Leiser Piepton</strong> — alle 10 s in der Pause.</li>
+  <li>🗣️ <strong>Stimme</strong> — kündigt Ergebnisse in deiner Sprache an.</li>
+</ul>`
+    },
+    {
+      icon: '❓', title: 'Häufige Fragen',
+      html: `
+<p class="help-faq-q">Warum werden zu viele Schläge gezählt?</p>
+<p class="help-faq-a">Der Erkennungsschwellenwert ist zu niedrig. Gehe zu <strong>Gerät kalibrieren</strong>, um ihn anzupassen.</p>
+<p class="help-faq-q">Funktioniert es ohne Internet?</p>
+<p class="help-faq-a">Ja. FastKungFu ist eine <strong>PWA</strong>, die nach dem ersten Laden vollständig offline funktioniert.</p>
+<p class="help-faq-q">Kann ich es auf iOS verwenden?</p>
+<p class="help-faq-a">Ja. Beim ersten Mal muss die <strong>Bewegungssensor-Berechtigung</strong> in der Konfiguration erteilt werden.</p>
+<p class="help-faq-q">Werden meine Daten in der Cloud gespeichert?</p>
+<p class="help-faq-a">Nein. Alles wird <strong>nur auf deinem Gerät</strong> gespeichert. Nichts wird an einen Server gesendet.</p>`
+    },
+  ],
+};
+
+// ═══════════════════════════════════════════════════
+// AYUDA — PANTALLA
+// ═══════════════════════════════════════════════════
+function initHelpScreen() {
+  document.getElementById('btn-help-back').onclick = () => showScreen('screen-menu');
+  applyLanguage();
+
+  const sections = HELP_SECTIONS[APP.lang] || HELP_SECTIONS.es;
+  const accordion = document.getElementById('help-accordion');
+  accordion.innerHTML = '';
+
+  sections.forEach((sec, idx) => {
+    const div = document.createElement('div');
+    div.className = 'help-section';
+    div.innerHTML = `
+      <button class="help-section-header" aria-expanded="false">
+        <span class="help-section-icon">${sec.icon}</span>
+        <span class="help-section-title">${sec.title}</span>
+        <span class="help-section-arrow">▼</span>
+      </button>
+      <div class="help-section-body" role="region">
+        <div class="help-section-content">${sec.html}</div>
+      </div>`;
+
+    const header = div.querySelector('.help-section-header');
+    header.addEventListener('click', () => {
+      const isOpen = div.classList.contains('open');
+      // Close all others
+      accordion.querySelectorAll('.help-section.open').forEach(s => {
+        s.classList.remove('open');
+        s.querySelector('.help-section-header').setAttribute('aria-expanded', 'false');
+      });
+      // Toggle this one
+      if (!isOpen) {
+        div.classList.add('open');
+        header.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    accordion.appendChild(div);
+  });
 }
 
 // ═══════════════════════════════════════════════════
