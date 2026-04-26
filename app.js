@@ -2272,8 +2272,8 @@ function init() {
 const HELP_SECTIONS = {
   es: [
     {
-      icon: '🥊', title: '¿Qué es FastKungFu?',
-      html: `<p>FastKungFu convierte tu móvil en un medidor de golpes para entrenamiento de <strong>boxeo, kickboxing, artes marciales</strong> o saco de arena.</p>
+      icon: '🥊', title: '¿Qué es ImpactLab?',
+      html: `<p>ImpactLab convierte tu móvil en un medidor de golpes para entrenamiento de <strong>boxeo, kickboxing, artes marciales</strong> o saco de arena.</p>
 <p>Mide en tiempo real la <strong>potencia</strong> (G), <strong>velocidad</strong> (m/s) y <strong>tiempo de reacción</strong> de tus golpes, y guarda el historial de sesiones para que puedas ver tu progreso.</p>`
     },
     {
@@ -2373,7 +2373,7 @@ const HELP_SECTIONS = {
 <p class="help-faq-q">¿Por qué cuenta golpes de más?</p>
 <p class="help-faq-a">El umbral de detección es muy bajo. Ve a <strong>Calibrar dispositivo</strong> para ajustarlo a tu golpe y tu saco.</p>
 <p class="help-faq-q">¿Funciona sin internet?</p>
-<p class="help-faq-a">Sí. FastKungFu es una <strong>PWA</strong> (Progressive Web App) que funciona completamente offline una vez cargada.</p>
+<p class="help-faq-a">Sí. ImpactLab es una <strong>PWA</strong> (Progressive Web App) que funciona completamente offline una vez cargada.</p>
 <p class="help-faq-q">¿Puedo usarla en iOS?</p>
 <p class="help-faq-a">Sí. La primera vez debes dar permiso al <strong>sensor de movimiento</strong> en la pantalla de configuración.</p>
 <p class="help-faq-q">¿Se guardan mis datos en la nube?</p>
@@ -2382,8 +2382,8 @@ const HELP_SECTIONS = {
   ],
   en: [
     {
-      icon: '🥊', title: 'What is FastKungFu?',
-      html: `<p>FastKungFu turns your phone into a punch tracker for <strong>boxing, kickboxing, martial arts</strong> or bag training.</p>
+      icon: '🥊', title: 'What is ImpactLab?',
+      html: `<p>ImpactLab turns your phone into a punch tracker for <strong>boxing, kickboxing, martial arts</strong> or bag training.</p>
 <p>It measures <strong>power</strong> (G), <strong>speed</strong> (m/s) and <strong>reaction time</strong> in real time, and saves session history so you can track your progress.</p>`
     },
     {
@@ -2483,7 +2483,7 @@ const HELP_SECTIONS = {
 <p class="help-faq-q">Why does it count too many punches?</p>
 <p class="help-faq-a">The detection threshold is too low. Go to <strong>Calibrate device</strong> to tune it for your punch and bag.</p>
 <p class="help-faq-q">Does it work without internet?</p>
-<p class="help-faq-a">Yes. FastKungFu is a <strong>PWA</strong> (Progressive Web App) that works fully offline once loaded.</p>
+<p class="help-faq-a">Yes. ImpactLab is a <strong>PWA</strong> (Progressive Web App) that works fully offline once loaded.</p>
 <p class="help-faq-q">Can I use it on iOS?</p>
 <p class="help-faq-a">Yes. The first time you must grant <strong>motion sensor permission</strong> in the config screen.</p>
 <p class="help-faq-q">Is my data saved to the cloud?</p>
@@ -2492,8 +2492,8 @@ const HELP_SECTIONS = {
   ],
   pt: [
     {
-      icon: '🥊', title: 'O que é FastKungFu?',
-      html: `<p>FastKungFu transforma seu celular em um medidor de golpes para treino de <strong>boxe, kickboxing, artes marciais</strong> ou saco de pancadas.</p>
+      icon: '🥊', title: 'O que é ImpactLab?',
+      html: `<p>ImpactLab transforma seu celular em um medidor de golpes para treino de <strong>boxe, kickboxing, artes marciais</strong> ou saco de pancadas.</p>
 <p>Mede em tempo real a <strong>potência</strong> (G), <strong>velocidade</strong> (m/s) e <strong>tempo de reação</strong> dos seus golpes, e salva o histórico de sessões para acompanhar seu progresso.</p>`
     },
     {
@@ -2593,7 +2593,7 @@ const HELP_SECTIONS = {
 <p class="help-faq-q">Por que conta golpes demais?</p>
 <p class="help-faq-a">O limiar de detecção está muito baixo. Vá em <strong>Calibrar dispositivo</strong> para ajustá-lo ao seu golpe e saco.</p>
 <p class="help-faq-q">Funciona sem internet?</p>
-<p class="help-faq-a">Sim. FastKungFu é um <strong>PWA</strong> que funciona completamente offline após o primeiro carregamento.</p>
+<p class="help-faq-a">Sim. ImpactLab é um <strong>PWA</strong> que funciona completamente offline após o primeiro carregamento.</p>
 <p class="help-faq-q">Posso usar no iOS?</p>
 <p class="help-faq-a">Sim. Na primeira vez, conceda <strong>permissão ao sensor de movimento</strong> na tela de configuração.</p>
 <p class="help-faq-q">Meus dados ficam na nuvem?</p>
@@ -2602,8 +2602,8 @@ const HELP_SECTIONS = {
   ],
   de: [
     {
-      icon: '🥊', title: 'Was ist FastKungFu?',
-      html: `<p>FastKungFu verwandelt dein Smartphone in einen Schlag-Tracker für <strong>Boxen, Kickboxen, Kampfsport</strong> oder Sandsack-Training.</p>
+      icon: '🥊', title: 'Was ist ImpactLab?',
+      html: `<p>ImpactLab verwandelt dein Smartphone in einen Schlag-Tracker für <strong>Boxen, Kickboxen, Kampfsport</strong> oder Sandsack-Training.</p>
 <p>Misst in Echtzeit <strong>Kraft</strong> (G), <strong>Geschwindigkeit</strong> (m/s) und <strong>Reaktionszeit</strong> deiner Schläge und speichert den Session-Verlauf.</p>`
     },
     {
@@ -2703,7 +2703,7 @@ const HELP_SECTIONS = {
 <p class="help-faq-q">Warum werden zu viele Schläge gezählt?</p>
 <p class="help-faq-a">Der Erkennungsschwellenwert ist zu niedrig. Gehe zu <strong>Gerät kalibrieren</strong>, um ihn anzupassen.</p>
 <p class="help-faq-q">Funktioniert es ohne Internet?</p>
-<p class="help-faq-a">Ja. FastKungFu ist eine <strong>PWA</strong>, die nach dem ersten Laden vollständig offline funktioniert.</p>
+<p class="help-faq-a">Ja. ImpactLab ist eine <strong>PWA</strong>, die nach dem ersten Laden vollständig offline funktioniert.</p>
 <p class="help-faq-q">Kann ich es auf iOS verwenden?</p>
 <p class="help-faq-a">Ja. Beim ersten Mal muss die <strong>Bewegungssensor-Berechtigung</strong> in der Konfiguration erteilt werden.</p>
 <p class="help-faq-q">Werden meine Daten in der Cloud gespeichert?</p>

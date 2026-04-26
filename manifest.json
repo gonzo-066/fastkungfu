@@ -1,6 +1,6 @@
 {
-  "name": "FastKungFu",
-  "short_name": "FastKungFu",
+  "name": "ImpactLab",
+  "short_name": "ImpactLab",
   "description": "Entrenamiento de boxeo y tiempo de reacción",
   "start_url": "/",
   "display": "standalone",
