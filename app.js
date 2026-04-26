@@ -1431,9 +1431,58 @@ function handleTrainingPunch(punch) {
 }
 
 function drawTrainingChart() {
+  const canvas = document.getElementById('training-chart');
+  if (!canvas) return;
+
+  const dpr   = window.devicePixelRatio || 1;
+  const cont  = canvas.parentElement;
+  const cssW  = cont ? Math.max(cont.clientWidth - 24, 280) : 300;
+  const cssH  = 80;
+
+  // Explicit pixel dimensions — critical to avoid blurry/blank canvas
+  canvas.width       = Math.round(cssW * dpr);
+  canvas.height      = Math.round(cssH * dpr);
+  canvas.style.width  = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // Background
+  ctx.fillStyle = '#1A1A1A';
+  ctx.fillRect(0, 0, cssW, cssH);
+
+  // Baseline
+  ctx.fillStyle = '#333333';
+  ctx.fillRect(0, cssH - 2, cssW, 2);
+
   const last10 = APP.round.punches.slice(-10).map(p => p.g);
   while (last10.length < 10) last10.unshift(0);
-  drawBarChart('training-chart', last10, 12, punchColor);
+
+  const maxG = 12;
+  const bw   = cssW / 10;
+  const pad  = 3;
+
+  last10.forEach((g, i) => {
+    const norm = Math.min(g / maxG, 1);
+    const bh   = Math.max(norm * (cssH - 14), g > 0 ? 3 : 0);
+    const x    = i * bw + pad;
+    const y    = cssH - 2 - bh;
+    const w    = bw - pad * 2;
+
+    // Bar — always yellow for training chart
+    ctx.fillStyle = '#FFE000';
+    ctx.fillRect(x, y, w, bh);
+
+    // Value label above bar
+    if (g > 0) {
+      ctx.fillStyle  = '#FFFFFF';
+      ctx.font       = `bold ${Math.round(9 * dpr) / dpr}px system-ui, sans-serif`;
+      ctx.textAlign  = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(g.toFixed(1), x + w / 2, y - 1);
+    }
+  });
 }
 
 // ═══════════════════════════════════════════════════
