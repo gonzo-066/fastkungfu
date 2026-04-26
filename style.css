@@ -421,6 +421,12 @@ button:active {
   box-shadow: 0 0 0 2px rgba(255, 224, 0, 0.12);
 }
 
+#profile-form-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 .sex-toggle {
   display: flex;
   gap: 8px;

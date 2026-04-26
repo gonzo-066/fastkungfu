@@ -43,7 +43,7 @@ const TRANSLATIONS = {
     combo_mode_label:     'MODO',
     mode_fixed:           'FIJO',
     mode_random:          'ALEATORIO',
-    nav_home:             'Inicio',
+    nav_profile:          'Perfil',
     nav_train:            'Entrenar',
     nav_history:          'Historial',
     ios_permission_text:  'iOS requiere permiso para el acelerómetro',
@@ -197,7 +197,7 @@ const TRANSLATIONS = {
     combo_mode_label:     'MODE',
     mode_fixed:           'FIXED',
     mode_random:          'RANDOM',
-    nav_home:             'Home',
+    nav_profile:          'Profile',
     nav_train:            'Train',
     nav_history:          'History',
     ios_permission_text:  'iOS requires permission for the accelerometer',
@@ -351,7 +351,7 @@ const TRANSLATIONS = {
     combo_mode_label:     'MODO',
     mode_fixed:           'FIXO',
     mode_random:          'ALEATÓRIO',
-    nav_home:             'Início',
+    nav_profile:          'Perfil',
     nav_train:            'Treinar',
     nav_history:          'Histórico',
     ios_permission_text:  'iOS requer permissão para o acelerômetro',
@@ -505,7 +505,7 @@ const TRANSLATIONS = {
     combo_mode_label:     'MODUS',
     mode_fixed:           'FEST',
     mode_random:          'ZUFÄLLIG',
-    nav_home:             'Start',
+    nav_profile:          'Profil',
     nav_train:            'Trainieren',
     nav_history:          'Verlauf',
     ios_permission_text:  'iOS benötigt Erlaubnis für den Beschleunigungssensor',
@@ -1089,17 +1089,33 @@ function afterLangSelected() {
 // ═══════════════════════════════════════════════════
 // PANTALLA: PERFIL
 // ═══════════════════════════════════════════════════
-function initProfileScreen() {
+function initProfileScreen(fromNav) {
+  const topbar = document.getElementById('profile-topbar');
+  const logoWrap = document.querySelector('#profile-form-wrap .logo-img') ||
+                   document.querySelector('#profile-form-wrap .logo-fallback');
+  topbar.classList.toggle('hidden', !fromNav);
+  if (fromNav) {
+    document.getElementById('btn-profile-back').onclick = () => {
+      showScreen('screen-menu');
+      initMenuScreen();
+    };
+  }
   const sexBtns = document.querySelectorAll('#screen-profile .sex-btn');
-  let selectedSex = 'hombre';
+  let selectedSex = APP.profile ? (APP.profile.sex || 'hombre') : 'hombre';
+  if (APP.profile) {
+    document.getElementById('input-name').value   = APP.profile.name   || '';
+    document.getElementById('input-weight').value = APP.profile.weight || '';
+    document.getElementById('input-age').value    = APP.profile.age    || '';
+  }
   sexBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.classList.toggle('active', btn.dataset.sex === selectedSex);
+    btn.onclick = () => {
       sexBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       selectedSex = btn.dataset.sex;
-    });
+    };
   });
-  document.getElementById('btn-save-profile').addEventListener('click', () => {
+  document.getElementById('btn-save-profile').onclick = () => {
     const name   = document.getElementById('input-name').value.trim();
     const weight = parseFloat(document.getElementById('input-weight').value);
     const age    = parseInt(document.getElementById('input-age').value);
@@ -1109,7 +1125,7 @@ function initProfileScreen() {
     saveProfile({ name, weight, age, sex: selectedSex });
     showScreen('screen-menu');
     initMenuScreen();
-  });
+  };
 }
 
 // ═══════════════════════════════════════════════════
@@ -1129,7 +1145,10 @@ function initMenuScreen() {
   document.getElementById('btn-settings').onclick = openSettingsModal;
   document.getElementById('btn-calibrate-menu').onclick = () => showCalibrationScreen('screen-menu');
   document.getElementById('btn-help').onclick = () => { showScreen('screen-help'); initHelpScreen(); };
-  document.getElementById('nav-home').onclick = () => {};
+  document.getElementById('nav-profile').onclick = () => {
+    showScreen('screen-profile');
+    initProfileScreen(true);
+  };
   document.getElementById('nav-train').onclick = () => {
     APP.mode = 'training';
     showScreen('screen-config');
