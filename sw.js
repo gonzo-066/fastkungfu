@@ -1,11 +1,11 @@
-const CACHE_NAME = 'impactlab-v1';
+const CACHE_NAME = 'impactlab-v2';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './manifest.json',
-  './assets/LOGO_FASTKUNGFU.png'
+  './assets/LOGO_IMPACTLAB.png'
 ];
 
 self.addEventListener('install', e => {

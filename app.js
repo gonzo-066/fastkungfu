@@ -1477,7 +1477,7 @@ function drawTrainingChart() {
   ctx.fillRect(0, 0, cssW, cssH);
 
   // Baseline
-  ctx.fillStyle = '#333333';
+  ctx.fillStyle = 'rgba(0, 191, 255, 0.4)';
   ctx.fillRect(0, cssH - 2, cssW, 2);
 
   const last10 = APP.round.punches.slice(-10).map(p => p.g);

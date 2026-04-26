@@ -10,6 +10,7 @@
 
 :root {
   --yellow:   #FFE000;
+  --blue:     #00BFFF;
   --red:      #ff2222;
   --green:    #00cc44;
   --bg:       #0A0A0A;
@@ -17,6 +18,7 @@
   --bg3:      #1A1A1A;
   --bg4:      #242424;
   --border:   #2A2A2A;
+  --border-blue: rgba(0, 191, 255, 0.22);
   --text:     #FFFFFF;
   --text-dim: #888888;
   --font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -266,7 +268,7 @@ button:active {
   left: 0;
   right: 0;
   background: #111111;
-  border-top: 1px solid var(--border);
+  border-top: 2px solid var(--blue);
   display: flex;
   justify-content: space-around;
   padding: 8px 0;
@@ -291,7 +293,7 @@ button:active {
 }
 
 .nav-btn.active {
-  color: var(--yellow);
+  color: var(--blue);
 }
 
 .nav-icon {
@@ -355,14 +357,14 @@ button:active {
 }
 
 .btn-reaction {
-  background: linear-gradient(135deg, #0a0a1a, #0f0f2e);
-  border: 2px solid #4444ff;
-  box-shadow: 0 4px 24px rgba(68, 68, 255, 0.12);
+  background: linear-gradient(135deg, #001a2e, #002a44);
+  border: 2px solid var(--blue);
+  box-shadow: 0 4px 24px rgba(0, 191, 255, 0.12);
 }
 
 .btn-reaction:active {
-  box-shadow: 0 2px 40px rgba(68, 68, 255, 0.45);
-  background: linear-gradient(135deg, #12122a, #1a1a44);
+  box-shadow: 0 2px 40px rgba(0, 191, 255, 0.45);
+  background: linear-gradient(135deg, #00253f, #003a5a);
 }
 
 .mode-icon {
@@ -709,7 +711,7 @@ button:active {
 
 .metric-card {
   background: var(--bg3);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-blue);
   border-radius: 14px;
   padding: 14px 8px;
   text-align: center;
@@ -734,7 +736,7 @@ button:active {
 
 .metric-label {
   font-size: 0.65rem;
-  color: var(--text-dim);
+  color: var(--blue);
   text-transform: uppercase;
   letter-spacing: 0.6px;
   font-weight: 600;
@@ -750,7 +752,7 @@ button:active {
 ════════════════════════════════════ */
 .chart-container {
   background: var(--bg3);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-blue);
   border-radius: 14px;
   padding: 10px 12px;
 }
@@ -1086,7 +1088,7 @@ canvas {
 .combo-metric-sm {
   flex: 1;
   background: var(--bg3);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-blue);
   border-radius: 12px;
   padding: 10px 6px;
   text-align: center;
@@ -1094,7 +1096,7 @@ canvas {
 
 .combo-metric-label {
   font-size: 0.58rem;
-  color: var(--text-dim);
+  color: var(--blue);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   font-weight: 700;
@@ -1159,7 +1161,7 @@ canvas {
 .result-card {
   flex: 1;
   background: var(--bg3);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-blue);
   border-radius: 14px;
   padding: 16px 8px;
   text-align: center;
@@ -1345,7 +1347,7 @@ canvas {
 
 .record-item {
   background: var(--bg3);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-blue);
   border-radius: 12px;
   padding: 12px 8px;
   text-align: center;
@@ -1378,7 +1380,7 @@ canvas {
 
 .total-item {
   background: var(--bg3);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-blue);
   border-radius: 12px;
   padding: 12px 8px;
   text-align: center;
