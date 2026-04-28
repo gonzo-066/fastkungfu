@@ -67,32 +67,132 @@
 </div>
 
 <!-- ═══════════════════════════════════
-     PANTALLA: MENÚ PRINCIPAL
+     PANTALLA: MENÚ PRINCIPAL (NUEVO HOME)
 ════════════════════════════════════ -->
 <div id="screen-menu" class="screen hidden">
-  <div class="screen-inner screen-inner-nav">
-    <div class="topbar">
+
+  <!-- HEADER SUPERIOR FIJO -->
+  <header class="home-header">
+    <div class="home-header-left">
+      <img src="assets/LOGO_IMPACTLAB.png" class="home-logo" alt="ImpactLab"
+           onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'home-logo-fallback',textContent:'🥊'}))">
+    </div>
+    <div class="home-sensor-status">
+      <span class="home-sensor-dot" id="home-sensor-dot"></span>
+      <span class="home-sensor-label" id="home-sensor-label">SENSOR LISTO</span>
+    </div>
+    <div class="home-header-right">
+      <span class="home-battery-icon" id="home-battery-icon"></span>
       <button class="icon-btn" id="btn-settings" title="Ajustes">⚙️</button>
-      <div></div>
-      <button class="icon-btn" id="btn-help" title="Ayuda">❓</button>
     </div>
-    <img src="assets/LOGO_IMPACTLAB.png" class="logo-img logo-menu" alt="ImpactLab" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',textContent:'🥊'}))">
-    <div class="menu-buttons">
-      <button class="btn-mode btn-striking" id="btn-training-mode">
-        <span class="mode-icon">🥊</span>
-        <span class="mode-label" data-i18n="training_mode">ENTRENAMIENTO</span>
-        <span class="mode-desc" data-i18n="training_desc">Mide velocidad y potencia</span>
-      </button>
-      <button class="btn-mode btn-reaction" id="btn-combo-mode">
-        <span class="mode-icon">⚡</span>
-        <span class="mode-label" data-i18n="combo_mode">MODO REACCIÓN</span>
-        <span class="mode-desc" data-i18n="combo_desc">Combos con tiempo de reacción</span>
-      </button>
-      <button class="btn-calibrate-menu" id="btn-calibrate-menu">
-        🎯 <span data-i18n="calib_menu_btn">CALIBRAR DISPOSITIVO</span>
-      </button>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL (scrollable) -->
+  <div class="home-content">
+
+    <!-- HERO: TÍTULO + SUBTÍTULO + BOTÓN PRINCIPAL -->
+    <section class="home-hero">
+      <h1 class="home-title">¿QUÉ TAN <span class="home-title-yellow">FUERTE</span> PEGAS?</h1>
+      <p class="home-subtitle">MIDE. <span class="home-subtitle-blue">MEJORA.</span> DOMINA.</p>
+      <button class="home-measure-btn" id="btn-training-mode">⚡ MEDIR MI GOLPE ›</button>
+    </section>
+
+    <!-- 3 MÉTRICAS DESDE LOCALSTORAGE -->
+    <div class="home-metrics-row">
+      <div class="home-metric-card">
+        <div class="home-metric-emoji">⚡</div>
+        <div class="home-metric-val" id="home-last-punch">—</div>
+        <div class="home-metric-name">ÚLTIMO GOLPE</div>
+        <div class="home-metric-unit">m/s</div>
+      </div>
+      <div class="home-metric-card">
+        <div class="home-metric-emoji">🏆</div>
+        <div class="home-metric-val" id="home-record">—</div>
+        <div class="home-metric-name">RÉCORD</div>
+        <div class="home-metric-unit">m/s</div>
+      </div>
+      <div class="home-metric-card">
+        <div class="home-metric-emoji">📈</div>
+        <div class="home-metric-val" id="home-vs-ayer">—</div>
+        <div class="home-metric-name">VS AYER</div>
+        <div class="home-metric-unit" id="home-vs-unit">%</div>
+      </div>
     </div>
-  </div>
+
+    <!-- 4 TARJETAS DE MODOS (grid 2×2) -->
+    <div class="home-modes-grid">
+
+      <!-- REACCIÓN -->
+      <button class="home-mode-card"
+        onclick="APP.mode='combo';APP.comboConfig.submode='simple';showScreen('screen-config');initConfigScreen();">
+        <span class="home-mode-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M13 2L3 14h8l-2 8L21 10h-8z" fill="#00D4FF"/>
+          </svg>
+        </span>
+        <span class="home-mode-title" style="color:#00D4FF">REACCIÓN</span>
+        <span class="home-mode-desc">Mejora tu velocidad de reacción</span>
+      </button>
+
+      <!-- COMBO -->
+      <button class="home-mode-card"
+        onclick="APP.mode='combo';APP.comboConfig.submode='combo';showScreen('screen-config');initConfigScreen();">
+        <span class="home-mode-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <ellipse cx="10" cy="13" rx="6.5" ry="5.5" fill="#FFD300"/>
+            <ellipse cx="16" cy="10" rx="2.8" ry="2.2" fill="#FFD300" transform="rotate(-25 16 10)"/>
+            <rect x="4" y="17.5" width="12" height="2.5" rx="1.25" fill="#c9a000"/>
+            <rect x="4" y="8" width="7.5" height="3.5" rx="1.75" fill="#e6bc00"/>
+          </svg>
+        </span>
+        <span class="home-mode-title" style="color:#FFD300">COMBO</span>
+        <span class="home-mode-desc">Series de golpes por tiempo</span>
+      </button>
+
+      <!-- POTENCIA -->
+      <button class="home-mode-card"
+        onclick="APP.mode='training';showScreen('screen-config');initConfigScreen();">
+        <span class="home-mode-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="4.5" y="9" width="3.5" height="7" rx="1.75" fill="#00FF66"/>
+            <rect x="8.5" y="7" width="3.5" height="9" rx="1.75" fill="#00FF66"/>
+            <rect x="12.5" y="8" width="3.5" height="8" rx="1.75" fill="#00FF66"/>
+            <rect x="4.5" y="15.5" width="11.5" height="3.5" rx="1.75" fill="#00cc55"/>
+            <rect x="16" y="11" width="3.5" height="5" rx="1.75" fill="#00FF66"/>
+          </svg>
+        </span>
+        <span class="home-mode-title" style="color:#00FF66">POTENCIA</span>
+        <span class="home-mode-desc">Golpea más fuerte, mejora tu fuerza</span>
+      </button>
+
+      <!-- COLORES -->
+      <button class="home-mode-card"
+        onclick="APP.mode='combo';APP.comboConfig.submode='colors';showScreen('screen-config');initConfigScreen();">
+        <span class="home-mode-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="7"  cy="7"  r="3.8" fill="#FFD300"/>
+            <circle cx="17" cy="7"  r="3.8" fill="#00D4FF"/>
+            <circle cx="7"  cy="17" r="3.8" fill="#00FF66"/>
+            <circle cx="17" cy="17" r="3.8" fill="#9B59B6"/>
+            <circle cx="12" cy="12" r="3.2" fill="#050505" stroke="#444" stroke-width="1"/>
+            <circle cx="12" cy="12" r="1.8" fill="#FF6B6B"/>
+          </svg>
+        </span>
+        <span class="home-mode-title" style="color:#9B59B6">COLORES</span>
+        <span class="home-mode-desc">Reacciona al color de luz</span>
+      </button>
+
+    </div><!-- /home-modes-grid -->
+
+    <!-- FOOTER: SCROLL HINT -->
+    <div class="home-footer-hint" role="button" tabindex="0"
+         onclick="showScreen('screen-history');initHistoryScreen();">
+      Desliza hacia abajo para ver tu progreso ▼
+    </div>
+
+  </div><!-- /home-content -->
+
+  <!-- BOTTOM NAV (mantenida igual) -->
   <nav class="bottom-nav">
     <button class="nav-btn" id="nav-profile">
       <span class="nav-icon">👤</span>
@@ -107,6 +207,12 @@
       <span class="nav-label" data-i18n="nav_history">Historial</span>
     </button>
   </nav>
+
+  <!-- COMPATIBILIDAD JS: botones ocultos que app.js necesita -->
+  <button id="btn-combo-mode"     style="display:none" aria-hidden="true"></button>
+  <button id="btn-calibrate-menu" style="display:none" aria-hidden="true"></button>
+  <button id="btn-help"           style="display:none" aria-hidden="true"></button>
+
 </div>
 
 <!-- ═══════════════════════════════════
@@ -707,5 +813,97 @@
 </div>
 
 <script src="app.js"></script>
+
+<!-- ═══════════════════════════════════
+     NUEVO HOME: métricas, sensor, batería
+════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  function updateHomeMetrics() {
+    try {
+      var sessions = JSON.parse(localStorage.getItem('fkf_sessions') || '[]');
+
+      // ── Último golpe (maxSpeed de la última sesión) ──
+      var lastEl = document.getElementById('home-last-punch');
+      var last = sessions.length ? sessions[sessions.length - 1] : null;
+      if (lastEl) {
+        var lastSpeed = last && last.maxSpeed > 0 ? last.maxSpeed.toFixed(1) : null;
+        lastEl.textContent = lastSpeed || '—';
+      }
+
+      // ── Récord personal (maxSpeed de todas las sesiones) ──
+      var recEl = document.getElementById('home-record');
+      if (recEl) {
+        var best = sessions.reduce(function (m, s) { return Math.max(m, s.maxSpeed || 0); }, 0);
+        recEl.textContent = best > 0 ? best.toFixed(1) : '—';
+      }
+
+      // ── VS Ayer (avgSpeed hoy vs ayer) ──
+      var vsEl = document.getElementById('home-vs-ayer');
+      var unitEl = document.getElementById('home-vs-unit');
+      if (vsEl) {
+        var todayStr = new Date().toDateString();
+        var yestStr  = new Date(Date.now() - 86400000).toDateString();
+        var todaySess = sessions.filter(function (s) { return new Date(s.ts).toDateString() === todayStr; });
+        var yestSess  = sessions.filter(function (s) { return new Date(s.ts).toDateString() === yestStr; });
+        if (todaySess.length && yestSess.length) {
+          var todayAvg = todaySess.reduce(function (a, s) { return a + (s.avgSpeed || 0); }, 0) / todaySess.length;
+          var yestAvg  = yestSess.reduce(function (a, s) { return a + (s.avgSpeed || 0); }, 0) / yestSess.length;
+          var pct = yestAvg > 0 ? Math.round(((todayAvg - yestAvg) / yestAvg) * 100) : 0;
+          vsEl.textContent = (pct >= 0 ? '+' : '') + pct + '%';
+          vsEl.style.color = pct >= 0 ? '#00FF66' : '#ff4444';
+          if (unitEl) unitEl.textContent = '';
+        } else {
+          vsEl.textContent = '—';
+          vsEl.style.color = '';
+          if (unitEl) unitEl.textContent = '%';
+        }
+      }
+
+      // ── Sensor status ──
+      var dot   = document.getElementById('home-sensor-dot');
+      var label = document.getElementById('home-sensor-label');
+      if (dot && label) {
+        var connected = typeof APP !== 'undefined' && APP.accel && APP.accel.available;
+        dot.classList.toggle('sensor-connected', !!connected);
+        label.textContent = connected ? 'SENSOR CONECTADO' : 'SENSOR LISTO';
+      }
+    } catch (e) { /* silencioso */ }
+  }
+
+  // ── Batería ──
+  function initBattery() {
+    if (!navigator.getBattery) return;
+    navigator.getBattery().then(function (bat) {
+      function draw() {
+        var el = document.getElementById('home-battery-icon');
+        if (!el) return;
+        var pct = Math.round(bat.level * 100);
+        var icon = pct <= 15 ? '🪫' : '🔋';
+        el.textContent = icon + ' ' + pct + '%';
+      }
+      draw();
+      bat.addEventListener('levelchange', draw);
+    }).catch(function () {});
+  }
+
+  // ── Parchar showScreen para actualizar al volver al home ──
+  window.addEventListener('load', function () {
+    var _orig = window.showScreen;
+    if (typeof _orig === 'function') {
+      window.showScreen = function (id) {
+        _orig(id);
+        if (id === 'screen-menu') {
+          setTimeout(updateHomeMetrics, 80);
+        }
+      };
+    }
+    initBattery();
+    updateHomeMetrics();
+  });
+}());
+</script>
 </body>
 </html>
