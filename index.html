@@ -138,82 +138,106 @@
       </div>
     </div>
 
-    <!-- 4 TARJETAS DE MODOS (fila horizontal con scroll) -->
-    <div class="home-modes-row">
+    <!-- 4 TARJETAS DE MODOS (columna vertical) -->
+    <div class="home-modes-col">
 
       <!-- REACCIÓN -->
-      <button class="home-mode-card home-mode-card--blue"
+      <button class="hmc hmc--blue"
         onclick="APP.mode='combo';APP.comboConfig.submode='simple';showScreen('screen-config');initConfigScreen();">
-        <span class="home-mode-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M13 2L3 14h8l-2 8L21 10h-8z" fill="#00D4FF"/>
-          </svg>
-        </span>
-        <div class="home-mode-body">
-          <span class="home-mode-title" style="color:#00D4FF">REACCIÓN</span>
-          <span class="home-mode-desc">Mejora tu velocidad de reacción</span>
+        <div class="hmc-left">
+          <div class="hmc-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M13 2L3 14h8l-2 8L21 10h-8z" fill="#00D4FF"/>
+            </svg>
+          </div>
+          <span class="hmc-title" style="color:#00D4FF" data-i18n="card_reaction">REACCIÓN</span>
+          <span class="hmc-desc" data-i18n="card_reaction_desc">Mejora tu velocidad de reacción</span>
+          <div class="hmc-record">
+            <span class="hmc-record-label" data-i18n="card_record">RÉCORD</span>
+            <span class="hmc-record-val" id="card-rec-reaction" style="color:#00D4FF">—</span>
+          </div>
         </div>
-        <span class="home-mode-arrow">›</span>
-      </button>
-
-      <!-- COMBO -->
-      <button class="home-mode-card home-mode-card--yellow"
-        onclick="APP.mode='combo';APP.comboConfig.submode='combo';showScreen('screen-config');initConfigScreen();">
-        <span class="home-mode-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <ellipse cx="10" cy="13" rx="6.5" ry="5.5" fill="#FFD300"/>
-            <ellipse cx="16" cy="10" rx="2.8" ry="2.2" fill="#FFD300" transform="rotate(-25 16 10)"/>
-            <rect x="4" y="17.5" width="12" height="2.5" rx="1.25" fill="#c9a000"/>
-            <rect x="4" y="8" width="7.5" height="3.5" rx="1.75" fill="#e6bc00"/>
-          </svg>
-        </span>
-        <div class="home-mode-body">
-          <span class="home-mode-title" style="color:#FFD300">COMBO</span>
-          <span class="home-mode-desc">Series de golpes por tiempo</span>
+        <div class="hmc-right" style="background-image:url('assets/card-reaccion.png')">
+          <span class="hmc-arrow">›</span>
         </div>
-        <span class="home-mode-arrow">›</span>
       </button>
 
       <!-- POTENCIA -->
-      <button class="home-mode-card home-mode-card--green"
+      <button class="hmc hmc--green"
         onclick="APP.mode='training';showScreen('screen-config');initConfigScreen();">
-        <span class="home-mode-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="4.5" y="9" width="3.5" height="7" rx="1.75" fill="#00FF66"/>
-            <rect x="8.5" y="7" width="3.5" height="9" rx="1.75" fill="#00FF66"/>
-            <rect x="12.5" y="8" width="3.5" height="8" rx="1.75" fill="#00FF66"/>
-            <rect x="4.5" y="15.5" width="11.5" height="3.5" rx="1.75" fill="#00cc55"/>
-            <rect x="16" y="11" width="3.5" height="5" rx="1.75" fill="#00FF66"/>
-          </svg>
-        </span>
-        <div class="home-mode-body">
-          <span class="home-mode-title" style="color:#00FF66">POTENCIA</span>
-          <span class="home-mode-desc">Golpea más fuerte, mejora tu fuerza</span>
+        <div class="hmc-left">
+          <div class="hmc-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="4.5" y="9" width="3.5" height="7" rx="1.75" fill="#00FF66"/>
+              <rect x="8.5" y="7" width="3.5" height="9" rx="1.75" fill="#00FF66"/>
+              <rect x="12.5" y="8" width="3.5" height="8" rx="1.75" fill="#00FF66"/>
+              <rect x="4.5" y="15.5" width="11.5" height="3.5" rx="1.75" fill="#00cc55"/>
+              <rect x="16" y="11" width="3.5" height="5" rx="1.75" fill="#00FF66"/>
+            </svg>
+          </div>
+          <span class="hmc-title" style="color:#00FF66" data-i18n="card_power">POTENCIA</span>
+          <span class="hmc-desc" data-i18n="card_power_desc">Golpea más fuerte, mejora tu fuerza</span>
+          <div class="hmc-record">
+            <span class="hmc-record-label" data-i18n="card_record">RÉCORD</span>
+            <span class="hmc-record-val" id="card-rec-power" style="color:#00FF66">—</span>
+          </div>
         </div>
-        <span class="home-mode-arrow">›</span>
+        <div class="hmc-right" style="background-image:url('assets/card-potencia.png')">
+          <span class="hmc-arrow">›</span>
+        </div>
+      </button>
+
+      <!-- COMBO -->
+      <button class="hmc hmc--yellow"
+        onclick="APP.mode='combo';APP.comboConfig.submode='combo';showScreen('screen-config');initConfigScreen();">
+        <div class="hmc-left">
+          <div class="hmc-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <ellipse cx="10" cy="13" rx="6.5" ry="5.5" fill="#FFD300"/>
+              <ellipse cx="16" cy="10" rx="2.8" ry="2.2" fill="#FFD300" transform="rotate(-25 16 10)"/>
+              <rect x="4" y="17.5" width="12" height="2.5" rx="1.25" fill="#c9a000"/>
+              <rect x="4" y="8" width="7.5" height="3.5" rx="1.75" fill="#e6bc00"/>
+            </svg>
+          </div>
+          <span class="hmc-title" style="color:#FFD300" data-i18n="card_combo">COMBO</span>
+          <span class="hmc-desc" data-i18n="card_combo_desc">Golpea más fluido</span>
+          <div class="hmc-record">
+            <span class="hmc-record-label" data-i18n="card_record">RÉCORD</span>
+            <span class="hmc-record-val" id="card-rec-combo" style="color:#FFD300">—</span>
+          </div>
+        </div>
+        <div class="hmc-right" style="background-image:url('assets/card-combo.png')">
+          <span class="hmc-arrow">›</span>
+        </div>
       </button>
 
       <!-- COLORES -->
-      <button class="home-mode-card home-mode-card--purple"
+      <button class="hmc hmc--purple"
         onclick="APP.mode='combo';APP.comboConfig.submode='colors';showScreen('screen-config');initConfigScreen();">
-        <span class="home-mode-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="7"  cy="7"  r="3.8" fill="#FFD300"/>
-            <circle cx="17" cy="7"  r="3.8" fill="#00D4FF"/>
-            <circle cx="7"  cy="17" r="3.8" fill="#00FF66"/>
-            <circle cx="17" cy="17" r="3.8" fill="#9B59B6"/>
-            <circle cx="12" cy="12" r="3.2" fill="#050505" stroke="#444" stroke-width="1"/>
-            <circle cx="12" cy="12" r="1.8" fill="#FF6B6B"/>
-          </svg>
-        </span>
-        <div class="home-mode-body">
-          <span class="home-mode-title" style="color:#9B59B6">COLORES</span>
-          <span class="home-mode-desc">Reacciona al color de luz</span>
+        <div class="hmc-left">
+          <div class="hmc-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="7"  cy="7"  r="3.8" fill="#FFD300"/>
+              <circle cx="17" cy="7"  r="3.8" fill="#00D4FF"/>
+              <circle cx="7"  cy="17" r="3.8" fill="#00FF66"/>
+              <circle cx="17" cy="17" r="3.8" fill="#9B59B6"/>
+              <circle cx="12" cy="12" r="3.2" fill="#050505" stroke="#444" stroke-width="1"/>
+              <circle cx="12" cy="12" r="1.8" fill="#FF6B6B"/>
+            </svg>
+          </div>
+          <span class="hmc-title" style="color:#9B59B6" data-i18n="card_colors">COLORES</span>
+          <span class="hmc-desc" data-i18n="card_colors_desc">Mejora tu precisión</span>
+          <div class="hmc-record">
+            <span class="hmc-record-label" data-i18n="card_record">RÉCORD</span>
+            <span class="hmc-record-val" id="card-rec-colors" style="color:#9B59B6">—</span>
+          </div>
         </div>
-        <span class="home-mode-arrow">›</span>
+        <div class="hmc-right" style="background-image:url('assets/card-colores.png')">
+          <span class="hmc-arrow">›</span>
+        </div>
       </button>
 
-    </div><!-- /home-modes-row -->
+    </div><!-- /home-modes-col -->
 
     <!-- FOOTER: SCROLL HINT -->
     <div class="home-footer-hint" role="button" tabindex="0"
@@ -889,6 +913,36 @@
           vsEl.style.color = '';
           if (unitEl) unitEl.textContent = '%';
         }
+      }
+
+      /* ── Récords por modo en las 4 tarjetas ── */
+      var reactSess  = sessions.filter(function (s) { return s.mode === 'combo' && s.submode === 'simple'; });
+      var powerSess  = sessions.filter(function (s) { return s.mode === 'training'; });
+      var comboSess  = sessions.filter(function (s) { return s.mode === 'combo' && s.submode === 'combo'; });
+      var colorsSess = sessions.filter(function (s) { return s.mode === 'combo' && s.submode === 'colors'; });
+
+      var elRec = document.getElementById('card-rec-reaction');
+      if (elRec) {
+        var bestR = reactSess.reduce(function (m, s) { return s.bestReaction && s.bestReaction < m ? s.bestReaction : m; }, Infinity);
+        elRec.textContent = bestR < Infinity ? bestR + 'ms' : '—';
+      }
+
+      var elPow = document.getElementById('card-rec-power');
+      if (elPow) {
+        var bestP = powerSess.reduce(function (m, s) { return Math.max(m, s.maxPower || 0); }, 0);
+        elPow.textContent = bestP > 0 ? bestP.toFixed(1) + 'G' : '—';
+      }
+
+      var elCmb = document.getElementById('card-rec-combo');
+      if (elCmb) {
+        var bestC = comboSess.reduce(function (m, s) { return s.bestComboDuration && s.bestComboDuration < m ? s.bestComboDuration : m; }, Infinity);
+        elCmb.textContent = bestC < Infinity ? bestC.toFixed(2) + 's' : '—';
+      }
+
+      var elCol = document.getElementById('card-rec-colors');
+      if (elCol) {
+        var bestCo = colorsSess.reduce(function (m, s) { return s.bestReaction && s.bestReaction < m ? s.bestReaction : m; }, Infinity);
+        elCol.textContent = bestCo < Infinity ? bestCo + 'ms' : '—';
       }
     } catch (e) { /* silencioso */ }
   }
