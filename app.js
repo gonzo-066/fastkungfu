@@ -799,12 +799,46 @@ function getLocale() {
 }
 
 // ═══════════════════════════════════════════════════
+// SISTEMA DE NIVELES
+// ═══════════════════════════════════════════════════
+const RANK_LEVELS = [
+  { name: 'Recluta',       min: 0,    max: 99 },
+  { name: 'Striker',       min: 100,  max: 299 },
+  { name: 'Contender',     min: 300,  max: 599 },
+  { name: 'Power Fighter', min: 600,  max: 999 },
+  { name: 'Knockout',      min: 1000, max: 1499 },
+  { name: 'Dominator',     min: 1500, max: 2199 },
+  { name: 'Champion',      min: 2200, max: 2999 },
+  { name: 'Legend',        min: 3000, max: 3999 },
+  { name: 'Impact Master', min: 4000, max: Infinity },
+];
+
+function getSessionScore(s) {
+  return (s.punches || 0) + Math.round((s.maxSpeed || 0) * 10);
+}
+
+function getRankLevel(sessions) {
+  const score = sessions.reduce((acc, s) => acc + getSessionScore(s), 0);
+  let idx = RANK_LEVELS.findIndex(l => score >= l.min && score <= l.max);
+  if (idx < 0) idx = RANK_LEVELS.length - 1;
+  const level     = RANK_LEVELS[idx];
+  const nextLevel = RANK_LEVELS[idx + 1] || null;
+  return { score, level, nextLevel, idx };
+}
+
+// ═══════════════════════════════════════════════════
 // NAVEGACIÓN
 // ═══════════════════════════════════════════════════
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.toggle('hidden', s.id !== id);
   });
+}
+
+function setNavActive(id) {
+  document.querySelectorAll('#bottom-nav .nav-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(id);
+  if (btn) btn.classList.add('active');
 }
 
 // ═══════════════════════════════════════════════════
@@ -1125,17 +1159,90 @@ function afterLangSelected() {
 // ═══════════════════════════════════════════════════
 // PANTALLA: PERFIL
 // ═══════════════════════════════════════════════════
+function renderProfileAvatar() {
+  const circle   = document.getElementById('profile-avatar-circle');
+  const section  = document.getElementById('profile-avatar-section');
+  const badgeEl  = document.getElementById('profile-level-badge');
+  const barEl    = document.getElementById('profile-level-bar');
+  const pointsEl = document.getElementById('profile-level-points');
+  if (!circle) return;
+
+  // Avatar: foto guardada o iniciales
+  const savedPhoto = localStorage.getItem('fkf_avatar');
+  circle.innerHTML = '';
+  if (savedPhoto) {
+    const img = document.createElement('img');
+    img.src = savedPhoto;
+    circle.appendChild(img);
+  } else {
+    const name = APP.profile ? (APP.profile.name || '') : '';
+    const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+    const span = document.createElement('span');
+    span.className = 'profile-avatar-initials';
+    span.textContent = initials;
+    circle.appendChild(span);
+  }
+
+  // Nivel
+  const sessions = JSON.parse(localStorage.getItem('fkf_sessions') || '[]');
+  const { score, level, nextLevel } = getRankLevel(sessions);
+  if (badgeEl)  badgeEl.textContent  = level.name;
+  if (barEl) {
+    if (nextLevel) {
+      const range = nextLevel.min - level.min;
+      const pct   = Math.min(100, Math.round(((score - level.min) / range) * 100));
+      barEl.style.width = pct + '%';
+    } else {
+      barEl.style.width = '100%';
+    }
+  }
+  if (pointsEl) {
+    pointsEl.textContent = nextLevel
+      ? score + ' / ' + nextLevel.min + ' pts'
+      : score + ' pts · NIVEL MÁXIMO';
+  }
+}
+
 function initProfileScreen(fromNav) {
-  const topbar = document.getElementById('profile-topbar');
-  const logoWrap = document.querySelector('#profile-form-wrap .logo-img') ||
-                   document.querySelector('#profile-form-wrap .logo-fallback');
+  const topbar   = document.getElementById('profile-topbar');
+  const logoEl   = document.querySelector('.profile-setup-logo');
+  const section  = document.getElementById('profile-avatar-section');
+
   topbar.classList.toggle('hidden', !fromNav);
   if (fromNav) {
     document.getElementById('btn-profile-back').onclick = () => {
       showScreen('screen-menu');
+      setNavActive('nav-home');
       initMenuScreen();
     };
+    // Con perfil existente: mostrar avatar, ocultar logo de setup
+    if (APP.profile) {
+      if (section) section.classList.remove('setup-mode');
+      if (logoEl)  logoEl.classList.add('hidden-nav');
+    }
+  } else {
+    // Primera configuración: ocultar sección de avatar
+    if (section) section.classList.add('setup-mode');
+    if (logoEl)  logoEl.classList.remove('hidden-nav');
   }
+
+  renderProfileAvatar();
+
+  // Upload de foto
+  const fileInput = document.getElementById('profile-photo-input');
+  if (fileInput) {
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        localStorage.setItem('fkf_avatar', ev.target.result);
+        renderProfileAvatar();
+      };
+      reader.readAsDataURL(file);
+    };
+  }
+
   const sexBtns = document.querySelectorAll('#screen-profile .sex-btn');
   let selectedSex = APP.profile ? (APP.profile.sex || 'hombre') : 'hombre';
   if (APP.profile) {
@@ -1160,6 +1267,7 @@ function initProfileScreen(fromNav) {
     if (!age || age < 10 || age > 100)         { alert(t('alert_age'));       return; }
     saveProfile({ name, weight, age, sex: selectedSex });
     showScreen('screen-menu');
+    setNavActive('nav-home');
     initMenuScreen();
   };
 }
@@ -1181,19 +1289,27 @@ function initMenuScreen() {
   document.getElementById('btn-settings').onclick = openSettingsModal;
   document.getElementById('btn-calibrate-menu').onclick = () => showCalibrationScreen('screen-menu');
   document.getElementById('btn-help').onclick = () => { showScreen('screen-help'); initHelpScreen(); };
-  document.getElementById('nav-profile').onclick = () => {
-    showScreen('screen-profile');
-    initProfileScreen(true);
-  };
-  document.getElementById('nav-train').onclick = () => {
-    APP.mode = 'training';
-    showScreen('screen-config');
-    initConfigScreen();
+  document.getElementById('nav-home').onclick = () => {
+    showScreen('screen-menu');
+    setNavActive('nav-home');
+    initMenuScreen();
   };
   document.getElementById('nav-history-btn').onclick = () => {
     showScreen('screen-history');
+    setNavActive('nav-history-btn');
     initHistoryScreen();
   };
+  document.getElementById('nav-ranking').onclick = () => {
+    showScreen('screen-history');
+    setNavActive('nav-ranking');
+    initHistoryScreen();
+  };
+  document.getElementById('nav-profile').onclick = () => {
+    showScreen('screen-profile');
+    setNavActive('nav-profile');
+    initProfileScreen(true);
+  };
+  setNavActive('nav-home');
 }
 
 // ═══════════════════════════════════════════════════

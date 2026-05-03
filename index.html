@@ -40,7 +40,22 @@
       <div></div>
     </div>
     <div class="center-content" id="profile-form-wrap">
-    <img src="assets/LOGO_IMPACTLAB.png" class="logo-img" alt="ImpactLab" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',textContent:'🥊'}))">
+
+    <!-- AVATAR + NIVEL -->
+    <div class="profile-avatar-section" id="profile-avatar-section">
+      <div class="profile-avatar-circle" id="profile-avatar-circle">
+        <!-- JS inyecta <img> o iniciales -->
+      </div>
+      <label class="btn-avatar-upload" for="profile-photo-input">📷 Cambiar foto</label>
+      <input type="file" id="profile-photo-input" accept="image/*" style="display:none">
+      <div class="profile-level-badge" id="profile-level-badge"></div>
+      <div class="profile-level-progress-wrap">
+        <div class="profile-level-progress-bar" id="profile-level-bar" style="width:0%"></div>
+      </div>
+      <div class="profile-level-points" id="profile-level-points"></div>
+    </div>
+
+    <img src="assets/LOGO_IMPACTLAB.png" class="logo-img profile-setup-logo" alt="ImpactLab" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',textContent:'🥊'}))">
     <p class="subtitle" data-i18n="profile_subtitle">Configura tu perfil para comenzar</p>
     <div class="form-group">
       <label for="input-name" data-i18n="name">Nombre</label>
@@ -103,12 +118,7 @@
     <div class="home-metrics-bar">
       <div class="home-metric-section">
         <div class="home-metric-icon-wrap">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="13" r="8" stroke="#FFD300" stroke-width="2"/>
-            <path d="M12 9v4l2.5 2.5" stroke="#FFD300" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M5.5 4.5l1.5 1.5M17 4.5L15.5 6" stroke="#FFD300" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M12 3v1.5" stroke="#FFD300" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
+          <img src="assets/icon-ultimo-golpe.png" width="40" height="40" alt="Último golpe" style="object-fit:contain">
         </div>
         <div class="home-metric-label">ÚLTIMO GOLPE</div>
         <div class="home-metric-val" id="home-last-punch">—</div>
@@ -117,9 +127,7 @@
       <div class="home-metric-sep"></div>
       <div class="home-metric-section">
         <div class="home-metric-icon-wrap">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 2l2.9 6.3 6.6.9-4.8 4.8 1.1 6.6L12 17.7l-5.8 3 1.1-6.6L2.5 9.2l6.6-.9z" fill="#FFD300"/>
-          </svg>
+          <img src="assets/icon-record.png" width="40" height="40" alt="Récord personal" style="object-fit:contain">
         </div>
         <div class="home-metric-label">RÉCORD PERSONAL</div>
         <div class="home-metric-val" id="home-record">—</div>
@@ -128,9 +136,7 @@
       <div class="home-metric-sep"></div>
       <div class="home-metric-section">
         <div class="home-metric-icon-wrap">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 19V5M5 12l7-7 7 7" stroke="#00D4FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <img src="assets/icon-vs-ayer.png" width="40" height="40" alt="VS ayer" style="object-fit:contain">
         </div>
         <div class="home-metric-label">VS AYER</div>
         <div class="home-metric-val" id="home-vs-ayer">—</div>
@@ -239,28 +245,49 @@
 
     </div><!-- /home-modes-col -->
 
-    <!-- FOOTER: SCROLL HINT -->
-    <div class="home-footer-hint" role="button" tabindex="0"
-         onclick="showScreen('screen-history');initHistoryScreen();">
-      <div class="home-footer-text">👆 Desliza hacia abajo para ver tu progreso</div>
-      <div class="home-footer-down">▼</div>
-    </div>
 
   </div><!-- /home-content -->
 
-  <!-- BOTTOM NAV (mantenida igual) -->
-  <nav class="bottom-nav">
-    <button class="nav-btn" id="nav-profile">
-      <span class="nav-icon">👤</span>
-      <span class="nav-label" data-i18n="nav_profile">Perfil</span>
-    </button>
-    <button class="nav-btn active" id="nav-train">
-      <span class="nav-icon">🥊</span>
-      <span class="nav-label" data-i18n="nav_train">Entrenar</span>
+  <!-- BOTTOM NAV — 4 items, posición relativa (no fija) -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="nav-btn active" id="nav-home">
+      <span class="nav-icon-wrap">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </span>
+      <span class="nav-label">INICIO</span>
     </button>
     <button class="nav-btn" id="nav-history-btn">
-      <span class="nav-icon">📊</span>
-      <span class="nav-label" data-i18n="nav_history">Historial</span>
+      <span class="nav-icon-wrap">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <polyline points="12 7 12 12 15 14"/>
+        </svg>
+      </span>
+      <span class="nav-label">HISTORIAL</span>
+    </button>
+    <button class="nav-btn" id="nav-ranking">
+      <span class="nav-icon-wrap">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9H4.5a2.5 2.5 0 000 5H6"/>
+          <path d="M18 9h1.5a2.5 2.5 0 010 5H18"/>
+          <path d="M6 9v1a6 6 0 0012 0V9H6z"/>
+          <line x1="12" y1="15" x2="12" y2="19"/>
+          <line x1="9" y1="19" x2="15" y2="19"/>
+        </svg>
+      </span>
+      <span class="nav-label">RANKING</span>
+    </button>
+    <button class="nav-btn" id="nav-profile">
+      <span class="nav-icon-wrap">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+      </span>
+      <span class="nav-label">PERFIL</span>
     </button>
   </nav>
 

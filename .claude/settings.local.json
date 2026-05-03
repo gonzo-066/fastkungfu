@@ -12,7 +12,10 @@
       "Bash(cp \"assets/La del cuerpo humano en el de colores.png\" \"assets/card-colores.png\")",
       "Bash(cp \"assets/Lo mismo con las otras variantes . La verde ira en potencia.png\" \"assets/card-potencia.png\")",
       "Bash(cp \"assets/Mejora tu velocidad, y figura el record..jpg\" \"assets/card-reaccion-2.jpg\")",
-      "Bash(cp \"assets/Y la amarilla en combo..jpg\" \"assets/card-combo.jpg\")"
+      "Bash(cp \"assets/Y la amarilla en combo..jpg\" \"assets/card-combo.jpg\")",
+      "Bash(cp assets/icon-record.png.png assets/icon-record.png)",
+      "Bash(cp assets/icon-ultimo-golpe.png.png assets/icon-ultimo-golpe.png)",
+      "Bash(cp assets/icon-vs-ayer.png.png assets/icon-vs-ayer.png)"
     ]
   }
 }
