@@ -175,6 +175,10 @@ const TRANSLATIONS = {
     card_colors:          'COLORES',
     card_colors_desc:     'Mejora tu precisión',
     card_record:          'RÉCORD',
+    home_intro_title:     '¿QUÉ TAN FUERTE PEGAS?',
+    home_tagline_1:       'MIDE.',
+    home_tagline_2:       'MEJORA.',
+    home_tagline_3:       'DOMINA.',
   },
   en: {
     profile_subtitle:     'Set up your profile to start',
@@ -338,6 +342,10 @@ const TRANSLATIONS = {
     card_colors:          'COLORS',
     card_colors_desc:     'Improve your accuracy',
     card_record:          'RECORD',
+    home_intro_title:     'HOW HARD DO YOU PUNCH?',
+    home_tagline_1:       'MEASURE.',
+    home_tagline_2:       'IMPROVE.',
+    home_tagline_3:       'DOMINATE.',
   },
   pt: {
     profile_subtitle:     'Configure seu perfil para começar',
@@ -501,6 +509,10 @@ const TRANSLATIONS = {
     card_colors:          'CORES',
     card_colors_desc:     'Melhora a tua precisão',
     card_record:          'RECORDE',
+    home_intro_title:     'QUÃ FORTE VOCÊ SOCA?',
+    home_tagline_1:       'MEÇA.',
+    home_tagline_2:       'MELHORE.',
+    home_tagline_3:       'DOMINE.',
   },
   de: {
     profile_subtitle:     'Profil einrichten um zu beginnen',
@@ -664,6 +676,10 @@ const TRANSLATIONS = {
     card_colors:          'FARBEN',
     card_colors_desc:     'Verbessere deine Präzision',
     card_record:          'REKORD',
+    home_intro_title:     'WIE HART SCHLÄGST DU?',
+    home_tagline_1:       'MESSEN.',
+    home_tagline_2:       'VERBESSERN.',
+    home_tagline_3:       'DOMINIEREN.',
   },
 };
 
@@ -1273,6 +1289,35 @@ function initProfileScreen(fromNav) {
 }
 
 // ═══════════════════════════════════════════════════
+// HOME — avatar + nivel en header
+// ═══════════════════════════════════════════════════
+function updateHomeHeader() {
+  const circle = document.getElementById('home-avatar-circle');
+  const levelEl = document.getElementById('home-avatar-level');
+  if (!circle) return;
+
+  circle.innerHTML = '';
+  const savedPhoto = localStorage.getItem('fkf_avatar');
+  if (savedPhoto) {
+    const img = document.createElement('img');
+    img.src = savedPhoto;
+    circle.appendChild(img);
+  } else {
+    const name = APP.profile ? (APP.profile.name || '') : '';
+    const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+    const span = document.createElement('span');
+    span.className = 'home-avatar-initials';
+    span.textContent = initials;
+    circle.appendChild(span);
+  }
+
+  if (levelEl) {
+    const sessions = JSON.parse(localStorage.getItem('fkf_sessions') || '[]');
+    levelEl.textContent = getRankLevel(sessions).level.name.toUpperCase();
+  }
+}
+
+// ═══════════════════════════════════════════════════
 // PANTALLA: MENÚ
 // ═══════════════════════════════════════════════════
 function initMenuScreen() {
@@ -1287,6 +1332,11 @@ function initMenuScreen() {
     initConfigScreen();
   };
   document.getElementById('btn-settings').onclick = openSettingsModal;
+  document.getElementById('btn-header-avatar').onclick = () => {
+    showScreen('screen-profile');
+    setNavActive('nav-profile');
+    initProfileScreen(true);
+  };
   document.getElementById('btn-calibrate-menu').onclick = () => showCalibrationScreen('screen-menu');
   document.getElementById('btn-help').onclick = () => { showScreen('screen-help'); initHelpScreen(); };
   document.getElementById('nav-home').onclick = () => {
@@ -1310,6 +1360,7 @@ function initMenuScreen() {
     initProfileScreen(true);
   };
   setNavActive('nav-home');
+  updateHomeHeader();
 }
 
 // ═══════════════════════════════════════════════════

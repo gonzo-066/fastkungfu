@@ -22,8 +22,8 @@
     <p class="lang-subtitle">Choose your language</p>
     <div class="lang-buttons">
       <button class="btn-lang" data-lang="es">🇪🇸 Español</button>
-      <button class="btn-lang" data-lang="en">🇬🇧 English</button>
-      <button class="btn-lang" data-lang="pt">🇵🇹 Português</button>
+      <button class="btn-lang" data-lang="en">🇺🇸 English</button>
+      <button class="btn-lang" data-lang="pt">🇧🇷 Português</button>
       <button class="btn-lang" data-lang="de">🇩🇪 Deutsch</button>
     </div>
   </div>
@@ -88,19 +88,51 @@
 
   <!-- HEADER SUPERIOR FIJO -->
   <header class="home-header">
-    <div class="home-header-left">
-      <img src="assets/LOGO_IMPACTLAB.png" class="home-logo" alt="ImpactLab"
-           onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'home-logo-fallback',textContent:'🥊'}))">
-      <div class="home-brand-text">
-        <span class="home-brand-name">IMPACTLAB</span>
-        <span class="home-brand-tagline">MEASURE. IMPROVE. DOMINATE.</span>
+
+    <!-- IZQUIERDA: Avatar + nivel -->
+    <button class="home-header-avatar" id="btn-header-avatar">
+      <div class="home-avatar-circle" id="home-avatar-circle">
+        <!-- JS inyecta foto o iniciales -->
+      </div>
+      <span class="home-avatar-level" id="home-avatar-level">RECLUTA</span>
+    </button>
+
+    <!-- CENTRO: Brand -->
+    <div class="home-header-brand">
+      <div class="home-brand-title">
+        <span class="home-brand-impact">IMPACT</span><span class="home-brand-lab">LAB</span>
+      </div>
+      <div class="home-brand-tagline">
+        <span class="tagline-blue" data-i18n="home_tagline_1">MIDE.</span>
+        <span class="tagline-white" data-i18n="home_tagline_2">MEJORA.</span>
+        <span class="tagline-yellow" data-i18n="home_tagline_3">DOMINA.</span>
       </div>
     </div>
-    <button class="icon-btn" id="btn-settings" title="Ajustes">⚙️</button>
+
+    <!-- DERECHA: Settings -->
+    <button class="home-settings-btn icon-btn" id="btn-settings" title="Ajustes">
+      <span class="nav-icon-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </span>
+    </button>
+
   </header>
 
   <!-- CONTENIDO PRINCIPAL (scrollable) -->
   <div class="home-content">
+
+    <!-- INTRO: título + tagline coloreada -->
+    <div class="home-intro">
+      <h2 class="home-intro-title" data-i18n="home_intro_title">¿QUÉ TAN FUERTE PEGAS?</h2>
+      <div class="home-intro-sub">
+        <span class="tagline-blue"   data-i18n="home_tagline_1">MIDE.</span>
+        <span class="tagline-white"  data-i18n="home_tagline_2">MEJORA.</span>
+        <span class="tagline-yellow" data-i18n="home_tagline_3">DOMINA.</span>
+      </div>
+    </div>
 
     <!-- BOTÓN PRINCIPAL GRANDE -->
     <button class="home-measure-btn" id="btn-training-mode">
@@ -826,8 +858,8 @@
       <label data-i18n="language_label">Idioma</label>
       <div class="lang-toggle">
         <button class="btn-lang-sm" data-lang="es">🇪🇸 ES</button>
-        <button class="btn-lang-sm" data-lang="en">🇬🇧 EN</button>
-        <button class="btn-lang-sm" data-lang="pt">🇵🇹 PT</button>
+        <button class="btn-lang-sm" data-lang="en">🇺🇸 EN</button>
+        <button class="btn-lang-sm" data-lang="pt">🇧🇷 PT</button>
         <button class="btn-lang-sm" data-lang="de">🇩🇪 DE</button>
       </div>
     </div>
