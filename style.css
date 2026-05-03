@@ -2554,6 +2554,16 @@ canvas {
   margin-bottom: 4px;
   width: 40px;
   height: 40px;
+  background: transparent;
+}
+
+.home-metric-icon-wrap img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  mix-blend-mode: screen;
+  background: transparent;
+  display: block;
 }
 
 .home-metric-label {
@@ -2685,9 +2695,9 @@ canvas {
 .hmc-right {
   flex: 1;
   position: relative;
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
+  background-size: cover !important;
+  background-position: center right !important;
+  background-repeat: no-repeat !important;
   overflow: hidden;
 }
 
@@ -2695,9 +2705,15 @@ canvas {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, #0A0A0A 0%, rgba(10,10,10,0.55) 50%, transparent 100%);
+  background: linear-gradient(to right, #0A0A0A 30%, rgba(10,10,10,0.3) 100%);
   z-index: 1;
 }
+
+/* ── Imágenes de cada tarjeta de modo ── */
+.hmc-img-reaction { background-image: url('assets/card-reaccion.png') !important; }
+.hmc-img-power    { background-image: url('assets/card-potencia.png') !important; }
+.hmc-img-combo    { background-image: url('assets/card-combo.png')    !important; }
+.hmc-img-colors   { background-image: url('assets/card-colores.png')  !important; }
 
 .hmc-arrow {
   position: absolute;
