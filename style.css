@@ -2623,11 +2623,12 @@ canvas {
 
 /* ── 3 MÉTRICAS: UNA TARJETA HORIZONTAL ── */
 .home-metrics-bar {
-  display: flex;
+  display: flex !important;
   background: #111;
   border: 1px solid #1E1E1E;
   border-radius: 16px;
   overflow: hidden;
+  width: 100%;
 }
 
 .home-metric-section {
@@ -2876,7 +2877,7 @@ canvas {
   .home-avatar-circle   { width: 36px; height: 36px; }
   .home-avatar-level    { display: none; }
   .home-brand-title     { font-size: 16px; }
-  .home-brand-tagline   { display: none; }
+  .home-brand-tagline   { display: flex !important; font-size: 9px; }
   .home-intro           { display: none; }
 
   .home-content {
@@ -2900,7 +2901,7 @@ canvas {
 
   .home-measure-text { font-size: 1rem; }
 
-  .home-metrics-bar { grid-area: metrics; }
+  .home-metrics-bar { grid-area: metrics; display: flex !important; }
 
   .home-metric-section { padding: 10px 4px 8px; }
   .home-metric-val     { font-size: 18px; }
