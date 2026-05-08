@@ -2816,11 +2816,14 @@ canvas {
   background-color: #0A0A0A;
   background-image: url('assets/Card-reacci%C3%B3n3.png') !important;
   background-blend-mode: normal;
+  background-position: 70% center !important;
 }
 .hmc-img-combo {
   background-color: #0A0A0A;
   background-image: url('assets/card-combo3.png') !important;
   background-blend-mode: normal;
+  background-size: 110% !important;
+  background-position: 40% center !important;
 }
 .hmc-img-colors {
   background-color: #0A0A0A;
@@ -2829,6 +2832,7 @@ canvas {
 }
 .hmc-img-power {
   background-image: url('assets/card-potencia3.png') !important;
+  background-position: 65% center !important;
 }
 
 .hmc-arrow {
