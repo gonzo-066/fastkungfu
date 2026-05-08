@@ -2811,10 +2811,32 @@ canvas {
 }
 
 /* ── Imágenes de cada tarjeta de modo ── */
-.hmc-img-reaction { background-image: url('assets/card-reaccion.png') !important; }
-.hmc-img-power    { background-image: url('assets/card-potencia.png') !important; }
-.hmc-img-combo    { background-image: url('assets/card-combo.png')    !important; }
-.hmc-img-colors   { background-image: url('assets/card-colores.png')  !important; }
+.hmc-img-reaction {
+  background-color: #0A0A0A;
+  background-image: url('assets/Card-reacci%C3%B3n2.png') !important;
+  background-blend-mode: normal;
+  background-size: contain !important;
+  background-position: center right !important;
+}
+.hmc-img-combo {
+  background-color: #0A0A0A;
+  background-image: url('assets/card-combo2.png') !important;
+  background-blend-mode: normal;
+  background-size: contain !important;
+  background-position: center right !important;
+}
+.hmc-img-colors {
+  background-color: #0A0A0A;
+  background-image: url('assets/card-colores2.png') !important;
+  background-blend-mode: normal;
+  background-size: contain !important;
+  background-position: center right !important;
+}
+.hmc-img-power {
+  background-image: url('assets/card-potencia2.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+}
 
 .hmc-arrow {
   position: absolute;
