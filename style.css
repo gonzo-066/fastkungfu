@@ -2703,7 +2703,7 @@ canvas {
 
 .hmc {
   width: 100%;
-  height: auto;
+  height: 140px;
   min-height: 140px;
   background: #0A0A0A;
   border: 1.5px solid #1E1E1E;
@@ -2822,7 +2822,7 @@ canvas {
   background-color: #0A0A0A;
   background-image: url('assets/card-combo3.png') !important;
   background-blend-mode: normal;
-  background-size: contain !important;
+  background-size: 85% !important;
   background-position: center right !important;
 }
 .hmc-img-colors {
@@ -2942,8 +2942,8 @@ canvas {
 
   .hmc {
     flex: 0 0 220px;
-    min-height: 110px;
-    height: auto;
+    height: 140px;
+    min-height: 140px;
   }
 
   .hmc-title  { font-size: 14px; }
