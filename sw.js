@@ -1,4 +1,4 @@
-const CACHE_NAME = 'impactlab-v11';
+const CACHE_NAME = 'impactlab-v12';
 const ASSETS = [
   './',
   './index.html',
@@ -9,10 +9,10 @@ const ASSETS = [
   './assets/icon-ultimo-golpe.png',
   './assets/icon-record.png',
   './assets/icon-vs-ayer.png',
-  './assets/Card-reacci%C3%B3n2.png',
-  './assets/card-potencia2.png',
-  './assets/card-combo2.png',
-  './assets/card-colores2.png'
+  './assets/Card-reacci%C3%B3n3.png',
+  './assets/card-potencia3.png',
+  './assets/card-combo3.png',
+  './assets/card-colores3.png'
 ];
 
 self.addEventListener('install', e => {
