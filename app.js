@@ -1367,16 +1367,27 @@ function initMenuScreen() {
 // PANTALLA: CONFIGURACIÓN
 // ═══════════════════════════════════════════════════
 function initConfigScreen() {
-  const isCombo        = APP.mode === 'combo';
-  const isComboSubmode = isCombo && APP.comboConfig.submode === 'combo';
-  const isColorsSubmode = isCombo && APP.comboConfig.submode === 'colors';
+  const isTraining      = APP.mode === 'training';
+  const isSimple        = APP.mode === 'combo' && APP.comboConfig.submode === 'simple';
+  const isComboSubmode  = APP.mode === 'combo' && APP.comboConfig.submode === 'combo';
+  const isColorsSubmode = APP.mode === 'combo' && APP.comboConfig.submode === 'colors';
 
-  document.getElementById('config-mode-title').textContent =
-    isCombo ? '⚡ ' + t('combo_mode') : '🥊 ' + t('training_mode');
+  // Mode-specific color, active background and title
+  let modeColor, modeBg, modeTitle;
+  if (isTraining)      { modeColor = '#FFD300'; modeBg = '#151100'; modeTitle = t('card_power')    || 'POTENCIA'; }
+  else if (isSimple)   { modeColor = '#00D4FF'; modeBg = '#001520'; modeTitle = t('card_reaction') || 'REACCIÓN'; }
+  else if (isComboSubmode)  { modeColor = '#FF0000'; modeBg = '#150000'; modeTitle = t('card_combo')    || 'COMBO';    }
+  else if (isColorsSubmode) { modeColor = '#9B59B6'; modeBg = '#0D0010'; modeTitle = t('card_colors')   || 'COLORES';  }
 
+  document.getElementById('config-mode-title').textContent = modeTitle;
   document.getElementById('btn-start-session').textContent = t('config_start');
 
-  document.getElementById('reaction-submode-block').classList.toggle('hidden', !isCombo);
+  const screenEl = document.getElementById('screen-config');
+  screenEl.style.setProperty('--mode-color', modeColor);
+  screenEl.style.setProperty('--mode-bg',    modeBg);
+
+  // Submode selector hidden — mode is pre-selected from home card
+  document.getElementById('reaction-submode-block').classList.add('hidden');
   document.getElementById('combo-config-extras').classList.toggle('hidden', !isComboSubmode);
   document.getElementById('color-mode-config').classList.toggle('hidden', !isColorsSubmode);
 
@@ -1403,8 +1414,8 @@ function initConfigScreen() {
 
   document.getElementById('btn-config-back').onclick = () => showScreen('screen-menu');
 
-  if (isCombo) initReactionSubmodeBlock();
-  if (isComboSubmode) initComboConfigExtras();
+  if (isComboSubmode)  initComboConfigExtras();
+  if (isColorsSubmode) initColorModeConfig();
 
   // iOS accelerometer
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
