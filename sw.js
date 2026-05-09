@@ -1,4 +1,4 @@
-const CACHE_NAME = 'impactlab-v17';
+const CACHE_NAME = 'impactlab-v18';
 const ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,7 @@ const ASSETS = [
   './assets/icon-vs-ayer.png',
   './assets/Card-reacci%C3%B3n3.png',
   './assets/card-potencia3.png',
-  './assets/card-combo3.png',
+  './assets/card-combo4.png',
   './assets/card-colores3.png'
 ];
 

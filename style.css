@@ -2842,10 +2842,10 @@ canvas {
 }
 .hmc-img-combo {
   background-color: #050505;
-  background-image: url('assets/card-combo3.png') !important;
+  background-image: url('assets/card-combo4.png') !important;
   background-blend-mode: normal;
-  background-size: 125% !important;
-  background-position: 20% center !important;
+  background-size: cover !important;
+  background-position: center center !important;
 }
 .hmc-img-colors {
   background-color: #050505;
