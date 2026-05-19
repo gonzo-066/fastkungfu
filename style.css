@@ -3072,3 +3072,98 @@ canvas {
 .profile-setup-logo.hidden-nav {
   display: none;
 }
+
+/* ═══════════════════════════════════
+   AUTH SCREENS
+════════════════════════════════════ */
+.auth-logo-big {
+  height: 100px;
+  width: auto;
+  object-fit: contain;
+  margin-bottom: 48px;
+}
+
+.auth-logo-sm {
+  height: 64px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  margin: 28px auto 32px;
+}
+
+.auth-logo-wrap {
+  text-align: center;
+  width: 100%;
+}
+
+.btn-auth-welcome {
+  max-width: 320px;
+  width: 100%;
+  background: #FFD300;
+  color: #000000;
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+}
+
+.btn-auth-outline {
+  max-width: 320px;
+  width: 100%;
+  padding: 16px;
+  background: transparent;
+  border: 2px solid #FFFFFF;
+  border-radius: 14px;
+  color: #FFFFFF;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  text-transform: uppercase;
+}
+
+.btn-auth-outline:active {
+  opacity: 0.7;
+}
+
+.auth-error {
+  color: #FF4444;
+  font-size: 13px;
+  min-height: 18px;
+  text-align: center;
+  width: 100%;
+}
+
+.auth-link {
+  color: var(--text-dim);
+  font-size: 14px;
+  text-align: center;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.auth-link a {
+  color: #FFD300;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.btn-logout {
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  border: 2px solid #FF4444;
+  border-radius: 14px;
+  color: #FF4444;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  margin-top: 8px;
+  text-transform: uppercase;
+  transition: background 0.15s;
+}
+
+.btn-logout:active {
+  background: rgba(255, 68, 68, 0.1);
+}

@@ -10,6 +10,7 @@
   <title>ImpactLab</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -26,6 +27,88 @@
       <button class="btn-lang" data-lang="pt">🇧🇷 Português</button>
       <button class="btn-lang" data-lang="de">🇩🇪 Deutsch</button>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: BIENVENIDA (AUTH)
+════════════════════════════════════ -->
+<div id="screen-welcome" class="screen hidden">
+  <div class="screen-inner center-content">
+    <img src="assets/LOGO_IMPACTLAB.png" class="auth-logo-big" alt="ImpactLab"
+         onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',textContent:'🥊'}))">
+    <button class="btn-primary btn-auth-welcome" id="btn-go-register">CREAR CUENTA</button>
+    <button class="btn-auth-outline" id="btn-go-login">YA TENGO CUENTA</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: REGISTRO
+════════════════════════════════════ -->
+<div id="screen-register" class="screen hidden">
+  <div class="screen-inner">
+    <div class="auth-logo-wrap">
+      <img src="assets/LOGO_IMPACTLAB.png" class="auth-logo-sm" alt="ImpactLab"
+           onerror="this.style.display='none'">
+    </div>
+    <div class="form-group">
+      <label>NOMBRE COMPLETO</label>
+      <input type="text" id="reg-name" placeholder="Tu nombre completo" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>EMAIL</label>
+      <input type="email" id="reg-email" placeholder="tu@email.com" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>CONTRASEÑA (mín. 6 caracteres)</label>
+      <input type="password" id="reg-password" placeholder="••••••">
+    </div>
+    <div class="form-group">
+      <label>PESO (kg)</label>
+      <input type="number" id="reg-weight" placeholder="70" min="30" max="200">
+    </div>
+    <div class="form-group">
+      <label>EDAD</label>
+      <input type="number" id="reg-age" placeholder="25" min="10" max="100">
+    </div>
+    <div class="form-group">
+      <label>SEXO</label>
+      <div class="sex-toggle">
+        <button class="sex-btn active" id="reg-sex-hombre">♂ Hombre</button>
+        <button class="sex-btn" id="reg-sex-mujer">♀ Mujer</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>DEPORTE / DISCIPLINA (opcional)</label>
+      <input type="text" id="reg-sport" placeholder="Boxeo, Kickboxing..." autocomplete="off">
+    </div>
+    <div class="auth-error" id="reg-error"></div>
+    <button class="btn-primary" id="btn-register">CREAR CUENTA</button>
+    <p class="auth-link">¿Ya tienes cuenta? <a id="btn-reg-to-login">Inicia sesión</a></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: LOGIN
+════════════════════════════════════ -->
+<div id="screen-login" class="screen hidden">
+  <div class="screen-inner">
+    <div class="auth-logo-wrap">
+      <img src="assets/LOGO_IMPACTLAB.png" class="auth-logo-sm" alt="ImpactLab"
+           onerror="this.style.display='none'">
+    </div>
+    <div class="form-group">
+      <label>EMAIL</label>
+      <input type="email" id="login-email" placeholder="tu@email.com" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>CONTRASEÑA</label>
+      <input type="password" id="login-password" placeholder="••••••">
+    </div>
+    <div class="auth-error" id="login-error"></div>
+    <button class="btn-primary" id="btn-login">ENTRAR</button>
+    <p class="auth-link">¿No tienes cuenta? <a id="btn-login-to-reg">Regístrate</a></p>
+    <p class="auth-link"><a id="btn-forgot-pass">Olvidé mi contraseña</a></p>
   </div>
 </div>
 
@@ -837,6 +920,7 @@
     </div>
     <button class="btn-secondary btn-calibrate-settings" id="btn-calibrate-settings">🎯 <span data-i18n="calib_menu_btn">CALIBRAR DISPOSITIVO</span></button>
     <button class="btn-primary" id="btn-save-settings" data-i18n="save_settings">GUARDAR</button>
+    <button class="btn-logout" id="btn-logout">CERRAR SESIÓN</button>
   </div>
 </div>
 

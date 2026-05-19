@@ -10,6 +10,21 @@ if ('serviceWorker' in navigator) {
 }
 
 // ═══════════════════════════════════════════════════
+// SUPABASE
+// ═══════════════════════════════════════════════════
+const SUPABASE_URL = 'https://yxhjblluztaiswfuwmbo.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4aGpibGx1enRhaXN3ZnV3bWJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwOTA1MDksImV4cCI6MjA3NzY2NjUwOX0.13gTk3fNYu3quihMe4kNAUPxIDUDKKwLy54IOYWHxP0';
+let supabaseClient = null;
+
+function initSupabase() {
+  try {
+    if (window.supabase && window.supabase.createClient) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+  } catch (e) {}
+}
+
+// ═══════════════════════════════════════════════════
 // TRADUCCIONES
 // ═══════════════════════════════════════════════════
 const TRANSLATIONS = {
@@ -954,6 +969,58 @@ function saveSession(session) {
   const sessions = getSessions();
   sessions.push(session);
   localStorage.setItem('fkf_sessions', JSON.stringify(sessions));
+  saveSessionToSupabase(session);
+}
+
+async function saveSessionToSupabase(session) {
+  if (!supabaseClient || !APP.profile || !APP.profile.supabase_id) return;
+  try {
+    await supabaseClient.from('sesiones').insert({
+      usuario_id:       APP.profile.supabase_id,
+      fecha:            new Date(session.ts).toISOString(),
+      modo:             session.mode,
+      rounds:           session.rounds,
+      total_golpes:     session.totalPunches,
+      potencia_media:   session.avgPower,
+      potencia_max:     session.maxPower,
+      velocidad_media:  session.avgSpeed,
+      velocidad_max:    session.maxSpeed,
+      reaccion_media:   session.avgReaction,
+      reaccion_min:     session.bestReaction,
+      calorias:         session.calories,
+      duracion_segundos: session.durationSec
+    });
+  } catch (e) {}
+}
+
+async function loadProfileFromSupabase(userId) {
+  try {
+    const { data } = await supabaseClient
+      .from('usuarios').select('*').eq('id', userId).single();
+    if (data) {
+      saveProfile({
+        name:        data.nombre,
+        weight:      data.peso,
+        age:         data.edad,
+        sex:         data.sexo,
+        sport:       data.deporte,
+        supabase_id: userId
+      });
+    }
+  } catch (e) {}
+}
+
+async function supabaseSignOut() {
+  try {
+    if (supabaseClient) await supabaseClient.auth.signOut();
+  } catch (e) {}
+  localStorage.removeItem('fkf_profile');
+  localStorage.removeItem('fkf_sessions');
+  localStorage.removeItem('fkf_avatar');
+  APP.profile = null;
+  closeSettingsModal();
+  showScreen('screen-lang');
+  initLangScreen();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1153,22 +1220,36 @@ function flashEl(el) {
 // ═══════════════════════════════════════════════════
 function initLangScreen() {
   document.querySelectorAll('#screen-lang .btn-lang').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.onclick = () => {
       APP.lang = btn.dataset.lang;
       localStorage.setItem('fkf_lang', APP.lang);
       applyLanguage();
       afterLangSelected();
-    });
+    };
   });
 }
 
-function afterLangSelected() {
-  if (loadProfile()) {
-    showScreen('screen-menu');
-    initMenuScreen();
+async function afterLangSelected() {
+  if (supabaseClient) {
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        await loadProfileFromSupabase(session.user.id);
+        showScreen('screen-menu');
+        initMenuScreen();
+        return;
+      }
+    } catch (e) {}
+    showScreen('screen-welcome');
+    initWelcomeScreen();
   } else {
-    showScreen('screen-profile');
-    initProfileScreen();
+    if (loadProfile()) {
+      showScreen('screen-menu');
+      initMenuScreen();
+    } else {
+      showScreen('screen-profile');
+      initProfileScreen();
+    }
   }
 }
 
@@ -1285,6 +1366,136 @@ function initProfileScreen(fromNav) {
     showScreen('screen-menu');
     setNavActive('nav-home');
     initMenuScreen();
+  };
+}
+
+// ═══════════════════════════════════════════════════
+// PANTALLAS AUTH
+// ═══════════════════════════════════════════════════
+function initWelcomeScreen() {
+  document.getElementById('btn-go-register').onclick = () => {
+    showScreen('screen-register');
+    initRegisterScreen();
+  };
+  document.getElementById('btn-go-login').onclick = () => {
+    showScreen('screen-login');
+    initLoginScreen();
+  };
+}
+
+function initRegisterScreen() {
+  const sexH = document.getElementById('reg-sex-hombre');
+  const sexM = document.getElementById('reg-sex-mujer');
+  sexH.onclick = () => { sexH.classList.add('active');    sexM.classList.remove('active'); };
+  sexM.onclick = () => { sexM.classList.add('active');    sexH.classList.remove('active'); };
+
+  document.getElementById('btn-reg-to-login').onclick = () => {
+    showScreen('screen-login');
+    initLoginScreen();
+  };
+
+  document.getElementById('btn-register').onclick = async () => {
+    const nombre   = document.getElementById('reg-name').value.trim();
+    const email    = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const peso     = parseFloat(document.getElementById('reg-weight').value);
+    const edad     = parseInt(document.getElementById('reg-age').value);
+    const sexo     = sexH.classList.contains('active') ? 'hombre' : 'mujer';
+    const deporte  = document.getElementById('reg-sport').value.trim();
+    const errEl    = document.getElementById('reg-error');
+    const btn      = document.getElementById('btn-register');
+
+    errEl.textContent = '';
+    if (!nombre)                           { errEl.textContent = 'Ingresa tu nombre completo'; return; }
+    if (!email || !email.includes('@'))    { errEl.textContent = 'Email inválido'; return; }
+    if (password.length < 6)              { errEl.textContent = 'La contraseña debe tener al menos 6 caracteres'; return; }
+    if (!peso || peso < 30 || peso > 200) { errEl.textContent = 'Peso inválido (30-200 kg)'; return; }
+    if (!edad || edad < 10 || edad > 100) { errEl.textContent = 'Edad inválida (10-100)'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'CREANDO...';
+
+    try {
+      const { data, error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) throw error;
+      if (!data.user) throw new Error('No se pudo crear el usuario');
+
+      const userId = data.user.id;
+      await supabaseClient.from('usuarios').insert({
+        id:      userId,
+        nombre,
+        email,
+        peso,
+        edad,
+        sexo,
+        deporte: deporte || null
+      });
+
+      saveProfile({ name: nombre, weight: peso, age: edad, sex: sexo, sport: deporte, supabase_id: userId });
+
+      if (data.session) {
+        showScreen('screen-menu');
+        initMenuScreen();
+      } else {
+        errEl.style.color = '#00FF66';
+        errEl.textContent = 'Revisa tu email para confirmar tu cuenta';
+        btn.disabled = false;
+        btn.textContent = 'CREAR CUENTA';
+      }
+    } catch (e) {
+      errEl.style.color = '#FF4444';
+      errEl.textContent = e.message || 'Error al crear la cuenta';
+      btn.disabled = false;
+      btn.textContent = 'CREAR CUENTA';
+    }
+  };
+}
+
+function initLoginScreen() {
+  const errEl = document.getElementById('login-error');
+
+  document.getElementById('btn-login-to-reg').onclick = () => {
+    showScreen('screen-register');
+    initRegisterScreen();
+  };
+
+  document.getElementById('btn-forgot-pass').onclick = async () => {
+    const email = document.getElementById('login-email').value.trim();
+    if (!email) { errEl.style.color = '#FF4444'; errEl.textContent = 'Ingresa tu email primero'; return; }
+    try {
+      await supabaseClient.auth.resetPasswordForEmail(email);
+      errEl.style.color = '#00FF66';
+      errEl.textContent = 'Email enviado. Revisa tu bandeja de entrada.';
+    } catch (e) {
+      errEl.style.color = '#FF4444';
+      errEl.textContent = e.message || 'Error al enviar el email';
+    }
+  };
+
+  document.getElementById('btn-login').onclick = async () => {
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn      = document.getElementById('btn-login');
+
+    errEl.style.color = '#FF4444';
+    errEl.textContent = '';
+    if (!email)    { errEl.textContent = 'Ingresa tu email'; return; }
+    if (!password) { errEl.textContent = 'Ingresa tu contraseña'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'ENTRANDO...';
+
+    try {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      await loadProfileFromSupabase(data.user.id);
+      showScreen('screen-menu');
+      initMenuScreen();
+    } catch (e) {
+      errEl.textContent = e.message || 'Email o contraseña incorrectos';
+      btn.disabled = false;
+      btn.textContent = 'ENTRAR';
+    }
   };
 }
 
@@ -2450,15 +2661,19 @@ function initSettingsModal() {
     if (!name)                                { alert(t('alert_enter_name')); return; }
     if (!weight || weight < 30 || weight > 200) { alert(t('alert_weight_s'));  return; }
     if (!age || age < 10 || age > 100)         { alert(t('alert_age_s'));      return; }
-    saveProfile({ name, weight, age, sex });
+    const supabaseId = APP.profile ? APP.profile.supabase_id : null;
+    saveProfile({ name, weight, age, sex, supabase_id: supabaseId });
     closeSettingsModal();
   };
+
+  document.getElementById('btn-logout').onclick = () => supabaseSignOut();
 }
 
 // ═══════════════════════════════════════════════════
 // INICIALIZACIÓN
 // ═══════════════════════════════════════════════════
 function init() {
+  initSupabase();
   loadSoundPref();
   loadCalibration();
   loadColorConfig();
