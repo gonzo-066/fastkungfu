@@ -3167,3 +3167,243 @@ canvas {
 .btn-logout:active {
   background: rgba(255, 68, 68, 0.1);
 }
+
+/* ═══════════════════════════════════
+   GAMIFICACIÓN — MODO POTENCIA
+════════════════════════════════════ */
+
+/* Hit rating popup */
+.gam-hit-rating {
+  text-align: center;
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+}
+.gam-hit-rating.gam-hit-anim {
+  animation: gamHitAnim 0.8s ease forwards;
+}
+@keyframes gamHitAnim {
+  0%   { opacity: 0; transform: translateY(-10px); }
+  20%  { opacity: 1; transform: translateY(0); }
+  65%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+.gam-hit-label {
+  font-size: clamp(1.5rem, 7vw, 2rem);
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.gam-hit-xp {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #FFD300;
+  margin-top: 2px;
+  letter-spacing: 1px;
+}
+
+/* Combo streak badge */
+.gam-streak-badge {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1.5px solid currentColor;
+  white-space: nowrap;
+}
+.gam-streak-badge.hidden { display: none; }
+.gam-s2  { color: #FFFFFF; border-color: rgba(255,255,255,0.35); }
+.gam-s5  { color: #FFD300; border-color: rgba(255,211,0,0.45); }
+.gam-s10 { color: #FF8800; border-color: rgba(255,136,0,0.5); font-size: 15px; }
+.gam-s20 { color: #FF3333; border-color: rgba(255,51,51,0.5); font-size: 16px; }
+.gam-s50 {
+  color: #FF0000;
+  border-color: rgba(255,0,0,0.6);
+  font-size: 16px;
+  animation: gamStreakPulse 0.8s ease-in-out infinite;
+}
+@keyframes gamStreakPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.65; transform: scale(1.06); }
+}
+
+/* XP Bar */
+.gam-xp-bar-wrap {
+  margin: 6px 0 4px;
+  padding: 0 2px;
+}
+.gam-xp-level-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #FFD300;
+  letter-spacing: 2px;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.gam-xp-bar-track {
+  height: 6px;
+  background: #1A1A1A;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.gam-xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FFD300, #FF8C00);
+  border-radius: 3px;
+  transition: width 0.45s ease;
+}
+.gam-xp-bar-progress {
+  font-size: 10px;
+  color: #555;
+  text-align: right;
+  margin-top: 2px;
+}
+.gam-xp-flash {
+  animation: gamXpFlash 0.7s ease-in-out;
+}
+@keyframes gamXpFlash {
+  0%, 100% { background: linear-gradient(90deg, #FFD300, #FF8C00); }
+  50%       { background: linear-gradient(90deg, #FFFFFF, #FFD300); }
+}
+
+/* Milestone overlay */
+.gam-milestone {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 200;
+  background: transparent;
+}
+.gam-milestone.hidden { display: none; }
+.gam-milestone-show {
+  background: rgba(0, 0, 0, 0.75);
+  animation: gamMilestoneOverlay 1.5s ease-out forwards;
+}
+@keyframes gamMilestoneOverlay {
+  0%   { opacity: 0; }
+  12%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.gam-milestone-text {
+  font-size: clamp(1.6rem, 8vw, 2.4rem);
+  font-weight: 900;
+  color: #FFD300;
+  text-align: center;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 24px 20px;
+  animation: gamMilestoneZoom 1.5s ease-out forwards;
+}
+@keyframes gamMilestoneZoom {
+  0%   { transform: scale(0.4); opacity: 0; }
+  15%  { transform: scale(1.08); opacity: 1; }
+  28%  { transform: scale(1.0); }
+  75%  { transform: scale(1.0); opacity: 1; }
+  100% { transform: scale(0.92); opacity: 0; }
+}
+
+/* Screen flash for x20+ combo */
+#screen-training.gam-screen-flash::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 51, 51, 0.35);
+  pointer-events: none;
+  animation: gamScreenFlash 0.4s ease-out forwards;
+  z-index: 199;
+}
+@keyframes gamScreenFlash {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Gamification summary section */
+.gam-summary-section {
+  background: linear-gradient(135deg, #160f00, #0d0d0d);
+  border: 1px solid rgba(255, 211, 0, 0.22);
+  border-radius: 16px;
+  padding: 20px 16px;
+  margin: 12px 0;
+  text-align: center;
+}
+.gam-summary-xp {
+  font-size: clamp(2.8rem, 14vw, 4rem);
+  font-weight: 900;
+  color: #FFD300;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.gam-summary-xp-label {
+  font-size: 10px;
+  color: #666;
+  letter-spacing: 2px;
+  margin: 4px 0 16px;
+  text-transform: uppercase;
+}
+.gam-summary-details {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.gam-summary-detail {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  padding: 10px 6px;
+}
+.gam-summary-detail-label {
+  font-size: 9px;
+  color: #555;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.gam-summary-detail-val {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #FFD300;
+  letter-spacing: 1px;
+}
+.gam-summary-level {
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+.gam-summary-level-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFD300;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.gam-summary-level-progress {
+  font-size: 10px;
+  color: #555;
+  margin-top: 4px;
+}
+.gam-summary-levelup {
+  margin-top: 14px;
+  padding: 10px 16px;
+  background: rgba(255, 211, 0, 0.12);
+  border: 1px solid rgba(255, 211, 0, 0.35);
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #FFD300;
+  letter-spacing: 2px;
+  animation: gamLevelUpPulse 1.2s ease-in-out infinite;
+}
+@keyframes gamLevelUpPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}

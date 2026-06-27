@@ -858,6 +858,421 @@ function getRankLevel(sessions) {
 }
 
 // ═══════════════════════════════════════════════════
+// GAMIFICACIÓN — MODO POTENCIA
+// ═══════════════════════════════════════════════════
+const XP_LEVELS = [
+  { name: 'Recluta',       min: 0     },
+  { name: 'Striker',       min: 500   },
+  { name: 'Contender',     min: 1500  },
+  { name: 'Power Fighter', min: 3000  },
+  { name: 'Knockout',      min: 5000  },
+  { name: 'Dominator',     min: 8000  },
+  { name: 'Champion',      min: 12000 },
+  { name: 'Legend',        min: 18000 },
+  { name: 'Impact Master', min: 25000 },
+];
+
+const HIT_RATINGS = [
+  { label: 'GOOD',       minG: 0, xp: 5  },
+  { label: 'GREAT',      minG: 2, xp: 10 },
+  { label: 'EXCELLENT',  minG: 4, xp: 20 },
+  { label: 'MASTER',     minG: 6, xp: 35 },
+  { label: 'SIFU LEVEL', minG: 8, xp: 50 },
+];
+
+const RATING_ORDER  = ['GOOD', 'GREAT', 'EXCELLENT', 'MASTER', 'SIFU LEVEL'];
+const RATING_COLORS = {
+  'GOOD':       '#FFFFFF',
+  'GREAT':      '#00D4FF',
+  'EXCELLENT':  '#00FF66',
+  'MASTER':     '#FF8800',
+  'SIFU LEVEL': '#FF2222',
+};
+
+let _milestoneQueue   = [];
+let _milestoneActive  = false;
+
+function getHitRating(g) {
+  for (let i = HIT_RATINGS.length - 1; i >= 0; i--) {
+    if (g >= HIT_RATINGS[i].minG) return HIT_RATINGS[i];
+  }
+  return HIT_RATINGS[0];
+}
+
+function loadGamificationXP() {
+  return parseInt(localStorage.getItem('fkf_gam_xp'), 10) || 0;
+}
+
+function saveGamificationXP(xp) {
+  localStorage.setItem('fkf_gam_xp', String(Math.max(0, xp)));
+}
+
+function getXPLevelInfo(xp) {
+  let idx = 0;
+  for (let i = XP_LEVELS.length - 1; i >= 0; i--) {
+    if (xp >= XP_LEVELS[i].min) { idx = i; break; }
+  }
+  return { idx, current: XP_LEVELS[idx], next: XP_LEVELS[idx + 1] || null };
+}
+
+function initGamificationSession() {
+  _milestoneQueue  = [];
+  _milestoneActive = false;
+  const totalXP  = loadGamificationXP();
+  const { idx }  = getXPLevelInfo(totalXP);
+  const sessions = getSessions();
+  const historicBestG      = sessions.reduce((m, s) => Math.max(m, s.maxPower || 0), 0);
+  const historicBestStreak = parseInt(localStorage.getItem('fkf_best_streak') || '0') || 0;
+  APP.gamification = {
+    totalXP,
+    sessionXP: 0,
+    currentStreak: 0,
+    bestStreak: 0,
+    streakTimer: null,
+    sessionBestG: 0,
+    sessionBestRating: '',
+    sessionStartLevelIdx: idx,
+    historicBestG,
+    historicBestStreak,
+  };
+}
+
+function handleGamificationPunch(punch) {
+  const gam = APP.gamification;
+  if (!gam) return;
+
+  const rating   = getHitRating(punch.g);
+  gam.sessionXP += rating.xp;
+  const prevTotal = gam.totalXP;
+  gam.totalXP    += rating.xp;
+  saveGamificationXP(gam.totalXP);
+
+  showHitRatingPopup(rating.label, rating.xp);
+  playHitRatingSound(rating.label);
+  updateXPBar();
+
+  const prevLevel = getXPLevelInfo(prevTotal);
+  const newLevel  = getXPLevelInfo(gam.totalXP);
+  if (newLevel.idx > prevLevel.idx) showLevelUp(newLevel.current.name);
+
+  // Streak
+  clearTimeout(gam.streakTimer);
+  gam.currentStreak++;
+  if (gam.currentStreak > gam.bestStreak) gam.bestStreak = gam.currentStreak;
+  gam.streakTimer = setTimeout(() => {
+    gam.currentStreak = 0;
+    updateStreakUI();
+  }, 3000);
+  updateStreakUI();
+  checkStreakMilestone(gam.currentStreak);
+
+  // Best rating
+  const rIdx = RATING_ORDER.indexOf(rating.label);
+  const bIdx = RATING_ORDER.indexOf(gam.sessionBestRating);
+  if (!gam.sessionBestRating || rIdx > bIdx) gam.sessionBestRating = rating.label;
+
+  // Records
+  let shownPersonal = false;
+  if (punch.g > gam.historicBestG) {
+    gam.historicBestG = punch.g;
+    shownPersonal = true;
+    showMilestone('🎯 NUEVO RÉCORD PERSONAL');
+    playRecordSound();
+  }
+  if (!shownPersonal && punch.g > gam.sessionBestG && gam.sessionBestG > 0) {
+    showMilestone('💥 MEJOR GOLPE HOY');
+  }
+  if (punch.g > gam.sessionBestG) gam.sessionBestG = punch.g;
+}
+
+function showHitRatingPopup(label, xp) {
+  const el    = document.getElementById('gam-hit-rating');
+  const lblEl = document.getElementById('gam-hit-label');
+  const xpEl  = document.getElementById('gam-hit-xp');
+  if (!el) return;
+  lblEl.textContent = label;
+  xpEl.textContent  = '+' + xp + ' XP';
+  lblEl.style.color = RATING_COLORS[label] || '#FFFFFF';
+  el.classList.remove('gam-hit-anim');
+  void el.offsetWidth;
+  el.classList.add('gam-hit-anim');
+}
+
+function updateStreakUI() {
+  const gam = APP.gamification;
+  const el  = document.getElementById('gam-streak-badge');
+  if (!el || !gam) return;
+  const s = gam.currentStreak;
+  if (s < 2) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden', 'gam-s2', 'gam-s5', 'gam-s10', 'gam-s20', 'gam-s50');
+  el.textContent = 'COMBO x' + s;
+  if      (s >= 50) el.classList.add('gam-s50');
+  else if (s >= 20) el.classList.add('gam-s20');
+  else if (s >= 10) el.classList.add('gam-s10');
+  else if (s >= 5)  el.classList.add('gam-s5');
+  else              el.classList.add('gam-s2');
+}
+
+function checkStreakMilestone(streak) {
+  if (streak === 10) { playComboStreakSound(10); showMilestone('10 HIT STREAK 🔥'); }
+  if (streak === 20) { playComboStreakSound(20); flashScreen(); }
+  if (streak === 25) { showMilestone('25 HIT STREAK ⚡'); }
+  if (streak === 50) {
+    const gam = APP.gamification;
+    playComboStreakSound(50);
+    if (gam && streak > gam.historicBestStreak) {
+      gam.historicBestStreak = streak;
+      localStorage.setItem('fkf_best_streak', String(streak));
+      showMilestone('🏆 NUEVO RÉCORD DE COMBO');
+      playRecordSound();
+    } else {
+      showMilestone('🔥 50 HIT STREAK!');
+    }
+  }
+}
+
+function updateXPBar() {
+  const gam = APP.gamification;
+  if (!gam) return;
+  const { current, next } = getXPLevelInfo(gam.totalXP);
+  const lvlEl  = document.getElementById('gam-xp-level-label');
+  const fillEl = document.getElementById('gam-xp-bar-fill');
+  const progEl = document.getElementById('gam-xp-bar-progress');
+  if (lvlEl) lvlEl.textContent = current.name.toUpperCase();
+  if (next) {
+    const pct = Math.min(100, Math.round(((gam.totalXP - current.min) / (next.min - current.min)) * 100));
+    if (fillEl) fillEl.style.width = pct + '%';
+    if (progEl) progEl.textContent = gam.totalXP + ' / ' + next.min + ' XP';
+  } else {
+    if (fillEl) fillEl.style.width = '100%';
+    if (progEl) progEl.textContent = gam.totalXP + ' XP · MAX';
+  }
+}
+
+function showLevelUp(levelName) {
+  playLevelUpSound();
+  showMilestone('⬆ LEVEL UP: ' + levelName.toUpperCase());
+  const fill = document.getElementById('gam-xp-bar-fill');
+  if (fill) {
+    fill.classList.add('gam-xp-flash');
+    setTimeout(() => fill.classList.remove('gam-xp-flash'), 1000);
+  }
+}
+
+function showMilestone(text) {
+  _milestoneQueue.push(text);
+  if (!_milestoneActive) drainMilestoneQueue();
+}
+
+function drainMilestoneQueue() {
+  if (!_milestoneQueue.length) { _milestoneActive = false; return; }
+  _milestoneActive = true;
+  const text  = _milestoneQueue.shift();
+  const el    = document.getElementById('gam-milestone');
+  const txtEl = document.getElementById('gam-milestone-text');
+  if (!el || !txtEl) { drainMilestoneQueue(); return; }
+  txtEl.textContent = text;
+  el.classList.remove('hidden', 'gam-milestone-show');
+  void el.offsetWidth;
+  el.classList.add('gam-milestone-show');
+  setTimeout(() => {
+    el.classList.remove('gam-milestone-show');
+    el.classList.add('hidden');
+    setTimeout(drainMilestoneQueue, 120);
+  }, 1500);
+}
+
+function flashScreen() {
+  const sc = document.getElementById('screen-training');
+  if (!sc) return;
+  sc.classList.remove('gam-screen-flash');
+  void sc.offsetWidth;
+  sc.classList.add('gam-screen-flash');
+  setTimeout(() => sc.classList.remove('gam-screen-flash'), 400);
+}
+
+function renderGamificationSummary() {
+  const gam = APP.gamification;
+  if (!gam) return;
+  const { current, next } = getXPLevelInfo(gam.totalXP);
+  const pct = next
+    ? Math.min(100, Math.round(((gam.totalXP - current.min) / (next.min - current.min)) * 100))
+    : 100;
+  const leveledUp   = getXPLevelInfo(gam.totalXP).idx > gam.sessionStartLevelIdx;
+  const leveledName = getXPLevelInfo(gam.totalXP).current.name;
+  const progText    = next ? gam.totalXP + ' / ' + next.min + ' XP' : gam.totalXP + ' XP · MAX';
+  const ratingColor = RATING_COLORS[gam.sessionBestRating] || '#FFD300';
+
+  const existing = document.getElementById('gam-summary-section');
+  if (existing) existing.remove();
+
+  const div = document.createElement('div');
+  div.id        = 'gam-summary-section';
+  div.className = 'gam-summary-section';
+  div.innerHTML = `
+    <div class="gam-summary-xp">+${gam.sessionXP} XP</div>
+    <div class="gam-summary-xp-label">XP GANADO EN ESTA SESIÓN</div>
+    <div class="gam-summary-details">
+      <div class="gam-summary-detail">
+        <div class="gam-summary-detail-label">MEJOR GOLPE</div>
+        <div class="gam-summary-detail-val" style="color:${ratingColor}">${gam.sessionBestRating || 'GOOD'}</div>
+      </div>
+      <div class="gam-summary-detail">
+        <div class="gam-summary-detail-label">MEJOR COMBO</div>
+        <div class="gam-summary-detail-val">x${gam.bestStreak}</div>
+      </div>
+    </div>
+    <div class="gam-summary-level">
+      <div class="gam-summary-level-name">${current.name.toUpperCase()}</div>
+      <div class="gam-xp-bar-track" style="margin:8px 0">
+        <div class="gam-xp-bar-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="gam-summary-level-progress">${progText}</div>
+    </div>
+    ${leveledUp ? `<div class="gam-summary-levelup">⬆ SUBISTE A ${leveledName.toUpperCase()}</div>` : ''}
+  `;
+
+  const body  = document.querySelector('#screen-summary .summary-body');
+  const msgEl = document.getElementById('summary-message');
+  if (body && msgEl) body.insertBefore(div, msgEl);
+}
+
+// ─── SONIDOS GAMIFICACIÓN ─────────────────────────────
+function playHitRatingSound(rating) {
+  if (!APP.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const t0 = ctx.currentTime;
+
+    if (rating === 'GOOD') {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine'; o.frequency.value = 1800;
+      g.gain.setValueAtTime(0.12, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.07);
+      o.start(t0); o.stop(t0 + 0.08);
+
+    } else if (rating === 'GREAT') {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(400, t0);
+      o.frequency.exponentialRampToValueAtTime(900, t0 + 0.15);
+      g.gain.setValueAtTime(0.18, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.18);
+      o.start(t0); o.stop(t0 + 0.2);
+
+    } else if (rating === 'EXCELLENT') {
+      [220, 330, 440].forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'triangle'; o.frequency.value = f;
+        const ti = t0 + i * 0.04;
+        g.gain.setValueAtTime(0.2, ti);
+        g.gain.exponentialRampToValueAtTime(0.001, ti + 0.28);
+        o.start(ti); o.stop(ti + 0.32);
+      });
+
+    } else if (rating === 'MASTER') {
+      const o1 = ctx.createOscillator(), g1 = ctx.createGain();
+      o1.connect(g1); g1.connect(ctx.destination);
+      o1.type = 'sawtooth';
+      o1.frequency.setValueAtTime(150, t0);
+      o1.frequency.exponentialRampToValueAtTime(70, t0 + 0.18);
+      g1.gain.setValueAtTime(0.28, t0);
+      g1.gain.exponentialRampToValueAtTime(0.001, t0 + 0.22);
+      o1.start(t0); o1.stop(t0 + 0.25);
+      [440, 660, 880].forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        const ti = t0 + 0.08 + i * 0.07;
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.18, ti);
+        g.gain.exponentialRampToValueAtTime(0.001, ti + 0.18);
+        o.start(ti); o.stop(ti + 0.22);
+      });
+
+    } else if (rating === 'SIFU LEVEL') {
+      const o1 = ctx.createOscillator(), g1 = ctx.createGain();
+      o1.connect(g1); g1.connect(ctx.destination);
+      o1.type = 'sawtooth';
+      o1.frequency.setValueAtTime(200, t0);
+      o1.frequency.exponentialRampToValueAtTime(50, t0 + 0.3);
+      g1.gain.setValueAtTime(0.38, t0);
+      g1.gain.exponentialRampToValueAtTime(0.001, t0 + 0.42);
+      o1.start(t0); o1.stop(t0 + 0.46);
+      [261, 329, 392, 523, 659].forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        const ti = t0 + 0.05 + i * 0.06;
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.16, ti);
+        g.gain.exponentialRampToValueAtTime(0.001, ti + 0.42);
+        o.start(ti); o.stop(ti + 0.48);
+      });
+    }
+  } catch(e) {}
+}
+
+function playComboStreakSound(milestone) {
+  if (!APP.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const t0 = ctx.currentTime;
+    const freqs = milestone === 10
+      ? [880, 1100, 1320]
+      : [330, 440, 550, 660, 880];
+    freqs.forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      const ti = t0 + i * (milestone === 10 ? 0.1 : 0.06);
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.2 + i * 0.02, ti);
+      g.gain.exponentialRampToValueAtTime(0.001, ti + 0.28);
+      o.start(ti); o.stop(ti + 0.32);
+    });
+  } catch(e) {}
+}
+
+function playLevelUpSound() {
+  if (!APP.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const t0 = ctx.currentTime;
+    [523, 659, 784].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      const ti = t0 + i * 0.14;
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.26, ti);
+      g.gain.exponentialRampToValueAtTime(0.001, ti + 0.24);
+      o.start(ti); o.stop(ti + 0.28);
+    });
+  } catch(e) {}
+}
+
+function playRecordSound() {
+  if (!APP.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const t0 = ctx.currentTime;
+    [392, 523, 659, 784, 1047].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      const ti = t0 + i * 0.11;
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.24, ti);
+      g.gain.exponentialRampToValueAtTime(0.001, ti + 0.28);
+      o.start(ti); o.stop(ti + 0.32);
+    });
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════
 // NAVEGACIÓN
 // ═══════════════════════════════════════════════════
 function showScreen(id) {
@@ -1751,6 +2166,7 @@ function startSession() {
   APP.sessionSaved = false;
   acquireWakeLock();
   if (!APP.accel.available) setupAccelerometer();
+  if (APP.mode === 'training') initGamificationSession();
   startRound(1);
 }
 
@@ -1844,11 +2260,21 @@ function showTrainingScreen(roundNum) {
   };
   document.getElementById('btn-training-stop').onclick = () => {
     if (confirm(t('confirm_stop'))) {
+      if (APP.gamification && APP.gamification.streakTimer) clearTimeout(APP.gamification.streakTimer);
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
       showScreen('screen-menu');
     }
   };
+
+  // Init gamification UI
+  updateXPBar();
+  const _hitRatingEl = document.getElementById('gam-hit-rating');
+  if (_hitRatingEl) _hitRatingEl.classList.remove('gam-hit-anim');
+  const _streakEl = document.getElementById('gam-streak-badge');
+  if (_streakEl) _streakEl.classList.add('hidden');
+  const _milestoneEl = document.getElementById('gam-milestone');
+  if (_milestoneEl) _milestoneEl.classList.add('hidden');
 }
 
 function updateTrainingTimer() {
@@ -1877,6 +2303,7 @@ function handleTrainingPunch(punch) {
   const bestG = Math.max(...APP.round.punches.map(p => p.g));
   document.getElementById('training-best').textContent  = bestG.toFixed(1) + 'G';
   drawTrainingChart();
+  handleGamificationPunch(punch);
 }
 
 function drawTrainingChart() {
@@ -2507,6 +2934,8 @@ function showSummaryScreen() {
     if (!APP.sessionSaved) { saveSession(sessionData); APP.sessionSaved = true; }
     showScreen('screen-menu');
   };
+
+  if (APP.mode === 'training' && APP.gamification) renderGamificationSummary();
 }
 
 function buildComparison(totalPunches, avgPower, bestReaction) {
