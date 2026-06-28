@@ -3027,34 +3027,30 @@ canvas {
   .home-intro           { display: none; }
 
   .home-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas:
-      "btn     metrics"
-      "modes   modes";
-    column-gap: 14px;
-    row-gap: 10px;
-    padding: 12px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 14px 14px;
     max-width: none;
-    align-items: start;
   }
 
   .home-measure-btn {
-    grid-area: btn;
-    padding: 18px 14px;
-    align-self: stretch;
+    padding: 14px 14px;
   }
 
   .home-measure-text { font-size: 1rem; }
 
-  .home-metrics-bar { grid-area: metrics; display: flex !important; }
+  .home-metrics {
+    display: flex !important;
+    flex-direction: row !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
 
-  .home-metric-section { padding: 10px 4px 8px; }
-  .home-metric-val     { font-size: 18px; }
-  .home-metric-label   { font-size: 11px; }
+  .home-metric-card .home-metric-val { font-size: 15px; }
+  .home-metric-lbl                   { font-size: 9px; }
 
   .home-modes-col {
-    grid-area: modes;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
@@ -4999,4 +4995,49 @@ canvas {
 
 @media (orientation: landscape) {
   .home-calib-hint { display: none !important; }
+}
+
+/* ═══════════════════════════════════
+   HOME METRICS — REDISEÑO CARDS
+════════════════════════════════════ */
+.home-metrics {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  width: 100% !important;
+  margin: 12px 0 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.home-metric-card {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: #0D0D0D !important;
+  border: 1px solid #222 !important;
+  border-radius: 12px !important;
+  padding: 10px 6px !important;
+  text-align: center !important;
+}
+
+.home-metric-lbl {
+  color: #888888;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.home-metric-card .home-metric-val {
+  font-size: 18px !important;
+  font-weight: 900;
+  color: #FFFFFF;
+  line-height: 1;
+  letter-spacing: -0.5px;
 }
