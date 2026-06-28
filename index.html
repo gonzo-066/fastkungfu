@@ -239,6 +239,7 @@
       <span class="home-measure-text">MEDIR MI GOLPE</span>
       <span class="home-measure-arrow">›</span>
     </button>
+    <p class="home-calib-hint" id="home-calib-hint">¿Primer uso? <span class="home-calib-hint-link">Calibra tu dispositivo →</span></p>
 
     <!-- 3 MÉTRICAS: UNA TARJETA HORIZONTAL -->
     <div class="home-metrics-bar">
@@ -1136,6 +1137,31 @@
     <div class="result-grade rg-S" id="result-grade">S</div>
     <div class="result-grade-label" id="result-grade-label">PERFECTO</div>
     <div class="result-xp-count" id="result-xp-count">+0 XP</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     MODAL: MEDIR MI GOLPE — ELECCIÓN
+════════════════════════════════════ -->
+<div id="modal-measure-choice" class="modal hidden">
+  <div class="modal-overlay" id="modal-measure-overlay"></div>
+  <div class="modal-content modal-measure-content">
+    <h3 class="modal-measure-title">MEDIR MI GOLPE</h3>
+    <button class="btn-measure-opt btn-measure-calib" id="btn-choice-calibrate">
+      <span class="btn-measure-opt-icon">🎯</span>
+      <div class="btn-measure-opt-text">
+        <span class="btn-measure-opt-label">CALIBRAR DISPOSITIVO</span>
+        <span class="btn-measure-opt-desc">Primer uso o nuevo dispositivo</span>
+      </div>
+    </button>
+    <button class="btn-measure-opt btn-measure-train" id="btn-choice-train">
+      <span class="btn-measure-opt-icon">🥊</span>
+      <div class="btn-measure-opt-text">
+        <span class="btn-measure-opt-label">MODO POTENCIA</span>
+        <span class="btn-measure-opt-desc">Mide la fuerza de tu golpe</span>
+      </div>
+    </button>
+    <button class="btn-measure-cancel" id="btn-choice-cancel">Cancelar</button>
   </div>
 </div>
 

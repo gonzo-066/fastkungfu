@@ -739,11 +739,15 @@ const APP = {
     available: false,
     permitted: false,
     lastPunchAt: 0,
-    COOLDOWN: 150,            // ms debounce — training mode & signal phase
-    COMBO_HIT_COOLDOWN: 80,   // ms debounce — within active combo (rapid succession)
-    THRESHOLD: 1.2,           // G-force minimum
+    COOLDOWN: 150,
+    COMBO_HIT_COOLDOWN: 80,
+    THRESHOLD: 2.0,           // G-force mínimo (default sin calibrar)
+    ABSOLUTE_MIN_G: 1.2,      // Nunca bajar de este valor aunque calibración lo pida
     _logAt: 0,
+    _peakStart: 0,            // Filtro sostenido: timestamp primer cruce de umbral
+    _peakMax: 0,              // Pico máximo durante la ventana sostenida
   },
+  sessionActive: false,
   combo: {
     state: 'idle',       // 'idle'|'wait'|'signal'|'active'|'result'
     targetHits: 3,
@@ -1305,12 +1309,14 @@ function pickEpicMsg(type) {
 function triggerHitFeedback(gForce) {
   const tier = getGlobalTier(gForce);
 
-  // Award XP globally
-  const prev = loadGamificationXP();
-  const next = prev + tier.xp;
-  saveGamificationXP(next);
-  if (APP.gamification) APP.gamification.totalXP = next;
-  updateGlobalXPBar();
+  // Dar XP solo durante una sesión activa
+  if (APP.sessionActive) {
+    const prev = loadGamificationXP();
+    const next = prev + tier.xp;
+    saveGamificationXP(next);
+    if (APP.gamification) APP.gamification.totalXP = next;
+    updateGlobalXPBar();
+  }
 
   // Visual popup
   showGlobalHitPopup(tier.label, tier.xp, tier.color);
@@ -1787,21 +1793,36 @@ function onDeviceMotion(e) {
   const gForce = raw / 9.81;
   const now    = Date.now();
 
-  // Throttled console log (~10 Hz) for calibration
   if (now - APP.accel._logAt > 100) {
     APP.accel._logAt = now;
-    console.log(`[FKF] accel  g=${gForce.toFixed(2)}G  state=${APP.mode}/${APP.combo.state}  thr=${APP.accel.THRESHOLD}G`);
+    console.log(`[FKF] accel g=${gForce.toFixed(2)}G thr=${APP.accel.THRESHOLD}G`);
   }
 
-  // Use shorter debounce within active combo so rapid successive hits all register
+  const effectiveThreshold = Math.max(APP.accel.THRESHOLD, APP.accel.ABSOLUTE_MIN_G);
   const cooldown = (APP.mode === 'combo' && APP.comboConfig.submode === 'combo' && APP.combo.state === 'active')
     ? APP.accel.COMBO_HIT_COOLDOWN
     : APP.accel.COOLDOWN;
 
-  if (gForce > APP.accel.THRESHOLD && (now - APP.accel.lastPunchAt) > cooldown) {
-    APP.accel.lastPunchAt = now;
-    console.log(`[FKF] PUNCH  g=${gForce.toFixed(2)}G  cooldown=${cooldown}ms  mode=${APP.mode}  combo=${APP.combo.state}  hits=${APP.combo.currentHits}/${APP.combo.targetHits}`);
-    registerPunch(gForce, raw);
+  if (gForce >= effectiveThreshold) {
+    // Filtro sostenido: el pico debe mantenerse al menos 50ms antes de registrar
+    if (!APP.accel._peakStart) {
+      APP.accel._peakStart = now;
+      APP.accel._peakMax   = gForce;
+    } else {
+      if (gForce > APP.accel._peakMax) APP.accel._peakMax = gForce;
+      if ((now - APP.accel._peakStart) >= 50 && (now - APP.accel.lastPunchAt) > cooldown) {
+        const peakG = APP.accel._peakMax;
+        APP.accel.lastPunchAt = now;
+        APP.accel._peakStart  = 0;
+        APP.accel._peakMax    = 0;
+        console.log(`[FKF] PUNCH g=${peakG.toFixed(2)}G mode=${APP.mode}`);
+        registerPunch(peakG, peakG * 9.81);
+      }
+    }
+  } else {
+    // Cayó por debajo del umbral: resetear la ventana de pico
+    APP.accel._peakStart = 0;
+    APP.accel._peakMax   = 0;
   }
 }
 
@@ -2299,10 +2320,7 @@ function initMenuScreen() {
   if (measureBtn) {
     measureBtn.onclick = e => {
       addRipple(e, measureBtn);
-      APP.mode = 'training';
-      stopHomeParticles();
-      showScreen('screen-config');
-      initConfigScreen();
+      showMeasureChoiceModal();
     };
   }
   document.getElementById('btn-combo-mode') && (document.getElementById('btn-combo-mode').onclick = () => {
@@ -2311,6 +2329,20 @@ function initMenuScreen() {
     showScreen('screen-config');
     initConfigScreen();
   });
+
+  // Card tap animations (Bug 5)
+  document.querySelectorAll('.hmc').forEach(card => {
+    card.addEventListener('touchstart', () => {
+      navigator.vibrate && navigator.vibrate(30);
+      card.classList.add('tapped');
+      setTimeout(() => card.classList.remove('tapped'), 200);
+    }, { passive: true });
+  });
+
+  // Calibration hint link (Bug 2)
+  const calibHint = document.getElementById('home-calib-hint');
+  if (calibHint) calibHint.onclick = () => { stopHomeParticles(); showCalibrationScreen('screen-menu'); };
+
   document.getElementById('btn-settings').onclick = openSettingsModal;
   document.getElementById('btn-header-avatar').onclick = () => {
     showScreen('screen-profile');
@@ -2368,6 +2400,18 @@ function initConfigScreen() {
   const screenEl = document.getElementById('screen-config');
   screenEl.style.setProperty('--mode-color', modeColor);
   screenEl.style.setProperty('--mode-bg',    modeBg);
+
+  // Mode-specific background image (Bug 6)
+  const modeCardImages = {
+    training: './assets/card-potencia3.png',
+    simple:   './assets/Card-reacci%C3%B3n3.png',
+    combo:    './assets/card-combo4.png',
+    colors:   './assets/card-colores3.png',
+  };
+  const modeKey = isTraining ? 'training' : isSimple ? 'simple' : isComboSubmode ? 'combo' : 'colors';
+  screenEl.style.backgroundImage = `linear-gradient(rgba(5,5,5,0.85), rgba(5,5,5,0.92)), url('${modeCardImages[modeKey]}')`;
+  screenEl.style.backgroundSize     = 'cover';
+  screenEl.style.backgroundPosition = 'center';
 
   // Submode selector hidden — mode is pre-selected from home card
   document.getElementById('reaction-submode-block').classList.add('hidden');
@@ -2520,7 +2564,8 @@ function startSession() {
     misses: 0,
   };
   APP.combo.results = [];
-  APP.sessionSaved = false;
+  APP.sessionSaved  = false;
+  APP.sessionActive = true;
   acquireWakeLock();
   if (!APP.accel.available) setupAccelerometer();
   if (APP.mode === 'training') initGamificationSession();
@@ -2622,6 +2667,7 @@ function showTrainingScreen(roundNum) {
       if (APP.gamification && APP.gamification.streakTimer) clearTimeout(APP.gamification.streakTimer);
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
+      APP.sessionActive = false;
       hideGlobalXPOverlay();
       showScreen('screen-menu');
       startHomeParticles();
@@ -2747,6 +2793,7 @@ function showComboScreen(roundNum) {
       stopComboCycle();
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
+      APP.sessionActive = false;
       hideGlobalXPOverlay();
       showScreen('screen-menu');
       startHomeParticles();
@@ -2998,6 +3045,7 @@ function showReactionScreen(roundNum) {
       stopReactionCycle();
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
+      APP.sessionActive = false;
       hideGlobalXPOverlay();
       showScreen('screen-menu');
       startHomeParticles();
@@ -3169,6 +3217,7 @@ function renderRestStats() {
 // ═══════════════════════════════════════════════════
 function showSummaryScreen() {
   releaseWakeLock();
+  APP.sessionActive = false;
   hideGlobalXPOverlay();
 
   const sess     = APP.session;
@@ -3408,15 +3457,44 @@ function calcStreak(sessions) {
 }
 
 // ═══════════════════════════════════════════════════
+// MODAL: MEDIR MI GOLPE — ELECCIÓN
+// ═══════════════════════════════════════════════════
+function showMeasureChoiceModal() {
+  const modal = document.getElementById('modal-measure-choice');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+
+  document.getElementById('btn-choice-calibrate').onclick = () => {
+    modal.classList.add('hidden');
+    stopHomeParticles();
+    showCalibrationScreen('screen-menu');
+  };
+  document.getElementById('btn-choice-train').onclick = () => {
+    modal.classList.add('hidden');
+    APP.mode = 'training';
+    stopHomeParticles();
+    showScreen('screen-config');
+    initConfigScreen();
+  };
+  document.getElementById('btn-choice-cancel').onclick = () => {
+    modal.classList.add('hidden');
+  };
+  document.getElementById('modal-measure-overlay').onclick = () => {
+    modal.classList.add('hidden');
+  };
+}
+
+// ═══════════════════════════════════════════════════
 // MODAL: AJUSTES
 // ═══════════════════════════════════════════════════
 function openSettingsModal() {
-  if (!APP.profile) return;
-  document.getElementById('settings-name').value   = APP.profile.name;
-  document.getElementById('settings-weight').value = APP.profile.weight;
-  document.getElementById('settings-age').value    = APP.profile.age;
-  document.getElementById('settings-sex-hombre').classList.toggle('active', APP.profile.sex === 'hombre');
-  document.getElementById('settings-sex-mujer').classList.toggle('active',  APP.profile.sex !== 'hombre');
+  if (APP.profile) {
+    document.getElementById('settings-name').value   = APP.profile.name;
+    document.getElementById('settings-weight').value = APP.profile.weight;
+    document.getElementById('settings-age').value    = APP.profile.age;
+    document.getElementById('settings-sex-hombre').classList.toggle('active', APP.profile.sex === 'hombre');
+    document.getElementById('settings-sex-mujer').classList.toggle('active',  APP.profile.sex !== 'hombre');
+  }
   document.querySelectorAll('.btn-lang-sm').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === APP.lang);
   });
@@ -4138,7 +4216,7 @@ function loadCalibration() {
   if (!raw) return false;
   try {
     const c = JSON.parse(raw);
-    APP.accel.THRESHOLD = c.threshold;
+    APP.accel.THRESHOLD = Math.max(APP.accel.ABSOLUTE_MIN_G, c.threshold);
     APP.accel.COOLDOWN  = c.debounce;
     APP.accel.COMBO_HIT_COOLDOWN = Math.max(55, c.debounce - 45);
     return true;
@@ -4146,8 +4224,9 @@ function loadCalibration() {
 }
 
 function saveCalibration(threshold, debounce) {
-  localStorage.setItem('fkf_calibration', JSON.stringify({ threshold, debounce, at: Date.now() }));
-  APP.accel.THRESHOLD = threshold;
+  const safeThreshold = Math.max(APP.accel.ABSOLUTE_MIN_G, threshold);
+  localStorage.setItem('fkf_calibration', JSON.stringify({ threshold: safeThreshold, debounce, at: Date.now() }));
+  APP.accel.THRESHOLD = safeThreshold;
   APP.accel.COOLDOWN  = debounce;
   APP.accel.COMBO_HIT_COOLDOWN = Math.max(55, debounce - 45);
 }
@@ -4433,6 +4512,7 @@ function showColorsScreen(roundNum) {
       stopColorsCycle();
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
+      APP.sessionActive = false;
       hideGlobalXPOverlay();
       showScreen('screen-menu');
       startHomeParticles();

@@ -485,7 +485,7 @@ button:active {
 .config-body {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
   flex: 1;
 }
 
@@ -493,6 +493,12 @@ button:active {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  background: rgba(13,13,13,0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,211,0,0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
 }
 
 .config-label-row {
@@ -2655,6 +2661,20 @@ canvas {
   animation: none;
 }
 
+/* ── HINT TEXT CALIBRACIÓN ── */
+.home-calib-hint {
+  text-align: center;
+  font-size: 0.78rem;
+  color: #666;
+  margin-top: -6px;
+  cursor: pointer;
+}
+.home-calib-hint-link {
+  color: #888;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* ── 3 MÉTRICAS: UNA TARJETA HORIZONTAL ── */
 .home-metrics-bar {
   display: flex !important;
@@ -3737,4 +3757,102 @@ canvas {
   width: 60%; height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
   animation: gxpShimmer 2.4s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════
+   HMC CARD TAP ANIMATION
+════════════════════════════════════ */
+.hmc.tapped {
+  transform: scale(1.03) !important;
+  opacity: 1 !important;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.hmc--blue.tapped   { box-shadow: 0 0 20px rgba(0,212,255,0.55); }
+.hmc--green.tapped  { box-shadow: 0 0 20px rgba(255,211,0,0.55); }
+.hmc--yellow.tapped { box-shadow: 0 0 20px rgba(255,0,0,0.55); }
+.hmc--purple.tapped { box-shadow: 0 0 20px rgba(155,89,182,0.55); }
+
+/* ═══════════════════════════════════
+   MODAL: MEDIR MI GOLPE — ELECCIÓN
+════════════════════════════════════ */
+.modal-measure-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 20px 20px;
+}
+
+.modal-measure-title {
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  text-align: center;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.btn-measure-opt {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+}
+
+.btn-measure-opt:active { transform: scale(0.97); }
+
+.btn-measure-calib {
+  background: rgba(255,211,0,0.1);
+  border-color: #FFD300;
+}
+
+.btn-measure-train {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.18);
+}
+
+.btn-measure-opt-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.btn-measure-opt-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.btn-measure-calib .btn-measure-opt-label {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #FFD300;
+  letter-spacing: 0.5px;
+}
+
+.btn-measure-train .btn-measure-opt-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.btn-measure-opt-desc {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.btn-measure-cancel {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  padding: 8px;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
 }
