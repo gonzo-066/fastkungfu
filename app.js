@@ -738,6 +738,7 @@ const APP = {
   accel: {
     available: false,
     permitted: false,
+    listening: false,
     lastPunchAt: 0,
     COOLDOWN: 150,
     COMBO_HIT_COOLDOWN: 80,
@@ -1001,17 +1002,24 @@ function showHitRatingPopup(label, xp) {
 
 function updateStreakUI() {
   const gam = APP.gamification;
-  const el  = document.getElementById('gam-streak-badge');
+  const el  = document.getElementById('global-streak-counter');
+  const old = document.getElementById('gam-streak-badge');
+  if (old) old.classList.add('hidden');
   if (!el || !gam) return;
   const s = gam.currentStreak;
   if (s < 2) { el.classList.add('hidden'); return; }
-  el.classList.remove('hidden', 'gam-s2', 'gam-s5', 'gam-s10', 'gam-s20', 'gam-s50');
-  el.textContent = 'COMBO x' + s;
-  if      (s >= 50) el.classList.add('gam-s50');
-  else if (s >= 20) el.classList.add('gam-s20');
-  else if (s >= 10) el.classList.add('gam-s10');
-  else if (s >= 5)  el.classList.add('gam-s5');
-  else              el.classList.add('gam-s2');
+  el.classList.remove('hidden', 'gsc-s2', 'gsc-s5', 'gsc-s10', 'gsc-s20', 'gsc-s50');
+  el.textContent = 'x' + s;
+  if      (s >= 50) el.classList.add('gsc-s50');
+  else if (s >= 20) el.classList.add('gsc-s20');
+  else if (s >= 10) el.classList.add('gsc-s10');
+  else if (s >= 5)  el.classList.add('gsc-s5');
+  else              el.classList.add('gsc-s2');
+}
+
+function resetStreakCounter() {
+  const el = document.getElementById('global-streak-counter');
+  if (el) el.classList.add('hidden');
 }
 
 function checkStreakMilestone(streak) {
@@ -1337,16 +1345,38 @@ function triggerHitFeedback(gForce) {
 }
 
 function showGlobalHitPopup(label, xp, color) {
-  const popup = document.getElementById('global-hit-popup');
-  const lbl   = document.getElementById('global-hit-label');
-  const xpEl  = document.getElementById('global-hit-xp');
-  if (!popup || !lbl || !xpEl) return;
+  const container = document.getElementById('hit-popup-container');
+  if (!container) return;
+
+  // Keep max 2 visible — remove oldest if full
+  while (container.children.length >= 2) {
+    const oldest = container.firstChild;
+    if (oldest._removeTimer) clearTimeout(oldest._removeTimer);
+    oldest.remove();
+  }
+
+  const card = document.createElement('div');
+  const slug = label.toLowerCase().replace(/\s+/g, '-');
+  card.className = `hit-popup-card hit-popup-${slug}`;
+  card.style.setProperty('--tc', color);
+
+  const lbl = document.createElement('div');
+  lbl.className = 'hit-popup-label';
   lbl.textContent = label;
-  lbl.style.color = color;
+
+  const xpEl = document.createElement('div');
+  xpEl.className = 'hit-popup-xp';
   xpEl.textContent = '+' + xp + ' XP';
-  popup.classList.remove('ghp-anim');
-  void popup.offsetWidth;
-  popup.classList.add('ghp-anim');
+
+  card.appendChild(lbl);
+  card.appendChild(xpEl);
+  container.appendChild(card);
+
+  // Animate out at 1.0s, remove at 1.25s
+  card._removeTimer = setTimeout(() => {
+    card.classList.add('hit-popup-out');
+    setTimeout(() => card.remove(), 250);
+  }, 1000);
 }
 
 function updateGlobalXPBar() {
@@ -1781,12 +1811,23 @@ function setupAccelerometer() {
 }
 
 function activateAccelerometer() {
+  if (APP.accel.listening) return;
   window.addEventListener('devicemotion', onDeviceMotion, { passive: true });
   APP.accel.available = true;
   APP.accel.permitted = true;
+  APP.accel.listening = true;
+}
+
+function deactivateAccelerometer() {
+  if (!APP.accel.listening) return;
+  window.removeEventListener('devicemotion', onDeviceMotion);
+  APP.accel.listening  = false;
+  APP.accel._peakStart = 0;
+  APP.accel._peakMax   = 0;
 }
 
 function onDeviceMotion(e) {
+  if (!APP.sessionActive) return;
   const acc = e.accelerationIncludingGravity;
   if (!acc) return;
   const raw    = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
@@ -1827,6 +1868,7 @@ function onDeviceMotion(e) {
 }
 
 function registerPunch(gForce, speed) {
+  if (!APP.sessionActive) return;
   const punch = { g: gForce, speed: speed || gForce * 9.81, time: Date.now() };
   vibrate([15]);
   const tier = triggerHitFeedback(gForce);
@@ -2452,7 +2494,8 @@ function initConfigScreen() {
       try {
         const perm = await DeviceMotionEvent.requestPermission();
         if (perm === 'granted') {
-          activateAccelerometer();
+          APP.accel.available = true;
+          APP.accel.permitted = true;
           document.getElementById('permission-status').textContent = t('ios_granted');
           document.getElementById('btn-ios-permission').disabled = true;
         } else {
@@ -2567,7 +2610,7 @@ function startSession() {
   APP.sessionSaved  = false;
   APP.sessionActive = true;
   acquireWakeLock();
-  if (!APP.accel.available) setupAccelerometer();
+  activateAccelerometer();
   if (APP.mode === 'training') initGamificationSession();
   stopHomeParticles();
   showGlobalXPOverlay();
@@ -2668,7 +2711,9 @@ function showTrainingScreen(roundNum) {
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
       APP.sessionActive = false;
+      deactivateAccelerometer();
       hideGlobalXPOverlay();
+      resetStreakCounter();
       showScreen('screen-menu');
       startHomeParticles();
     }
@@ -2794,6 +2839,7 @@ function showComboScreen(roundNum) {
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
       APP.sessionActive = false;
+      deactivateAccelerometer();
       hideGlobalXPOverlay();
       showScreen('screen-menu');
       startHomeParticles();
@@ -3046,6 +3092,7 @@ function showReactionScreen(roundNum) {
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
       APP.sessionActive = false;
+      deactivateAccelerometer();
       hideGlobalXPOverlay();
       showScreen('screen-menu');
       startHomeParticles();
@@ -3218,7 +3265,9 @@ function renderRestStats() {
 function showSummaryScreen() {
   releaseWakeLock();
   APP.sessionActive = false;
+  deactivateAccelerometer();
   hideGlobalXPOverlay();
+  resetStreakCounter();
 
   const sess     = APP.session;
   const punches  = sess.allPunches;
@@ -3602,9 +3651,11 @@ function init() {
     initLangScreen();
   }
 
+  // Pre-check accelerometer availability (listener added only when session starts)
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   if (!isIOS && typeof DeviceMotionEvent !== 'undefined') {
-    activateAccelerometer();
+    APP.accel.available = true;
+    APP.accel.permitted = true;
   }
 }
 
@@ -4513,6 +4564,7 @@ function showColorsScreen(roundNum) {
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
       APP.sessionActive = false;
+      deactivateAccelerometer();
       hideGlobalXPOverlay();
       showScreen('screen-menu');
       startHomeParticles();
