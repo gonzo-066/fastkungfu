@@ -1463,24 +1463,22 @@ function triggerBodyShake() {
 let _homeParticleRAF = null;
 const _HOME_PARTICLE_COLORS = ['#FFD300', '#00D4FF', '#FF1A1A'];
 
-function startHomeParticles() {
-  const canvas = document.getElementById('home-particles');
+function startBgParticles() {
+  if (_homeParticleRAF) return;
+  const canvas = document.getElementById('bg-particles');
   if (!canvas) return;
-  const screen = document.getElementById('screen-menu');
-  canvas.width  = screen ? screen.clientWidth  : window.innerWidth;
-  canvas.height = screen ? screen.clientHeight : window.innerHeight;
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
-
   const particles = Array.from({ length: 40 }, () => ({
     x: Math.random() * W, y: Math.random() * H,
-    vx: (Math.random() - 0.5) * 0.6,
-    vy: (Math.random() - 0.5) * 0.6,
+    vx: (Math.random() - 0.5) * 0.55,
+    vy: (Math.random() - 0.5) * 0.55,
     r: 2 + Math.random() * 3,
-    alpha: 0.3 + Math.random() * 0.3,
+    alpha: 0.25 + Math.random() * 0.28,
     color: _HOME_PARTICLE_COLORS[Math.floor(Math.random() * 3)],
   }));
-
   const tick = () => {
     ctx.clearRect(0, 0, W, H);
     particles.forEach(p => {
@@ -1497,11 +1495,15 @@ function startHomeParticles() {
   tick();
 }
 
-function stopHomeParticles() {
+function stopBgParticles() {
   if (_homeParticleRAF) { cancelAnimationFrame(_homeParticleRAF); _homeParticleRAF = null; }
-  const canvas = document.getElementById('home-particles');
-  if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  const canvas = document.getElementById('bg-particles');
+  if (canvas) { const c = canvas.getContext('2d'); c.clearRect(0, 0, canvas.width, canvas.height); }
 }
+
+// Backwards-compat aliases (called from many stop/start paths)
+function startHomeParticles() { startBgParticles(); }
+function stopHomeParticles()  { stopBgParticles(); }
 
 // ═══════════════════════════════════════════════════
 // AAA — RESULT SPLASH SCREEN
@@ -2287,7 +2289,7 @@ function initLoginScreen() {
     const email = document.getElementById('login-email').value.trim();
     if (!email) { errEl.style.color = '#FF4444'; errEl.textContent = 'Ingresa tu email primero'; return; }
     try {
-      await supabaseClient.auth.resetPasswordForEmail(email);
+      await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: 'https://fastkungfu.vercel.app' });
       errEl.style.color = '#00FF66';
       errEl.textContent = 'Email enviado. Revisa tu bandeja de entrada.';
     } catch (e) {
@@ -2362,7 +2364,8 @@ function initMenuScreen() {
   if (measureBtn) {
     measureBtn.onclick = e => {
       addRipple(e, measureBtn);
-      showMeasureChoiceModal();
+      stopBgParticles();
+      showCalibrationScreen('screen-menu');
     };
   }
   document.getElementById('btn-combo-mode') && (document.getElementById('btn-combo-mode').onclick = () => {
@@ -2385,7 +2388,7 @@ function initMenuScreen() {
   const calibHint = document.getElementById('home-calib-hint');
   if (calibHint) calibHint.onclick = () => { stopHomeParticles(); showCalibrationScreen('screen-menu'); };
 
-  document.getElementById('btn-settings').onclick = openSettingsModal;
+  document.getElementById('btn-settings').onclick = toggleSettingsDropdown;
   document.getElementById('btn-header-avatar').onclick = () => {
     showScreen('screen-profile');
     setNavActive('nav-profile');
@@ -2399,19 +2402,16 @@ function initMenuScreen() {
     initMenuScreen();
   };
   document.getElementById('nav-history-btn').onclick = () => {
-    stopHomeParticles();
     showScreen('screen-history');
     setNavActive('nav-history-btn');
-    initHistoryScreen();
+    initHistoryScreen('historial');
   };
   document.getElementById('nav-ranking').onclick = () => {
-    stopHomeParticles();
     showScreen('screen-history');
     setNavActive('nav-ranking');
-    initHistoryScreen();
+    initHistoryScreen('ranking');
   };
   document.getElementById('nav-profile').onclick = () => {
-    stopHomeParticles();
     showScreen('screen-profile');
     setNavActive('nav-profile');
     initProfileScreen(true);
@@ -2448,7 +2448,7 @@ function initConfigScreen() {
     training: './assets/card-potencia3.png',
     simple:   './assets/Card-reacci%C3%B3n3.png',
     combo:    './assets/card-combo4.png',
-    colors:   './assets/card-colores3.png',
+    colors:   './assets/card-colores4.jpg',
   };
   const modeOverlays = {
     training: 'linear-gradient(rgba(20,14,0,0.75) 0%, rgba(28,18,0,0.88) 100%)',
@@ -3178,11 +3178,13 @@ function startReactionWait() {
 }
 
 function showReactionStimulus() {
-  APP.reaction.state     = 'hit';
+  APP.reaction.state      = 'hit';
   APP.reaction.stimulusAt = Date.now();
-  setReactionStimulus('state-hit', '⚡', t('stimulus_hit'), '');
-  vibrate([30]);
-  playBeep(880, 0.12);
+  // Flash blanco → rojo + vibración triple
+  triggerBodyFlash('white');
+  setTimeout(() => setReactionStimulus('state-hit', '⚡', 'HIT', t('stimulus_hit')), 60);
+  vibrate([50, 30, 50]);
+  playBeep(880, 0.18);
   APP.reaction.missTimeout = setTimeout(() => {
     if (APP.reaction.state === 'hit') missReaction();
   }, 1000);
@@ -3210,6 +3212,7 @@ function handleReactionPunch(punch) {
   APP.round.punches.push(punch);
   APP.round.reactionTimes.push(reactionMs);
   setReactionStimulus('state-result-ok', '✓', reactionMs + 'ms', reactionRank(reactionMs));
+  showReactionHitOverlay(reactionMs);
   vibrate([20, 30, 20]);
   if (reactionMs < 200) speakVoice(t('voice_master'));
   else speakVoice(t('voice_ok'));
@@ -3217,6 +3220,18 @@ function handleReactionPunch(punch) {
   if (APP.round.secondsLeft > 0) {
     setTimeout(() => startReactionWait(), 1500);
   }
+}
+
+function showReactionHitOverlay(reactionMs) {
+  const overlay = document.getElementById('reaction-hit-overlay');
+  if (!overlay) return;
+  const rank = reactionRank(reactionMs);
+  const isPerf = reactionMs < 200;
+  overlay.querySelector('.rho-rank').textContent = rank.toUpperCase();
+  overlay.querySelector('.rho-time').textContent = reactionMs + 'ms';
+  overlay.className = 'reaction-hit-overlay rho-show' + (isPerf ? ' rho-perfect' : '');
+  if (isPerf) triggerBodyFlash('white');
+  setTimeout(() => { overlay.classList.remove('rho-show'); }, 1400);
 }
 
 function updateReactionMetricsUI() {
@@ -3484,8 +3499,29 @@ function buildComparison(totalPunches, avgPower, bestReaction) {
 // ═══════════════════════════════════════════════════
 // HISTORIAL
 // ═══════════════════════════════════════════════════
-function initHistoryScreen() {
-  document.getElementById('btn-history-back').onclick = () => showScreen('screen-menu');
+function initHistoryScreen(tab) {
+  document.getElementById('btn-history-back').onclick = () => { startBgParticles(); showScreen('screen-menu'); };
+
+  const tabH = document.getElementById('tab-historial');
+  const tabR = document.getElementById('tab-ranking');
+  const bodyH = document.getElementById('hist-body-historial');
+  const bodyR = document.getElementById('hist-body-ranking');
+
+  const activateTab = (t) => {
+    if (tabH) tabH.classList.toggle('hist-tab-active', t === 'historial');
+    if (tabR) tabR.classList.toggle('hist-tab-active', t === 'ranking');
+    if (bodyH) bodyH.classList.toggle('hidden', t !== 'historial');
+    if (bodyR) bodyR.classList.toggle('hidden', t !== 'ranking');
+    if (t === 'ranking') renderRankingContent();
+    else renderHistorialContent();
+  };
+
+  if (tabH) tabH.onclick = () => activateTab('historial');
+  if (tabR) tabR.onclick = () => activateTab('ranking');
+  activateTab(tab || 'historial');
+}
+
+function renderHistorialContent() {
   const sessions = getSessions();
 
   if (!sessions.length) {
@@ -3526,6 +3562,59 @@ function initHistoryScreen() {
 
   const calVals = last10.map(s => s.calories || 0);
   drawBarChart('hist-calories-chart', calVals, Math.max(...calVals, 50), () => '#ff8800');
+}
+
+function renderRankingContent() {
+  const bodyR = document.getElementById('hist-body-ranking');
+  if (!bodyR) return;
+  const sessions = getSessions();
+  const profile  = APP.profile;
+  const name     = profile ? profile.name : (localStorage.getItem('fkf_guestName') || 'Tú');
+  const xp       = loadGamificationXP();
+
+  const bestPower = sessions.reduce((m, s) => Math.max(m, s.maxPower || 0), 0);
+  const bestSpeed = sessions.reduce((m, s) => Math.max(m, s.maxSpeed || 0), 0);
+
+  const rankRow = (pos, n, val, unit, color) =>
+    `<div class="rank-row${pos === 1 ? ' rank-row-me' : ''}">
+      <span class="rank-pos">#${pos}</span>
+      <span class="rank-name">${n}</span>
+      <span class="rank-val" style="color:${color}">${val}${unit}</span>
+    </div>`;
+
+  // Active ranking sub-tab
+  let activeSubTab = bodyR.dataset.subtab || 'potencia';
+  const renderSub = (sub) => {
+    bodyR.dataset.subtab = sub;
+    bodyR.querySelectorAll('.rank-subtab').forEach(b =>
+      b.classList.toggle('rank-subtab-active', b.dataset.sub === sub));
+    const listEl = bodyR.querySelector('.rank-list');
+    if (!listEl) return;
+    if (sub === 'potencia') {
+      listEl.innerHTML = bestPower > 0
+        ? rankRow(1, name, bestPower.toFixed(1), 'G', '#FFD300')
+        : '<p class="rank-empty">Sin sesiones aún</p>';
+    } else if (sub === 'velocidad') {
+      listEl.innerHTML = bestSpeed > 0
+        ? rankRow(1, name, bestSpeed.toFixed(1), 'm/s', '#00D4FF')
+        : '<p class="rank-empty">Sin sesiones aún</p>';
+    } else {
+      listEl.innerHTML = rankRow(1, name, xp, ' XP', '#9B59B6');
+    }
+  };
+
+  bodyR.innerHTML = `
+    <div class="rank-subtabs">
+      <button class="rank-subtab" data-sub="potencia">🏆 POTENCIA</button>
+      <button class="rank-subtab" data-sub="velocidad">⚡ VELOCIDAD</button>
+      <button class="rank-subtab" data-sub="xp">⭐ XP</button>
+    </div>
+    <div class="rank-list"></div>
+    <p class="rank-coming-soon">🌐 Ranking global próximamente</p>`;
+
+  bodyR.querySelectorAll('.rank-subtab').forEach(b =>
+    b.onclick = () => renderSub(b.dataset.sub));
+  renderSub(activeSubTab);
 }
 
 function calcStreak(sessions) {
@@ -3578,6 +3667,50 @@ function showMeasureChoiceModal() {
   document.getElementById('modal-measure-overlay').onclick = () => {
     modal.classList.add('hidden');
   };
+}
+
+// ═══════════════════════════════════════════════════
+// SETTINGS DROPDOWN
+// ═══════════════════════════════════════════════════
+function toggleSettingsDropdown() {
+  const dd = document.getElementById('settings-dropdown');
+  if (!dd) { openSettingsModal(); return; }
+  const isOpen = !dd.classList.contains('hidden');
+  dd.classList.toggle('hidden', isOpen);
+  if (isOpen) return;
+
+  document.getElementById('sd-help').onclick = () => {
+    dd.classList.add('hidden');
+    showScreen('screen-help'); initHelpScreen();
+  };
+  document.getElementById('sd-calib').onclick = () => {
+    dd.classList.add('hidden');
+    stopBgParticles(); showCalibrationScreen('screen-menu');
+  };
+  document.getElementById('sd-profile').onclick = () => {
+    dd.classList.add('hidden');
+    openSettingsModal();
+  };
+  document.getElementById('sd-logout').onclick = () => {
+    dd.classList.add('hidden'); supabaseSignOut();
+  };
+  document.querySelectorAll('.sd-lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === APP.lang);
+    btn.onclick = () => {
+      APP.lang = btn.dataset.lang;
+      localStorage.setItem('fkf_lang', APP.lang);
+      applyLanguage();
+      dd.classList.add('hidden');
+    };
+  });
+
+  const closeOutside = (e) => {
+    if (!dd.contains(e.target) && !document.getElementById('btn-settings').contains(e.target)) {
+      dd.classList.add('hidden');
+      document.removeEventListener('click', closeOutside, true);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeOutside, true), 50);
 }
 
 // ═══════════════════════════════════════════════════

@@ -203,7 +203,8 @@
       </div>
     </div>
 
-    <!-- DERECHA: Settings -->
+    <!-- DERECHA: Settings + dropdown -->
+    <div class="settings-wrap">
     <button class="home-settings-btn icon-btn" id="btn-settings" title="Ajustes">
       <span class="nav-icon-wrap">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -212,6 +213,19 @@
         </svg>
       </span>
     </button>
+    <div id="settings-dropdown" class="settings-dropdown hidden">
+      <button class="sd-item" id="sd-help">📖 <span>AYUDA</span></button>
+      <div class="sd-lang-row">
+        <button class="btn-lang-sm sd-lang-btn" data-lang="es">🇪🇸 ES</button>
+        <button class="btn-lang-sm sd-lang-btn" data-lang="en">🇺🇸 EN</button>
+        <button class="btn-lang-sm sd-lang-btn" data-lang="pt">🇧🇷 PT</button>
+        <button class="btn-lang-sm sd-lang-btn" data-lang="de">🇩🇪 DE</button>
+      </div>
+      <button class="sd-item" id="sd-calib">🎯 <span>CALIBRAR</span></button>
+      <button class="sd-item" id="sd-profile">⚙️ <span>AJUSTES</span></button>
+      <button class="sd-item sd-logout" id="sd-logout">🚪 <span>CERRAR SESIÓN</span></button>
+    </div>
+    </div><!-- /settings-wrap -->
 
   </header>
 
@@ -236,7 +250,7 @@
                     stroke="#050505" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
       </span>
-      <span class="home-measure-text">MEDIR MI GOLPE</span>
+      <span class="home-measure-text">CALIBRAR DISPOSITIVO</span>
       <span class="home-measure-arrow">›</span>
     </button>
     <p class="home-calib-hint" id="home-calib-hint">¿Primer uso? <span class="home-calib-hint-link">Calibra tu dispositivo →</span></p>
@@ -665,6 +679,12 @@
     <button class="btn-fallback" id="btn-fallback-reaction" data-i18n="fallback_punch">👊 GOLPEAR</button>
   </div>
 
+  <!-- Hit result overlay (non-blocking) -->
+  <div id="reaction-hit-overlay" class="reaction-hit-overlay" aria-hidden="true">
+    <div class="rho-rank"></div>
+    <div class="rho-time"></div>
+  </div>
+
 </div>
 
 <!-- ═══════════════════════════════════
@@ -853,10 +873,13 @@
   <div class="screen-inner">
     <div class="topbar">
       <button class="icon-btn" id="btn-history-back">←</button>
-      <h2 data-i18n="stats_title">ESTADÍSTICAS</h2>
+      <div class="hist-tabs">
+        <button class="hist-tab hist-tab-active" id="tab-historial">📊 HISTORIAL</button>
+        <button class="hist-tab" id="tab-ranking">🏆 RANKING</button>
+      </div>
       <div></div>
     </div>
-    <div class="history-body">
+    <div class="history-body" id="hist-body-historial">
       <section class="hist-section">
         <h3 data-i18n="records_title">🏆 Récords Históricos</h3>
         <div class="records-grid">
@@ -905,6 +928,9 @@
         <canvas id="hist-calories-chart" width="320" height="120"></canvas>
       </section>
       <div style="height:80px"></div>
+    </div>
+    <div class="history-body hidden" id="hist-body-ranking">
+      <!-- JS renders ranking content here -->
     </div>
   </div>
 </div>
@@ -1103,6 +1129,9 @@
   });
 }());
 </script>
+
+<!-- GLOBAL BACKGROUND PARTICLES -->
+<canvas id="bg-particles" class="bg-particles-global" aria-hidden="true"></canvas>
 
 <!-- ═══════════════════════════════════
      AAA — GLOBAL HIT FEEDBACK OVERLAY
