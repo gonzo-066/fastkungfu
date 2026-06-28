@@ -635,48 +635,87 @@
 ════════════════════════════════════ -->
 <div id="screen-reaction" class="screen hidden">
 
-  <!-- Header fijo (round + timer + stop) -->
-  <div class="combo-header" id="reaction-header">
-    <span class="round-badge" id="reaction-round-indicator">ROUND 1/3</span>
-    <span class="combo-session-timer" id="reaction-session-timer">2:00</span>
-    <div class="header-actions">
-      <button class="mute-btn" id="btn-mute-reaction">🔊</button>
-      <button class="btn-stop" id="btn-reaction-stop">■</button>
+  <!-- Background particles -->
+  <canvas id="reaction-bg-canvas" class="rsc-bg-canvas" aria-hidden="true"></canvas>
+
+  <!-- HEADER -->
+  <div class="rsc-header">
+    <div class="rsc-hdr-left">
+      <div class="rsc-round-lbl" id="reaction-round-indicator">ROUND 1/3</div>
+      <div class="rsc-round-dots" id="reaction-round-dots"></div>
+    </div>
+    <div class="rsc-hdr-center">
+      <div class="rsc-timer" id="reaction-session-timer">2:00</div>
+      <div class="rsc-timer-sub">TIEMPO RESTANTE</div>
+    </div>
+    <div class="rsc-hdr-right">
+      <button class="rsc-icon-btn" id="btn-mute-reaction">🔊</button>
+      <button class="rsc-icon-btn" id="btn-reaction-stop">⏸</button>
     </div>
   </div>
 
-  <!-- Contenido principal -->
-  <div class="reaction-content">
-    <!-- Estímulo central -->
-    <div class="reaction-stimulus-wrap">
-      <div class="reaction-stimulus state-wait" id="reaction-stimulus">
-        <div class="stimulus-icon" id="stimulus-icon">⏳</div>
-        <div class="stimulus-text" id="stimulus-text">Prepárate</div>
-        <div class="stimulus-sub" id="stimulus-sub"></div>
+  <!-- MAIN AREA -->
+  <div class="rsc-main">
+
+    <!-- LEFT COLUMN: 4 metric cards -->
+    <div class="rsc-left-col">
+      <div class="rsc-card">
+        <div class="rsc-card-icon">⚡</div>
+        <div class="rsc-card-lbl">ÚLTIMA REACCIÓN</div>
+        <div class="rsc-card-val" id="reaction-last">—</div>
+      </div>
+      <div class="rsc-card">
+        <div class="rsc-card-icon">👑</div>
+        <div class="rsc-card-lbl">MEJOR REACCIÓN</div>
+        <div class="rsc-card-val" id="reaction-best">—</div>
+      </div>
+      <div class="rsc-card">
+        <div class="rsc-card-lbl">COMBO</div>
+        <div class="rsc-card-val rsc-combo-num" id="reaction-combo">x0</div>
+        <div class="rsc-combo-bars" id="reaction-combo-bars"></div>
+      </div>
+      <div class="rsc-card rsc-card--split">
+        <div class="rsc-split-half">
+          <div class="rsc-card-lbl" style="color:#00D4FF">ACIERTOS</div>
+          <div class="rsc-card-val" style="color:#00D4FF" id="reaction-hits">0</div>
+        </div>
+        <div class="rsc-split-sep"></div>
+        <div class="rsc-split-half">
+          <div class="rsc-card-lbl" style="color:#FF4444">FALLOS</div>
+          <div class="rsc-card-val" style="color:#FF4444" id="reaction-misses">0</div>
+        </div>
       </div>
     </div>
 
-    <!-- 4 métricas -->
-    <div class="reaction-metrics">
-      <div class="metric-card">
-        <div class="metric-value" id="reaction-last">—</div>
-        <div class="metric-label" data-i18n="last_reaction">Última reacción</div>
+    <!-- CENTER: Main circle + fallback -->
+    <div class="rsc-center">
+      <div class="rsc-circle-wrap">
+        <div class="rsc-spark-ring rsc-spark-1"></div>
+        <div class="rsc-spark-ring rsc-spark-2"></div>
+        <div class="rsc-circle state-wait" id="reaction-circle">
+          <div class="rsc-circle-check" id="reaction-circle-check"></div>
+          <div class="rsc-circle-rank" id="reaction-circle-rank"></div>
+          <div class="rsc-circle-ms" id="reaction-circle-ms">PREPÁRATE</div>
+          <div class="rsc-circle-sub" id="reaction-circle-sub"></div>
+          <div class="rsc-circle-xp" id="reaction-circle-xp"></div>
+        </div>
       </div>
-      <div class="metric-card">
-        <div class="metric-value green" id="reaction-hits">0</div>
-        <div class="metric-label" data-i18n="hits">Aciertos</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-value red" id="reaction-misses">0</div>
-        <div class="metric-label" data-i18n="misses">Fallos</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-value" id="reaction-best">—</div>
-        <div class="metric-label" data-i18n="best_reaction">Mejor reacción</div>
-      </div>
+      <button class="btn-fallback" id="btn-fallback-reaction" data-i18n="fallback_punch">👊 GOLPEAR</button>
     </div>
 
-    <button class="btn-fallback" id="btn-fallback-reaction" data-i18n="fallback_punch">👊 GOLPEAR</button>
+  </div>
+
+  <!-- FOOTER: XP bar -->
+  <div class="rsc-footer">
+    <div class="rsc-footer-left">
+      <span class="rsc-footer-level" id="reaction-footer-level">NIVEL 1</span>
+      <div class="rsc-footer-xp-track">
+        <div class="rsc-footer-xp-fill" id="reaction-footer-xp-fill" style="width:0%">
+          <div class="rsc-xp-shimmer"></div>
+        </div>
+      </div>
+    </div>
+    <div class="rsc-footer-xp-badge" id="reaction-footer-xp-badge">0 XP</div>
   </div>
 
   <!-- Hit result overlay (non-blocking) -->

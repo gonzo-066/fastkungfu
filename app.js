@@ -1506,6 +1506,50 @@ function startHomeParticles() { startBgParticles(); }
 function stopHomeParticles()  { stopBgParticles(); }
 
 // ═══════════════════════════════════════════════════
+// REACTION SCREEN BG PARTICLES
+// ═══════════════════════════════════════════════════
+let _reactionBgRAF = null;
+
+function startReactionBgParticles() {
+  if (_reactionBgRAF) return;
+  const canvas = document.getElementById('reaction-bg-canvas');
+  if (!canvas) return;
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const particles = Array.from({ length: 28 }, () => ({
+    x: Math.random() * W,
+    y: H + Math.random() * H,
+    vx: (Math.random() - 0.5) * 0.5,
+    vy: -(0.4 + Math.random() * 0.7),
+    r: 1.5 + Math.random() * 2.5,
+    alpha: 0.1 + Math.random() * 0.25,
+    color: '#FFD300',
+  }));
+  const tick = () => {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle   = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    _reactionBgRAF = requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+function stopReactionBgParticles() {
+  if (_reactionBgRAF) { cancelAnimationFrame(_reactionBgRAF); _reactionBgRAF = null; }
+  const canvas = document.getElementById('reaction-bg-canvas');
+  if (canvas) { const c = canvas.getContext('2d'); c.clearRect(0, 0, canvas.width, canvas.height); }
+}
+
+// ═══════════════════════════════════════════════════
 // AAA — RESULT SPLASH SCREEN
 // ═══════════════════════════════════════════════════
 function getSessionGrade(punches) {
@@ -2658,7 +2702,7 @@ function startSession() {
   APP.sessionActive = true;
   acquireWakeLock();
   activateAccelerometer();
-  if (APP.mode === 'training') initGamificationSession();
+  initGamificationSession();
   stopHomeParticles();
   showGlobalXPOverlay();
   startRound(1);
@@ -2714,9 +2758,14 @@ function startRoundTimer(onEnd) {
 function endRound() {
   clearInterval(APP.round.timerInterval);
   if (APP.mode === 'combo') {
-    if (APP.comboConfig.submode === 'simple')       stopReactionCycle();
-    else if (APP.comboConfig.submode === 'colors')  stopColorsCycle();
-    else                                            stopComboCycle();
+    if (APP.comboConfig.submode === 'simple') {
+      stopReactionCycle();
+      stopReactionBgParticles();
+    } else if (APP.comboConfig.submode === 'colors') {
+      stopColorsCycle();
+    } else {
+      stopComboCycle();
+    }
   }
 
   APP.session.roundData.push({ ...APP.round });
@@ -3122,10 +3171,25 @@ function stopComboCycle() {
 // ═══════════════════════════════════════════════════
 function showReactionScreen(roundNum) {
   showScreen('screen-reaction');
+  const total = APP.config.rounds;
   document.getElementById('reaction-round-indicator').textContent =
-    t('round_indicator', { n: roundNum, total: APP.config.rounds });
+    t('round_indicator', { n: roundNum, total });
+
+  // Round dots
+  const dotsEl = document.getElementById('reaction-round-dots');
+  if (dotsEl) {
+    dotsEl.innerHTML = '';
+    for (let i = 1; i <= total; i++) {
+      const d = document.createElement('div');
+      d.className = 'rsc-dot' + (i <= roundNum ? ' rsc-dot--filled' : '');
+      dotsEl.appendChild(d);
+    }
+  }
+
   updateReactionTimer();
   resetReactionMetrics();
+  updateReactionFooterXP();
+  startReactionBgParticles();
 
   document.getElementById('btn-mute-reaction').onclick = toggleSound;
   updateMuteButtons();
@@ -3140,6 +3204,7 @@ function showReactionScreen(roundNum) {
       releaseWakeLock();
       APP.sessionActive = false;
       deactivateAccelerometer();
+      stopReactionBgParticles();
       hideGlobalXPOverlay();
       showScreen('screen-menu');
       startHomeParticles();
@@ -3157,20 +3222,60 @@ function resetReactionMetrics() {
   document.getElementById('reaction-hits').textContent   = '0';
   document.getElementById('reaction-misses').textContent = '0';
   document.getElementById('reaction-best').textContent   = '—';
+  updateReactionComboUI(0);
 }
 
-function setReactionStimulus(state, icon, text, sub) {
-  const el = document.getElementById('reaction-stimulus');
-  el.className = 'reaction-stimulus ' + state;
-  document.getElementById('stimulus-icon').textContent = icon;
-  document.getElementById('stimulus-text').textContent = text;
-  document.getElementById('stimulus-sub').textContent  = sub || '';
+function updateReactionComboUI(streak) {
+  const numEl = document.getElementById('reaction-combo');
+  const barEl = document.getElementById('reaction-combo-bars');
+  if (numEl) numEl.textContent = 'x' + streak;
+  if (barEl) {
+    const MAX = 8;
+    const filled = Math.min(streak % (MAX + 1) || (streak >= MAX ? MAX : streak), MAX);
+    let html = '';
+    for (let i = 0; i < MAX; i++) {
+      html += '<div class="rsc-bar ' + (i < filled ? 'rsc-bar-on' : 'rsc-bar-off') + '"></div>';
+    }
+    barEl.innerHTML = html;
+  }
+}
+
+function updateReactionFooterXP() {
+  const xp  = loadGamificationXP();
+  const inf = getXPLevelInfo(xp);
+  const lvlEl   = document.getElementById('reaction-footer-level');
+  const fillEl  = document.getElementById('reaction-footer-xp-fill');
+  const badgeEl = document.getElementById('reaction-footer-xp-badge');
+  if (lvlEl)   lvlEl.textContent   = 'NIVEL ' + (inf.idx + 1);
+  if (badgeEl) badgeEl.textContent = xp + ' XP';
+  if (fillEl && inf.next) {
+    const pct = Math.min(100, Math.round(((xp - inf.current.min) / (inf.next.min - inf.current.min)) * 100));
+    fillEl.style.width = pct + '%';
+  } else if (fillEl) {
+    fillEl.style.width = '100%';
+  }
+}
+
+function setReactionStimulus(state, icon, text, sub, rank, xp) {
+  const circleEl = document.getElementById('reaction-circle');
+  if (!circleEl) return;
+  circleEl.className = 'rsc-circle ' + state;
+  const checkEl = document.getElementById('reaction-circle-check');
+  const rankEl  = document.getElementById('reaction-circle-rank');
+  const msEl    = document.getElementById('reaction-circle-ms');
+  const subEl   = document.getElementById('reaction-circle-sub');
+  const xpEl    = document.getElementById('reaction-circle-xp');
+  if (checkEl) checkEl.textContent = icon || '';
+  if (rankEl)  rankEl.textContent  = rank || '';
+  if (msEl)    msEl.textContent    = text;
+  if (subEl)   subEl.textContent   = sub || '';
+  if (xpEl)    xpEl.textContent    = xp || '';
 }
 
 function startReactionWait() {
   if (APP.round.secondsLeft <= 0) return;
   APP.reaction.state = 'wait';
-  setReactionStimulus('state-wait', '⏳', t('stimulus_wait'), '');
+  setReactionStimulus('state-wait', '', 'PREPÁRATE', '', '', '');
   const delay = 1000 + Math.random() * 2000;
   APP.reaction.waitTimeout = setTimeout(() => {
     if (APP.round.secondsLeft > 0) showReactionStimulus();
@@ -3180,9 +3285,8 @@ function startReactionWait() {
 function showReactionStimulus() {
   APP.reaction.state      = 'hit';
   APP.reaction.stimulusAt = Date.now();
-  // Flash blanco → rojo + vibración triple
   triggerBodyFlash('white');
-  setTimeout(() => setReactionStimulus('state-hit', '⚡', 'HIT', t('stimulus_hit')), 60);
+  setTimeout(() => setReactionStimulus('state-hit', '⚡', 'HIT', '', '', ''), 60);
   vibrate([50, 30, 50]);
   playBeep(880, 0.18);
   APP.reaction.missTimeout = setTimeout(() => {
@@ -3194,7 +3298,7 @@ function missReaction() {
   clearTimeout(APP.reaction.missTimeout);
   APP.reaction.state = 'miss';
   APP.round.misses++;
-  setReactionStimulus('state-miss', '✗', t('stimulus_miss'), '');
+  setReactionStimulus('state-miss', '✗', 'FALLO', '', '', '');
   vibrate([80]);
   speakVoice(t('voice_fail'));
   updateReactionMetricsUI();
@@ -3211,12 +3315,22 @@ function handleReactionPunch(punch) {
   APP.round.hits++;
   APP.round.punches.push(punch);
   APP.round.reactionTimes.push(reactionMs);
-  setReactionStimulus('state-result-ok', '✓', reactionMs + 'ms', reactionRank(reactionMs));
+  const rankStr = reactionRank(reactionMs);
+  const tier    = getGlobalTier(punch.g);
+  setReactionStimulus(
+    'state-result-ok',
+    '✓',
+    reactionMs + 'ms',
+    '— ' + rankStr.replace(/[⚫🟤🟡⚪]/g, '').trim() + ' —',
+    rankStr.replace(/[⚫🟤🟡⚪]\s*/g, '').trim(),
+    '» +' + tier.xp + ' XP «'
+  );
   showReactionHitOverlay(reactionMs);
   vibrate([20, 30, 20]);
   if (reactionMs < 200) speakVoice(t('voice_master'));
   else speakVoice(t('voice_ok'));
   updateReactionMetricsUI();
+  updateReactionFooterXP();
   if (APP.round.secondsLeft > 0) {
     setTimeout(() => startReactionWait(), 1500);
   }
@@ -3242,6 +3356,8 @@ function updateReactionMetricsUI() {
   document.getElementById('reaction-hits').textContent   = APP.round.hits;
   document.getElementById('reaction-misses').textContent = APP.round.misses;
   document.getElementById('reaction-best').textContent   = best !== null ? best + 'ms' : '—';
+  const streak = APP.gamification ? APP.gamification.currentStreak : 0;
+  updateReactionComboUI(streak);
 }
 
 function stopReactionCycle() {
