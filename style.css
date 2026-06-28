@@ -560,8 +560,6 @@ button:active {
 }
 
 .config-summary {
-  background: var(--bg3);
-  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 16px;
   text-align: center;
@@ -701,15 +699,89 @@ button:active {
   --mode-color: var(--yellow);
   --mode-bg:    #1A1500;
 }
-#screen-config #config-mode-title         { color: var(--mode-color); }
-#screen-config .config-value              { color: var(--mode-color); }
+
+/* Title */
+#screen-config #config-mode-title {
+  color: var(--mode-color);
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+/* Back arrow */
+#screen-config .icon-btn { color: #FFFFFF; }
+
+/* Labels dim */
+#screen-config .config-label-row label,
+#screen-config .config-section-label {
+  color: #AAAAAA;
+  font-size: 0.72rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Slider values */
+#screen-config .config-value { color: var(--mode-color); font-weight: 900; }
+
+/* Slider thumb — track fill done via JS */
+#screen-config .slider { border-radius: 4px; }
 #screen-config .slider::-webkit-slider-thumb {
   background: var(--mode-color);
-  box-shadow: none;
+  box-shadow: 0 0 6px var(--mode-color);
+  width: 22px;
+  height: 22px;
 }
-#screen-config .slider::-moz-range-thumb  { background: var(--mode-color); }
-#screen-config .btn-primary               { background: var(--mode-color); box-shadow: none; }
-#screen-config .btn-primary:active        { background: var(--mode-color); filter: brightness(0.82); box-shadow: none; }
+#screen-config .slider::-moz-range-thumb { background: var(--mode-color); }
+
+/* Summary card */
+#screen-config .config-summary {
+  background: var(--mode-summary-bg, rgba(0,0,0,0.65));
+  border: 1px solid var(--mode-summary-border, rgba(255,255,255,0.2));
+  border-radius: 14px;
+  padding: 14px 12px;
+}
+
+/* Summary metrics grid */
+.csm-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.csm-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.csm-val {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--mode-color);
+  line-height: 1;
+}
+.csm-lbl {
+  font-size: 0.6rem;
+  letter-spacing: 1px;
+  color: #777;
+  text-transform: uppercase;
+}
+
+/* Start button */
+#screen-config .btn-primary {
+  background: var(--mode-color);
+  color: #000000 !important;
+  font-size: 1.05rem;
+  font-weight: 900;
+  border-radius: 16px;
+  box-shadow: var(--mode-shadow, none);
+  letter-spacing: 1px;
+}
+#screen-config .btn-primary::before { content: '▶  '; }
+#screen-config .btn-primary:active  { background: var(--mode-color); filter: brightness(0.82); }
+
+/* Submode / pills / toggles / steppers */
 #screen-config .submode-card.active       { border-color: var(--mode-color); color: var(--mode-color); background: var(--mode-bg); }
 #screen-config .submode-card.active .submode-card-desc { color: var(--mode-color); opacity: 0.65; }
 #screen-config .option-pill.selected      { border-color: var(--mode-color); color: var(--mode-color); background: var(--mode-bg); }

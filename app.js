@@ -2443,17 +2443,44 @@ function initConfigScreen() {
   screenEl.style.setProperty('--mode-color', modeColor);
   screenEl.style.setProperty('--mode-bg',    modeBg);
 
-  // Mode-specific background image (Bug 6)
+  // Mode-specific background image + tinted overlay
   const modeCardImages = {
     training: './assets/card-potencia3.png',
     simple:   './assets/Card-reacci%C3%B3n3.png',
     combo:    './assets/card-combo4.png',
     colors:   './assets/card-colores3.png',
   };
+  const modeOverlays = {
+    training: 'linear-gradient(rgba(20,14,0,0.75) 0%, rgba(28,18,0,0.88) 100%)',
+    simple:   'linear-gradient(rgba(0,5,20,0.75) 0%, rgba(0,10,30,0.85) 100%)',
+    combo:    'linear-gradient(rgba(20,0,0,0.75) 0%, rgba(30,0,0,0.88) 100%)',
+    colors:   'linear-gradient(rgba(15,0,22,0.75) 0%, rgba(20,0,30,0.88) 100%)',
+  };
+  const modeShadows = {
+    training: '0 0 20px rgba(255,211,0,0.5)',
+    simple:   '0 0 20px rgba(0,212,255,0.5)',
+    combo:    '0 0 20px rgba(255,0,0,0.5)',
+    colors:   '0 0 20px rgba(155,89,182,0.5)',
+  };
+  const modeSummaryBgs = {
+    training: 'rgba(20,15,0,0.72)',
+    simple:   'rgba(0,10,30,0.72)',
+    combo:    'rgba(20,0,0,0.72)',
+    colors:   'rgba(15,0,22,0.72)',
+  };
+  const modeSummaryBorders = {
+    training: 'rgba(255,211,0,0.28)',
+    simple:   'rgba(0,212,255,0.28)',
+    combo:    'rgba(255,0,0,0.28)',
+    colors:   'rgba(155,89,182,0.28)',
+  };
   const modeKey = isTraining ? 'training' : isSimple ? 'simple' : isComboSubmode ? 'combo' : 'colors';
-  screenEl.style.backgroundImage = `linear-gradient(rgba(5,5,5,0.85), rgba(5,5,5,0.92)), url('${modeCardImages[modeKey]}')`;
+  screenEl.style.backgroundImage    = `${modeOverlays[modeKey]}, url('${modeCardImages[modeKey]}')`;
   screenEl.style.backgroundSize     = 'cover';
   screenEl.style.backgroundPosition = 'center';
+  screenEl.style.setProperty('--mode-shadow',         modeShadows[modeKey]);
+  screenEl.style.setProperty('--mode-summary-bg',     modeSummaryBgs[modeKey]);
+  screenEl.style.setProperty('--mode-summary-border', modeSummaryBorders[modeKey]);
 
   // Submode selector hidden — mode is pre-selected from home card
   document.getElementById('reaction-submode-block').classList.add('hidden');
@@ -2477,9 +2504,12 @@ function initConfigScreen() {
 
   updateConfigSummary();
 
-  rInput.oninput    = () => { APP.config.rounds        = parseInt(rInput.value);    updateConfigSummary(); };
-  rdInput.oninput   = () => { APP.config.roundDuration = parseInt(rdInput.value);   updateConfigSummary(); };
-  restInput.oninput = () => { APP.config.restDuration  = parseInt(restInput.value); updateConfigSummary(); };
+  // Slider fill color
+  [rInput, rdInput, restInput].forEach(sl => updateSliderFill(sl, modeColor));
+
+  rInput.oninput    = () => { APP.config.rounds        = parseInt(rInput.value);    updateConfigSummary(); updateSliderFill(rInput, modeColor); };
+  rdInput.oninput   = () => { APP.config.roundDuration = parseInt(rdInput.value);   updateConfigSummary(); updateSliderFill(rdInput, modeColor); };
+  restInput.oninput = () => { APP.config.restDuration  = parseInt(restInput.value); updateConfigSummary(); updateSliderFill(restInput, modeColor); };
 
   document.getElementById('btn-config-back').onclick = () => showScreen('screen-menu');
 
@@ -2581,6 +2611,13 @@ function initComboConfigExtras() {
   };
 }
 
+function updateSliderFill(input, color) {
+  const min = parseFloat(input.min) || 0;
+  const max = parseFloat(input.max) || 100;
+  const pct = ((parseFloat(input.value) - min) / (max - min)) * 100;
+  input.style.background = `linear-gradient(to right, ${color} 0%, ${color} ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)`;
+}
+
 function updateConfigSummary() {
   const r   = APP.config.rounds;
   const rd  = APP.config.roundDuration;
@@ -2590,7 +2627,17 @@ function updateConfigSummary() {
   document.getElementById('val-rounds').textContent         = t('val_rounds',        { n: r });
   document.getElementById('val-round-duration').textContent = t('val_round_duration', { n: rd });
   document.getElementById('val-rest-duration').textContent  = t('val_rest_duration',  { n: rst });
-  document.getElementById('config-summary').textContent     = t('config_summary', { r, rd, rst, total });
+
+  const summaryEl = document.getElementById('config-summary');
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      <div class="csm-grid">
+        <div class="csm-cell"><span class="csm-val">${r}</span><span class="csm-lbl">ROUNDS</span></div>
+        <div class="csm-cell"><span class="csm-val">${rd}</span><span class="csm-lbl">MIN/RD</span></div>
+        <div class="csm-cell"><span class="csm-val">${rst}s</span><span class="csm-lbl">DESCANSO</span></div>
+        <div class="csm-cell"><span class="csm-val">${total}</span><span class="csm-lbl">MIN TOTAL</span></div>
+      </div>`;
+  }
 }
 
 // ═══════════════════════════════════════════════════
