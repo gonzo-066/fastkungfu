@@ -794,6 +794,7 @@ const APP = {
     ringEnd: null,
     fromScreen: 'screen-menu',
   },
+  avatar: null,
 };
 
 // ═══════════════════════════════════════════════════
@@ -872,31 +873,29 @@ const XP_LEVELS = [
   { name: 'Impact Master', min: 25000 },
 ];
 
-const HIT_RATINGS = [
-  { label: 'GOOD',       minG: 0, xp: 5  },
-  { label: 'GREAT',      minG: 2, xp: 10 },
-  { label: 'EXCELLENT',  minG: 4, xp: 20 },
-  { label: 'MASTER',     minG: 6, xp: 35 },
-  { label: 'SIFU LEVEL', minG: 8, xp: 50 },
+const GLOBAL_HIT_TIERS = [
+  { label: 'HIT',        minG: 0,   xp: 5,   color: '#FFFFFF' },
+  { label: 'GOOD',       minG: 1.5, xp: 10,  color: '#00FF66' },
+  { label: 'GREAT',      minG: 3,   xp: 25,  color: '#00D4FF' },
+  { label: 'EXCELLENT',  minG: 5,   xp: 50,  color: '#FFD300' },
+  { label: 'MASTER',     minG: 7,   xp: 100, color: '#FF8C00' },
+  { label: 'SIFU LEVEL', minG: 9,   xp: 200, color: '#FF1A1A' },
 ];
 
-const RATING_ORDER  = ['GOOD', 'GREAT', 'EXCELLENT', 'MASTER', 'SIFU LEVEL'];
-const RATING_COLORS = {
-  'GOOD':       '#FFFFFF',
-  'GREAT':      '#00D4FF',
-  'EXCELLENT':  '#00FF66',
-  'MASTER':     '#FF8800',
-  'SIFU LEVEL': '#FF2222',
-};
+const RATING_ORDER = ['HIT', 'GOOD', 'GREAT', 'EXCELLENT', 'MASTER', 'SIFU LEVEL'];
+
+function getGlobalTier(g) {
+  for (let i = GLOBAL_HIT_TIERS.length - 1; i >= 0; i--) {
+    if (g >= GLOBAL_HIT_TIERS[i].minG) return GLOBAL_HIT_TIERS[i];
+  }
+  return GLOBAL_HIT_TIERS[0];
+}
 
 let _milestoneQueue   = [];
 let _milestoneActive  = false;
 
 function getHitRating(g) {
-  for (let i = HIT_RATINGS.length - 1; i >= 0; i--) {
-    if (g >= HIT_RATINGS[i].minG) return HIT_RATINGS[i];
-  }
-  return HIT_RATINGS[0];
+  return getGlobalTier(g);
 }
 
 function loadGamificationXP() {
@@ -937,20 +936,17 @@ function initGamificationSession() {
   };
 }
 
-function handleGamificationPunch(punch) {
+function handleGamificationPunch(punch, tier) {
   const gam = APP.gamification;
   if (!gam) return;
 
-  const rating   = getHitRating(punch.g);
-  gam.sessionXP += rating.xp;
-  const prevTotal = gam.totalXP;
-  gam.totalXP    += rating.xp;
-  saveGamificationXP(gam.totalXP);
+  // XP & popup already handled by triggerHitFeedback — only track session XP here
+  gam.sessionXP += tier.xp;
+  // totalXP already updated by triggerHitFeedback
 
-  showHitRatingPopup(rating.label, rating.xp);
-  playHitRatingSound(rating.label);
   updateXPBar();
 
+  const prevTotal = gam.totalXP - tier.xp;
   const prevLevel = getXPLevelInfo(prevTotal);
   const newLevel  = getXPLevelInfo(gam.totalXP);
   if (newLevel.idx > prevLevel.idx) showLevelUp(newLevel.current.name);
@@ -967,20 +963,20 @@ function handleGamificationPunch(punch) {
   checkStreakMilestone(gam.currentStreak);
 
   // Best rating
-  const rIdx = RATING_ORDER.indexOf(rating.label);
+  const rIdx = RATING_ORDER.indexOf(tier.label);
   const bIdx = RATING_ORDER.indexOf(gam.sessionBestRating);
-  if (!gam.sessionBestRating || rIdx > bIdx) gam.sessionBestRating = rating.label;
+  if (!gam.sessionBestRating || rIdx > bIdx) gam.sessionBestRating = tier.label;
 
   // Records
   let shownPersonal = false;
   if (punch.g > gam.historicBestG) {
     gam.historicBestG = punch.g;
     shownPersonal = true;
-    showMilestone('🎯 NUEVO RÉCORD PERSONAL');
+    showMilestone(pickEpicMsg('record'));
     playRecordSound();
   }
   if (!shownPersonal && punch.g > gam.sessionBestG && gam.sessionBestG > 0) {
-    showMilestone('💥 MEJOR GOLPE HOY');
+    showMilestone(pickEpicMsg('best'));
   }
   if (punch.g > gam.sessionBestG) gam.sessionBestG = punch.g;
 }
@@ -992,7 +988,8 @@ function showHitRatingPopup(label, xp) {
   if (!el) return;
   lblEl.textContent = label;
   xpEl.textContent  = '+' + xp + ' XP';
-  lblEl.style.color = RATING_COLORS[label] || '#FFFFFF';
+  const tier = GLOBAL_HIT_TIERS.find(t => t.label === label);
+  lblEl.style.color = tier ? tier.color : '#FFFFFF';
   el.classList.remove('gam-hit-anim');
   void el.offsetWidth;
   el.classList.add('gam-hit-anim');
@@ -1014,19 +1011,19 @@ function updateStreakUI() {
 }
 
 function checkStreakMilestone(streak) {
-  if (streak === 10) { playComboStreakSound(10); showMilestone('10 HIT STREAK 🔥'); }
-  if (streak === 20) { playComboStreakSound(20); flashScreen(); }
-  if (streak === 25) { showMilestone('25 HIT STREAK ⚡'); }
+  if (streak === 10) { playComboStreakSound(10); showMilestone(pickEpicMsg('streak10')); }
+  if (streak === 20) { playComboStreakSound(20); showMilestone(pickEpicMsg('streak20')); flashScreen(); }
+  if (streak === 25) { showMilestone(pickEpicMsg('streak25')); }
   if (streak === 50) {
     const gam = APP.gamification;
     playComboStreakSound(50);
     if (gam && streak > gam.historicBestStreak) {
       gam.historicBestStreak = streak;
       localStorage.setItem('fkf_best_streak', String(streak));
-      showMilestone('🏆 NUEVO RÉCORD DE COMBO');
+      showMilestone(pickEpicMsg('record'));
       playRecordSound();
     } else {
-      showMilestone('🔥 50 HIT STREAK!');
+      showMilestone(pickEpicMsg('streak50'));
     }
   }
 }
@@ -1051,7 +1048,11 @@ function updateXPBar() {
 
 function showLevelUp(levelName) {
   playLevelUpSound();
-  showMilestone('⬆ LEVEL UP: ' + levelName.toUpperCase());
+  const ov = document.createElement('div');
+  ov.className = 'level-up-overlay';
+  ov.innerHTML = `<div class="lu-tag">LEVEL UP</div><div class="lu-name">${levelName.toUpperCase()}</div>`;
+  document.body.appendChild(ov);
+  setTimeout(() => ov.remove(), 2600);
   const fill = document.getElementById('gam-xp-bar-fill');
   if (fill) {
     fill.classList.add('gam-xp-flash');
@@ -1101,7 +1102,8 @@ function renderGamificationSummary() {
   const leveledUp   = getXPLevelInfo(gam.totalXP).idx > gam.sessionStartLevelIdx;
   const leveledName = getXPLevelInfo(gam.totalXP).current.name;
   const progText    = next ? gam.totalXP + ' / ' + next.min + ' XP' : gam.totalXP + ' XP · MAX';
-  const ratingColor = RATING_COLORS[gam.sessionBestRating] || '#FFD300';
+  const _rTier = GLOBAL_HIT_TIERS.find(t => t.label === gam.sessionBestRating);
+  const ratingColor = _rTier ? _rTier.color : '#FFD300';
 
   const existing = document.getElementById('gam-summary-section');
   if (existing) existing.remove();
@@ -1145,7 +1147,16 @@ function playHitRatingSound(rating) {
     if (ctx.state === 'suspended') ctx.resume();
     const t0 = ctx.currentTime;
 
-    if (rating === 'GOOD') {
+    if (rating === 'HIT') {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(110, t0);
+      o.frequency.exponentialRampToValueAtTime(55, t0 + 0.12);
+      g.gain.setValueAtTime(0.28, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.18);
+      o.start(t0); o.stop(t0 + 0.22);
+    } else if (rating === 'GOOD') {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.connect(g); g.connect(ctx.destination);
       o.type = 'sine'; o.frequency.value = 1800;
@@ -1273,12 +1284,324 @@ function playRecordSound() {
 }
 
 // ═══════════════════════════════════════════════════
+// AAA — EPIC MESSAGE POOL
+// ═══════════════════════════════════════════════════
+const EPIC_MSGS = {
+  record:   ['🎯 NUEVO RÉCORD PERSONAL', '⚡ RÉCORD ROTO', '🏆 HISTORIA ESCRITA', '💎 NIVEL DIOS'],
+  best:     ['💥 MEJOR GOLPE HOY', '🔥 TÚ EN LLAMAS', '💪 ASÍ SE HACE'],
+  streak10: ['🔥 10 GOLPES SEGUIDOS', '⚡ IMPARABLE', '🔥 EN RACHA'],
+  streak20: ['💀 20 SIN PARAR', '🌪️ TORBELLINO', '⚡ MODO BESTIA'],
+  streak25: ['🏆 25 HIT STREAK', '🔥 LEYENDA EN CURSO', '💥 ¡INCREÍBLE!'],
+  streak50: ['🔥 50 HIT STREAK!', '💀 MODO SIFU', '🏆 COMBO ÉPICO'],
+};
+function pickEpicMsg(type) {
+  const pool = EPIC_MSGS[type] || ['🔥'];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ═══════════════════════════════════════════════════
+// AAA — GLOBAL HIT FEEDBACK (all modes)
+// ═══════════════════════════════════════════════════
+function triggerHitFeedback(gForce) {
+  const tier = getGlobalTier(gForce);
+
+  // Award XP globally
+  const prev = loadGamificationXP();
+  const next = prev + tier.xp;
+  saveGamificationXP(next);
+  if (APP.gamification) APP.gamification.totalXP = next;
+  updateGlobalXPBar();
+
+  // Visual popup
+  showGlobalHitPopup(tier.label, tier.xp, tier.color);
+
+  // Sound
+  playHitRatingSound(tier.label);
+
+  // Effects
+  spawnHitParticles(tier.color);
+  if (tier.label === 'SIFU LEVEL') {
+    triggerBodyFlash('red');
+    triggerBodyShake();
+  } else if (gForce >= 5) {
+    triggerBodyFlash('white');
+  }
+
+  return tier;
+}
+
+function showGlobalHitPopup(label, xp, color) {
+  const popup = document.getElementById('global-hit-popup');
+  const lbl   = document.getElementById('global-hit-label');
+  const xpEl  = document.getElementById('global-hit-xp');
+  if (!popup || !lbl || !xpEl) return;
+  lbl.textContent = label;
+  lbl.style.color = color;
+  xpEl.textContent = '+' + xp + ' XP';
+  popup.classList.remove('ghp-anim');
+  void popup.offsetWidth;
+  popup.classList.add('ghp-anim');
+}
+
+function updateGlobalXPBar() {
+  const overlay = document.getElementById('global-xp-overlay');
+  if (!overlay || overlay.classList.contains('hidden')) return;
+  const xp  = loadGamificationXP();
+  const inf = getXPLevelInfo(xp);
+  const lbl = document.getElementById('global-xp-level-lbl');
+  const fill = document.getElementById('global-xp-fill');
+  if (lbl) lbl.textContent = inf.current.name.toUpperCase();
+  if (fill) {
+    const pct = inf.next
+      ? Math.min(100, Math.round(((xp - inf.current.min) / (inf.next.min - inf.current.min)) * 100))
+      : 100;
+    fill.style.width = pct + '%';
+  }
+}
+
+function showGlobalXPOverlay() {
+  const el = document.getElementById('global-xp-overlay');
+  if (el) { el.classList.remove('hidden'); updateGlobalXPBar(); }
+}
+
+function hideGlobalXPOverlay() {
+  const el = document.getElementById('global-xp-overlay');
+  if (el) el.classList.add('hidden');
+}
+
+function spawnHitParticles(color) {
+  const canvas = document.getElementById('hit-particle-canvas');
+  if (!canvas) return;
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const cx  = canvas.width / 2;
+  const cy  = canvas.height * 0.42;
+  const count = 10;
+  const particles = Array.from({ length: count }, () => {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 3 + Math.random() * 5;
+    return { x: cx, y: cy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2,
+             alpha: 1, r: 3 + Math.random() * 4 };
+  });
+  let frame = 0;
+  const MAX = 28;
+  const tick = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x     += p.vx;
+      p.y     += p.vy;
+      p.vy    += 0.25;
+      p.alpha -= 1 / MAX;
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.fillStyle   = color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    if (++frame < MAX) requestAnimationFrame(tick);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+  requestAnimationFrame(tick);
+}
+
+function triggerBodyFlash(type) {
+  const cls = type === 'red' ? 'screen-flash-red-body' : 'screen-flash-body';
+  document.body.classList.remove(cls);
+  void document.body.offsetWidth;
+  document.body.classList.add(cls);
+  setTimeout(() => document.body.classList.remove(cls), 400);
+}
+
+function triggerBodyShake() {
+  document.body.classList.remove('screen-shake-body');
+  void document.body.offsetWidth;
+  document.body.classList.add('screen-shake-body');
+  setTimeout(() => document.body.classList.remove('screen-shake-body'), 350);
+}
+
+// ═══════════════════════════════════════════════════
+// AAA — HOME PARTICLE CANVAS
+// ═══════════════════════════════════════════════════
+let _homeParticleRAF = null;
+const _HOME_PARTICLE_COLORS = ['#FFD300', '#00D4FF', '#FF1A1A'];
+
+function startHomeParticles() {
+  const canvas = document.getElementById('home-particles');
+  if (!canvas) return;
+  const screen = document.getElementById('screen-menu');
+  canvas.width  = screen ? screen.clientWidth  : window.innerWidth;
+  canvas.height = screen ? screen.clientHeight : window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const particles = Array.from({ length: 40 }, () => ({
+    x: Math.random() * W, y: Math.random() * H,
+    vx: (Math.random() - 0.5) * 0.6,
+    vy: (Math.random() - 0.5) * 0.6,
+    r: 2 + Math.random() * 3,
+    alpha: 0.3 + Math.random() * 0.3,
+    color: _HOME_PARTICLE_COLORS[Math.floor(Math.random() * 3)],
+  }));
+
+  const tick = () => {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle   = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    _homeParticleRAF = requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+function stopHomeParticles() {
+  if (_homeParticleRAF) { cancelAnimationFrame(_homeParticleRAF); _homeParticleRAF = null; }
+  const canvas = document.getElementById('home-particles');
+  if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// ═══════════════════════════════════════════════════
+// AAA — RESULT SPLASH SCREEN
+// ═══════════════════════════════════════════════════
+function getSessionGrade(punches) {
+  if (!punches.length) return { grade: 'C', label: 'SIGUE ENTRENANDO' };
+  const tiers = punches.map(p => getGlobalTier(p.g).label);
+  const top   = tiers.filter(l => ['EXCELLENT','MASTER','SIFU LEVEL'].includes(l)).length;
+  const good  = tiers.filter(l => ['GREAT','EXCELLENT','MASTER','SIFU LEVEL'].includes(l)).length;
+  const pct   = ratio => ratio / punches.length;
+  if (pct(top)  >= 0.3) return { grade: 'S', label: 'PERFECTO' };
+  if (pct(good) >= 0.3) return { grade: 'A', label: 'EXCELENTE' };
+  if (pct(tiers.filter(l => ['GOOD','GREAT','EXCELLENT','MASTER','SIFU LEVEL'].includes(l)).length) >= 0.4) return { grade: 'B', label: 'MUY BIEN' };
+  return { grade: 'C', label: 'SIGUE ENTRENANDO' };
+}
+
+function showResultSplash(punches, sessionXP, onDone) {
+  const { grade, label } = getSessionGrade(punches || []);
+  const gradeEl = document.getElementById('result-grade');
+  const labelEl = document.getElementById('result-grade-label');
+  const xpEl    = document.getElementById('result-xp-count');
+  if (!gradeEl) { onDone && onDone(); return; }
+
+  gradeEl.textContent = grade;
+  gradeEl.className   = 'result-grade rg-' + grade;
+  labelEl.textContent = label;
+  xpEl.textContent    = '+0 XP';
+
+  showScreen('screen-result-splash', true);
+
+  // XP count-up animation
+  const targetXP = sessionXP || 0;
+  if (targetXP > 0) {
+    let cur = 0;
+    const step = Math.max(1, Math.round(targetXP / 30));
+    const iv = setInterval(() => {
+      cur = Math.min(cur + step, targetXP);
+      xpEl.textContent = '+' + cur + ' XP';
+      if (cur >= targetXP) clearInterval(iv);
+    }, 50);
+  }
+
+  // Grade sound
+  playGradeSound(grade);
+
+  // Confetti for S and A
+  if (grade === 'S' || grade === 'A') spawnSplashConfetti();
+
+  setTimeout(() => {
+    onDone && onDone();
+  }, 2200);
+}
+
+function playGradeSound(grade) {
+  if (!APP.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const t0 = ctx.currentTime;
+    const freqSets = {
+      S: [523, 659, 784, 1047],
+      A: [440, 554, 659, 880],
+      B: [330, 415, 494, 659],
+      C: [262, 330, 392],
+    };
+    (freqSets[grade] || freqSets.C).forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine'; o.frequency.value = f;
+      const ti = t0 + i * 0.12;
+      g.gain.setValueAtTime(0.22, ti);
+      g.gain.exponentialRampToValueAtTime(0.001, ti + 0.3);
+      o.start(ti); o.stop(ti + 0.35);
+    });
+  } catch(e) {}
+}
+
+function spawnSplashConfetti() {
+  const canvas = document.getElementById('result-confetti-canvas');
+  if (!canvas) return;
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx  = canvas.getContext('2d');
+  const cols  = ['#FFD300','#00D4FF','#FF1A1A','#00FF66','#FFFFFF'];
+  const pieces = Array.from({ length: 60 }, () => ({
+    x: Math.random() * canvas.width, y: -10,
+    vx: (Math.random() - 0.5) * 4,
+    vy: 2 + Math.random() * 4,
+    w: 6 + Math.random() * 8, h: 4 + Math.random() * 4,
+    rot: Math.random() * Math.PI,
+    vrot: (Math.random() - 0.5) * 0.15,
+    color: cols[Math.floor(Math.random() * cols.length)],
+    alpha: 1,
+  }));
+  let frame = 0;
+  const tick = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.rot += p.vrot;
+      if (frame > 80) p.alpha -= 0.015;
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.fillStyle = p.color;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    ctx.globalAlpha = 1;
+    if (++frame < 120) requestAnimationFrame(tick);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+  requestAnimationFrame(tick);
+}
+
+// ═══════════════════════════════════════════════════
 // NAVEGACIÓN
 // ═══════════════════════════════════════════════════
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => {
-    s.classList.toggle('hidden', s.id !== id);
-  });
+function showScreen(id, instant) {
+  const current = document.querySelector('.screen:not(.hidden)');
+  const doSwitch = () => {
+    document.querySelectorAll('.screen').forEach(s => {
+      s.classList.toggle('hidden', s.id !== id);
+    });
+  };
+  if (instant || !current || current.id === id) {
+    doSwitch();
+    return;
+  }
+  current.style.opacity = '0';
+  current.style.pointerEvents = 'none';
+  setTimeout(() => {
+    current.style.opacity = '';
+    current.style.pointerEvents = '';
+    doSwitch();
+  }, 180);
 }
 
 function setNavActive(id) {
@@ -1485,8 +1808,8 @@ function onDeviceMotion(e) {
 function registerPunch(gForce, speed) {
   const punch = { g: gForce, speed: speed || gForce * 9.81, time: Date.now() };
   vibrate([15]);
-  playPunchThud();
-  if (APP.mode === 'training')                              handleTrainingPunch(punch);
+  const tier = triggerHitFeedback(gForce);
+  if (APP.mode === 'training')                              handleTrainingPunch(punch, tier);
   else if (APP.comboConfig.submode === 'simple')            handleReactionPunch(punch);
   else if (APP.comboConfig.submode === 'colors')            handleColorsPunch(punch);
   else                                                      handleComboPunch(punch);
@@ -1970,16 +2293,24 @@ function updateHomeHeader() {
 // PANTALLA: MENÚ
 // ═══════════════════════════════════════════════════
 function initMenuScreen() {
-  document.getElementById('btn-training-mode').onclick = () => {
-    APP.mode = 'training';
-    showScreen('screen-config');
-    initConfigScreen();
-  };
-  document.getElementById('btn-combo-mode').onclick = () => {
+  startHomeParticles();
+
+  const measureBtn = document.getElementById('btn-training-mode');
+  if (measureBtn) {
+    measureBtn.onclick = e => {
+      addRipple(e, measureBtn);
+      APP.mode = 'training';
+      stopHomeParticles();
+      showScreen('screen-config');
+      initConfigScreen();
+    };
+  }
+  document.getElementById('btn-combo-mode') && (document.getElementById('btn-combo-mode').onclick = () => {
     APP.mode = 'combo';
+    stopHomeParticles();
     showScreen('screen-config');
     initConfigScreen();
-  };
+  });
   document.getElementById('btn-settings').onclick = openSettingsModal;
   document.getElementById('btn-header-avatar').onclick = () => {
     showScreen('screen-profile');
@@ -1994,16 +2325,19 @@ function initMenuScreen() {
     initMenuScreen();
   };
   document.getElementById('nav-history-btn').onclick = () => {
+    stopHomeParticles();
     showScreen('screen-history');
     setNavActive('nav-history-btn');
     initHistoryScreen();
   };
   document.getElementById('nav-ranking').onclick = () => {
+    stopHomeParticles();
     showScreen('screen-history');
     setNavActive('nav-ranking');
     initHistoryScreen();
   };
   document.getElementById('nav-profile').onclick = () => {
+    stopHomeParticles();
     showScreen('screen-profile');
     setNavActive('nav-profile');
     initProfileScreen(true);
@@ -2190,6 +2524,8 @@ function startSession() {
   acquireWakeLock();
   if (!APP.accel.available) setupAccelerometer();
   if (APP.mode === 'training') initGamificationSession();
+  stopHomeParticles();
+  showGlobalXPOverlay();
   startRound(1);
 }
 
@@ -2286,7 +2622,9 @@ function showTrainingScreen(roundNum) {
       if (APP.gamification && APP.gamification.streakTimer) clearTimeout(APP.gamification.streakTimer);
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
+      hideGlobalXPOverlay();
       showScreen('screen-menu');
+      startHomeParticles();
     }
   };
 
@@ -2316,7 +2654,7 @@ function resetTrainingMetrics() {
   document.getElementById('training-best').textContent        = '0.0G';
 }
 
-function handleTrainingPunch(punch) {
+function handleTrainingPunch(punch, tier) {
   APP.round.punches.push(punch);
   const countEl = document.getElementById('training-punch-count');
   countEl.textContent = APP.round.punches.length;
@@ -2326,7 +2664,7 @@ function handleTrainingPunch(punch) {
   const bestG = Math.max(...APP.round.punches.map(p => p.g));
   document.getElementById('training-best').textContent  = bestG.toFixed(1) + 'G';
   drawTrainingChart();
-  handleGamificationPunch(punch);
+  handleGamificationPunch(punch, tier);
 }
 
 function drawTrainingChart() {
@@ -2409,7 +2747,9 @@ function showComboScreen(roundNum) {
       stopComboCycle();
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
+      hideGlobalXPOverlay();
       showScreen('screen-menu');
+      startHomeParticles();
     }
   };
 }
@@ -2658,7 +2998,9 @@ function showReactionScreen(roundNum) {
       stopReactionCycle();
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
+      hideGlobalXPOverlay();
       showScreen('screen-menu');
+      startHomeParticles();
     }
   };
 }
@@ -2827,7 +3169,7 @@ function renderRestStats() {
 // ═══════════════════════════════════════════════════
 function showSummaryScreen() {
   releaseWakeLock();
-  showScreen('screen-summary');
+  hideGlobalXPOverlay();
 
   const sess     = APP.session;
   const punches  = sess.allPunches;
@@ -2956,9 +3298,13 @@ function showSummaryScreen() {
   document.getElementById('btn-summary-menu').onclick = () => {
     if (!APP.sessionSaved) { saveSession(sessionData); APP.sessionSaved = true; }
     showScreen('screen-menu');
+    startHomeParticles();
   };
 
   if (APP.mode === 'training' && APP.gamification) renderGamificationSummary();
+
+  const sessionXP = APP.gamification ? APP.gamification.sessionXP : 0;
+  showResultSplash(sess.allPunches, sessionXP, () => showScreen('screen-summary', true));
 }
 
 function buildComparison(totalPunches, avgPower, bestReaction) {
@@ -3124,11 +3470,48 @@ function initSettingsModal() {
 // ═══════════════════════════════════════════════════
 // INICIALIZACIÓN
 // ═══════════════════════════════════════════════════
+function addRipple(e, btn) {
+  const r    = btn.getBoundingClientRect();
+  const size = Math.max(r.width, r.height);
+  const x    = (e.clientX || r.left + r.width / 2) - r.left - size / 2;
+  const y    = (e.clientY || r.top  + r.height / 2) - r.top  - size / 2;
+  const el   = document.createElement('span');
+  el.className = 'btn-ripple-el';
+  el.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
+  btn.appendChild(el);
+  setTimeout(() => el.remove(), 600);
+}
+
+function initAvatarSystem() {
+  if (!localStorage.getItem('fkf_avatar_v2')) {
+    const catalog = [
+      { id: 'gloves_red',    type: 'gloves',   name: 'Red Power Gloves',  xp_threshold: 0     },
+      { id: 'gloves_gold',   type: 'gloves',   name: 'Champion Gloves',   xp_threshold: 5000  },
+      { id: 'belt_white',    type: 'belt',      name: 'White Belt',        xp_threshold: 0     },
+      { id: 'belt_black',    type: 'belt',      name: 'Black Belt',        xp_threshold: 12000 },
+      { id: 'outfit_basic',  type: 'outfit',    name: 'Basic Gear',        xp_threshold: 0     },
+      { id: 'outfit_sifu',   type: 'outfit',    name: 'Sifu Uniform',      xp_threshold: 25000 },
+    ];
+    const currentXP = loadGamificationXP();
+    const unlocked  = catalog.filter(i => currentXP >= i.xp_threshold).map(i => i.id);
+    APP.avatar = {
+      unlocked_items: unlocked,
+      equipped: { hair: null, outfit: 'outfit_basic', gloves: 'gloves_red', belt: 'belt_white', accessories: [] },
+      cosmetic_points: 0,
+      catalog,
+    };
+    localStorage.setItem('fkf_avatar_v2', JSON.stringify(APP.avatar));
+  } else {
+    try { APP.avatar = JSON.parse(localStorage.getItem('fkf_avatar_v2')); } catch(e) {}
+  }
+}
+
 function init() {
   initSupabase();
   loadSoundPref();
   loadCalibration();
   loadColorConfig();
+  initAvatarSystem();
   initSettingsModal();
 
   const savedLang = localStorage.getItem('fkf_lang');
@@ -3733,9 +4116,10 @@ function speakVoice(text) {
   try {
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = { es: 'es-ES', en: 'en-GB', pt: 'pt-BR', de: 'de-DE' }[APP.lang] || 'es-ES';
-    utter.rate  = 1.1;
-    utter.volume = 0.85;
+    utter.lang   = { es: 'es-ES', en: 'en-GB', pt: 'pt-BR', de: 'de-DE' }[APP.lang] || 'es-ES';
+    utter.pitch  = 0.9;
+    utter.rate   = 0.95;
+    utter.volume = 0.9;
     window.speechSynthesis.speak(utter);
   } catch(e) {}
 }
@@ -4049,7 +4433,9 @@ function showColorsScreen(roundNum) {
       stopColorsCycle();
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
+      hideGlobalXPOverlay();
       showScreen('screen-menu');
+      startHomeParticles();
     }
   };
   setColorsStage(null);

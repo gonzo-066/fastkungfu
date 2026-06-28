@@ -178,6 +178,7 @@
      PANTALLA: MENÚ PRINCIPAL (NUEVO HOME)
 ════════════════════════════════════ -->
 <div id="screen-menu" class="screen hidden">
+  <canvas id="home-particles" class="home-particles-canvas"></canvas>
 
   <!-- HEADER SUPERIOR FIJO -->
   <header class="home-header">
@@ -1101,5 +1102,42 @@
   });
 }());
 </script>
+
+<!-- ═══════════════════════════════════
+     AAA — GLOBAL HIT FEEDBACK OVERLAY
+════════════════════════════════════ -->
+<div id="global-hit-popup" class="global-hit-popup" aria-hidden="true">
+  <div id="global-hit-label" class="global-hit-popup-label"></div>
+  <div id="global-hit-xp"   class="global-hit-popup-xp"></div>
+</div>
+
+<!-- ═══════════════════════════════════
+     AAA — GLOBAL XP OVERLAY (all modes)
+════════════════════════════════════ -->
+<div id="global-xp-overlay" class="global-xp-overlay hidden">
+  <div class="global-xp-level-lbl" id="global-xp-level-lbl"></div>
+  <div class="global-xp-track">
+    <div class="global-xp-fill" id="global-xp-fill" style="width:0%"></div>
+    <div class="global-xp-shimmer"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     AAA — HIT PARTICLE CANVAS
+════════════════════════════════════ -->
+<canvas id="hit-particle-canvas" class="hit-particle-canvas"></canvas>
+
+<!-- ═══════════════════════════════════
+     AAA — RESULT SPLASH SCREEN
+════════════════════════════════════ -->
+<div id="screen-result-splash" class="screen hidden">
+  <canvas id="result-confetti-canvas"></canvas>
+  <div class="result-splash-inner">
+    <div class="result-grade rg-S" id="result-grade">S</div>
+    <div class="result-grade-label" id="result-grade-label">PERFECTO</div>
+    <div class="result-xp-count" id="result-xp-count">+0 XP</div>
+  </div>
+</div>
+
 </body>
 </html>
