@@ -1334,6 +1334,7 @@ function triggerHitFeedback(gForce) {
 
   // Effects
   spawnHitParticles(tier.color);
+  applyTierScreenEffect(tier);
   if (tier.label === 'SIFU LEVEL') {
     triggerBodyFlash('red');
     triggerBodyShake();
@@ -1348,8 +1349,8 @@ function showGlobalHitPopup(label, xp, color) {
   const container = document.getElementById('hit-popup-container');
   if (!container) return;
 
-  // Keep max 2 visible — remove oldest if full
-  while (container.children.length >= 2) {
+  // Keep max 3 visible — remove oldest if full
+  while (container.children.length >= 3) {
     const oldest = container.firstChild;
     if (oldest._removeTimer) clearTimeout(oldest._removeTimer);
     oldest.remove();
@@ -1553,15 +1554,15 @@ function stopReactionBgParticles() {
 // AAA — RESULT SPLASH SCREEN
 // ═══════════════════════════════════════════════════
 function getSessionGrade(punches) {
-  if (!punches.length) return { grade: 'C', label: 'SIGUE ENTRENANDO' };
+  if (!punches.length) return { grade: 'C', label: 'PRACTICANTE' };
   const tiers = punches.map(p => getGlobalTier(p.g).label);
   const top   = tiers.filter(l => ['EXCELLENT','MASTER','SIFU LEVEL'].includes(l)).length;
   const good  = tiers.filter(l => ['GREAT','EXCELLENT','MASTER','SIFU LEVEL'].includes(l)).length;
   const pct   = ratio => ratio / punches.length;
-  if (pct(top)  >= 0.3) return { grade: 'S', label: 'PERFECTO' };
-  if (pct(good) >= 0.3) return { grade: 'A', label: 'EXCELENTE' };
-  if (pct(tiers.filter(l => ['GOOD','GREAT','EXCELLENT','MASTER','SIFU LEVEL'].includes(l)).length) >= 0.4) return { grade: 'B', label: 'MUY BIEN' };
-  return { grade: 'C', label: 'SIGUE ENTRENANDO' };
+  if (pct(top)  >= 0.3) return { grade: 'S', label: 'LEGENDARIO' };
+  if (pct(good) >= 0.3) return { grade: 'A', label: 'MAESTRO' };
+  if (pct(tiers.filter(l => ['GOOD','GREAT','EXCELLENT','MASTER','SIFU LEVEL'].includes(l)).length) >= 0.4) return { grade: 'B', label: 'GUERRERO' };
+  return { grade: 'C', label: 'PRACTICANTE' };
 }
 
 function showResultSplash(punches, sessionXP, onDone) {
@@ -1575,6 +1576,25 @@ function showResultSplash(punches, sessionXP, onDone) {
   gradeEl.className   = 'result-grade rg-' + grade;
   labelEl.textContent = label;
   xpEl.textContent    = '+0 XP';
+
+  // Populate stats row
+  const pArr = punches || [];
+  const bestEl  = document.getElementById('result-stat-best');
+  const comboEl = document.getElementById('result-stat-combo');
+  const timeEl  = document.getElementById('result-stat-time');
+  if (bestEl) {
+    const bestG = pArr.length ? Math.max(...pArr.map(p => p.g || 0)) : 0;
+    bestEl.textContent = bestG ? bestG.toFixed(1) + 'G' : '—';
+  }
+  if (comboEl) {
+    const bestCombo = APP.gamification ? (APP.gamification.bestStreak || 0) : 0;
+    comboEl.textContent = bestCombo ? 'x' + bestCombo : 'x0';
+  }
+  if (timeEl) {
+    const elapsed = APP.session.startTime ? Math.round((Date.now() - APP.session.startTime) / 1000) : 0;
+    const m = Math.floor(elapsed / 60), s = elapsed % 60;
+    timeEl.textContent = elapsed ? m + ':' + String(s).padStart(2,'0') : '—';
+  }
 
   showScreen('screen-result-splash', true);
 
@@ -3326,7 +3346,8 @@ function handleReactionPunch(punch) {
     '» +' + tier.xp + ' XP «'
   );
   showReactionHitOverlay(reactionMs);
-  vibrate([20, 30, 20]);
+  showHitRings();
+  vibrate([30, 20, 50, 20, 30]);
   if (reactionMs < 200) speakVoice(t('voice_master'));
   else speakVoice(t('voice_ok'));
   updateReactionMetricsUI();
@@ -3345,7 +3366,7 @@ function showReactionHitOverlay(reactionMs) {
   overlay.querySelector('.rho-time').textContent = reactionMs + 'ms';
   overlay.className = 'reaction-hit-overlay rho-show' + (isPerf ? ' rho-perfect' : '');
   if (isPerf) triggerBodyFlash('white');
-  setTimeout(() => { overlay.classList.remove('rho-show'); }, 1400);
+  setTimeout(() => { overlay.classList.remove('rho-show'); }, 2000);
 }
 
 function updateReactionMetricsUI() {
@@ -3953,6 +3974,8 @@ function init() {
     APP.accel.available = true;
     APP.accel.permitted = true;
   }
+
+  setTimeout(() => startBgParticles(), 100);
 }
 
 // ═══════════════════════════════════════════════════
@@ -4974,3 +4997,53 @@ function stopColorsCycle() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// ═══════════════════════════════════════════════════
+// PARTE 2 — VISUAL EFFECTS
+// ═══════════════════════════════════════════════════
+
+function showHitRings() {
+  const wrap = document.querySelector('.rsc-circle-wrap');
+  if (!wrap) return;
+  [0, 100, 200].forEach(delay => {
+    setTimeout(() => {
+      const ring = document.createElement('div');
+      ring.className = 'hit-ring';
+      wrap.appendChild(ring);
+      setTimeout(() => ring.remove(), 700);
+    }, delay);
+  });
+}
+
+function applyTierScreenEffect(tier) {
+  switch (tier.label) {
+    case 'GREAT':      showEdgeWave(); break;
+    case 'EXCELLENT':  showBorderFlash(false); break;
+    case 'MASTER':     showBorderFlash(true);  break;
+    case 'SIFU LEVEL': showBorderFlash(true); showSifuCenterText(); break;
+  }
+}
+
+function showEdgeWave() {
+  ['top','bottom','left','right'].forEach(side => {
+    const el = document.createElement('div');
+    el.className = 'edge-wave edge-wave-' + side;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 600);
+  });
+}
+
+function showBorderFlash(isMaster) {
+  const el = document.createElement('div');
+  el.className = 'border-flash-overlay' + (isMaster ? ' bf-master' : '');
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 600);
+}
+
+function showSifuCenterText() {
+  const el = document.createElement('div');
+  el.className = 'sifu-center-text';
+  el.textContent = '⚡ SIFU LEVEL ⚡';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
