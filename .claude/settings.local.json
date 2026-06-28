@@ -15,7 +15,12 @@
       "Bash(cp \"assets/Y la amarilla en combo..jpg\" \"assets/card-combo.jpg\")",
       "Bash(cp assets/icon-record.png.png assets/icon-record.png)",
       "Bash(cp assets/icon-ultimo-golpe.png.png assets/icon-ultimo-golpe.png)",
-      "Bash(cp assets/icon-vs-ayer.png.png assets/icon-vs-ayer.png)"
+      "Bash(cp assets/icon-vs-ayer.png.png assets/icon-vs-ayer.png)",
+      "Bash(copy *)",
+      "PowerShell(Copy-Item *)",
+      "PowerShell(\\(Get-Content \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\style.css\" | Measure-Object -Line\\).Lines)",
+      "PowerShell(\\(Get-Content \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\style.css\" | Measure-Object -Line\\).Lines; \\(Get-Content \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\app.js\" | Measure-Object -Line\\).Lines; \\(Get-Content \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\index.html\" | Measure-Object -Line\\).Lines)",
+      "PowerShell(\\(Get-Content \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\app.js\" | Measure-Object -Line\\).Lines)"
     ]
   }
 }
