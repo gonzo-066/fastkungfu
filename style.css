@@ -4987,3 +4987,16 @@ canvas {
   text-transform: uppercase;
   text-align: center;
 }
+
+/* ═══════════════════════════════════
+   HOME METRICS — SIEMPRE VISIBLES
+════════════════════════════════════ */
+.home-metrics-bar {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+@media (orientation: landscape) {
+  .home-calib-hint { display: none !important; }
+}
