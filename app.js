@@ -2239,22 +2239,6 @@ function initProfileScreen(fromNav) {
 // ═══════════════════════════════════════════════════
 // PANTALLAS AUTH
 // ═══════════════════════════════════════════════════
-function getRedirectTo() {
-  return window.location.hostname === 'localhost'
-    ? 'http://localhost:3000'
-    : 'https://fastkungfu.vercel.app';
-}
-
-async function signInWithGoogle() {
-  if (!supabaseClient) return;
-  try {
-    await supabaseClient.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: getRedirectTo() },
-    });
-  } catch (e) {}
-}
-
 function initWelcomeScreen() {
   document.getElementById('btn-go-register').onclick = () => {
     showScreen('screen-register');
@@ -2264,7 +2248,6 @@ function initWelcomeScreen() {
     showScreen('screen-login');
     initLoginScreen();
   };
-  document.getElementById('btn-google-welcome').onclick = signInWithGoogle;
 }
 
 function initRegisterScreen() {
@@ -2341,8 +2324,6 @@ function initRegisterScreen() {
 
 function initLoginScreen() {
   const errEl = document.getElementById('login-error');
-
-  document.getElementById('btn-google-login').onclick = signInWithGoogle;
 
   document.getElementById('btn-login-to-reg').onclick = () => {
     showScreen('screen-register');
