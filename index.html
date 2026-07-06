@@ -233,16 +233,22 @@
     </div>
 
     <!-- BOTÓN PRINCIPAL GRANDE -->
-    <button class="home-measure-btn" id="btn-training-mode">
-      <span class="home-measure-ecg">
-        <svg width="38" height="28" viewBox="0 0 38 28" fill="none" aria-hidden="true">
-          <polyline points="0,14 7,14 10,3 13,25 17,9 20,19 23,14 38,14"
-                    stroke="#050505" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>
-      </span>
-      <span class="home-measure-text">CALIBRAR</span>
-      <span class="home-measure-arrow">›</span>
-    </button>
+    <div class="calib-btn-wrap">
+      <span class="calib-spark tl"></span>
+      <span class="calib-spark tr"></span>
+      <span class="calib-spark bl"></span>
+      <span class="calib-spark br"></span>
+      <button class="home-measure-btn" id="btn-training-mode">
+        <span class="home-measure-ecg">
+          <svg width="38" height="28" viewBox="0 0 38 28" fill="none" aria-hidden="true">
+            <polyline points="0,14 7,14 10,3 13,25 17,9 20,19 23,14 38,14"
+                      stroke="#050505" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </span>
+        <span class="home-measure-text">CALIBRAR</span>
+        <span class="home-measure-arrow">›</span>
+      </button>
+    </div>
     <p class="home-calib-hint" id="home-calib-hint">¿Primer uso? <span class="home-calib-hint-link">Calibra tu dispositivo →</span></p>
 
     <!-- 3 MÉTRICAS -->

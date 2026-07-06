@@ -749,6 +749,7 @@ const APP = {
     _peakMax: 0,              // Pico máximo durante la ventana sostenida
   },
   sessionActive: false,
+  hitWindowActive: false,
   combo: {
     state: 'idle',       // 'idle'|'wait'|'signal'|'active'|'result'
     targetHits: 3,
@@ -1000,11 +1001,26 @@ function showHitRatingPopup(label, xp) {
   el.classList.add('gam-hit-anim');
 }
 
+function getComboGlowEl() {
+  let el = document.getElementById('combo-edge-glow');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'combo-edge-glow';
+    el.className = 'combo-edge-glow';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
 function updateStreakUI() {
   const gam = APP.gamification;
   const el  = document.getElementById('global-streak-counter');
   const old = document.getElementById('gam-streak-badge');
   if (old) old.classList.add('hidden');
+
+  const glow = getComboGlowEl();
+  glow.classList.remove('cg-5', 'cg-10', 'cg-20');
+
   if (!el || !gam) return;
   const s = gam.currentStreak;
   if (s < 2) { el.classList.add('hidden'); return; }
@@ -1015,6 +1031,10 @@ function updateStreakUI() {
   else if (s >= 10) el.classList.add('gsc-s10');
   else if (s >= 5)  el.classList.add('gsc-s5');
   else              el.classList.add('gsc-s2');
+
+  if      (s >= 20) glow.classList.add('cg-20');
+  else if (s >= 10) glow.classList.add('cg-10');
+  else if (s >= 5)  glow.classList.add('cg-5');
 }
 
 function resetStreakCounter() {
@@ -1124,7 +1144,7 @@ function renderGamificationSummary() {
   div.id        = 'gam-summary-section';
   div.className = 'gam-summary-section';
   div.innerHTML = `
-    <div class="gam-summary-xp">+${gam.sessionXP} XP</div>
+    <div class="gam-summary-xp">+${Math.max(0, gam.sessionXP)} XP</div>
     <div class="gam-summary-xp-label">XP GANADO EN ESTA SESIÓN</div>
     <div class="gam-summary-details">
       <div class="gam-summary-detail">
@@ -1316,6 +1336,7 @@ function pickEpicMsg(type) {
 // ═══════════════════════════════════════════════════
 function triggerHitFeedback(gForce) {
   const tier = getGlobalTier(gForce);
+  boostBgSpeed();
 
   // Dar XP solo durante una sesión activa
   if (APP.sessionActive) {
@@ -1406,15 +1427,15 @@ function hideGlobalXPOverlay() {
   if (el) el.classList.add('hidden');
 }
 
-function spawnHitParticles(color) {
+function spawnHitParticles(color, originX, originY) {
   const canvas = document.getElementById('hit-particle-canvas');
   if (!canvas) return;
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
   const ctx = canvas.getContext('2d');
-  const cx  = canvas.width / 2;
-  const cy  = canvas.height * 0.42;
-  const count = 10;
+  const cx  = originX != null ? originX : canvas.width / 2;
+  const cy  = originY != null ? originY : canvas.height * 0.42;
+  const count = _fxParticleCount(10);
   const particles = Array.from({ length: count }, () => {
     const angle = Math.random() * Math.PI * 2;
     const speed = 3 + Math.random() * 5;
@@ -1424,6 +1445,7 @@ function spawnHitParticles(color) {
   let frame = 0;
   const MAX = 28;
   const tick = () => {
+    if (_fxPaused) { requestAnimationFrame(tick); return; }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     particles.forEach(p => {
       p.x     += p.vx;
@@ -1459,10 +1481,71 @@ function triggerBodyShake() {
 }
 
 // ═══════════════════════════════════════════════════
-// AAA — HOME PARTICLE CANVAS
+// AAA — HOME PARTICLE CANVAS (formas mixtas + KI waves + rayos)
 // ═══════════════════════════════════════════════════
 let _homeParticleRAF = null;
-const _HOME_PARTICLE_COLORS = ['#FFD300', '#00D4FF', '#FF1A1A'];
+let _homeLightningTimer = null;
+let _bgSpeedBoost = 1;
+
+// Pausa global de FX cuando la pestaña/app está en background
+let _fxPaused = typeof document !== 'undefined' && document.hidden;
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => { _fxPaused = document.hidden; });
+}
+
+function _fxParticleCount(base) {
+  return (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2)
+    ? Math.round(base * 0.5) : base;
+}
+
+// Sube el "ritmo" del fondo con cada golpe; decae solo hacia 1x
+function boostBgSpeed() {
+  _bgSpeedBoost = Math.min(3, _bgSpeedBoost + 0.35);
+}
+
+const _HOME_SHAPES = [
+  { shape: 'star',   color: '#FFD300' },
+  { shape: 'circle', color: '#00D4FF' },
+  { shape: 'diamond',color: '#FF1A1A' },
+  { shape: 'spark',  color: '#FFFFFF' },
+];
+
+function _drawFxShape(ctx, shape, x, y, r, color, alpha) {
+  ctx.globalAlpha = Math.max(0, alpha);
+  ctx.fillStyle = color;
+  ctx.strokeStyle = color;
+  switch (shape) {
+    case 'circle':
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      break;
+    case 'diamond':
+      ctx.beginPath();
+      ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y);
+      ctx.closePath(); ctx.fill();
+      break;
+    case 'spark':
+      ctx.lineWidth = Math.max(1, r * 0.4);
+      ctx.beginPath();
+      ctx.moveTo(x - r, y); ctx.lineTo(x + r, y);
+      ctx.moveTo(x, y - r); ctx.lineTo(x, y + r);
+      ctx.stroke();
+      break;
+    case 'star':
+    default:
+      ctx.beginPath();
+      ctx.moveTo(x, y - r);
+      ctx.lineTo(x + r * 0.28, y - r * 0.28);
+      ctx.lineTo(x + r, y);
+      ctx.lineTo(x + r * 0.28, y + r * 0.28);
+      ctx.lineTo(x, y + r);
+      ctx.lineTo(x - r * 0.28, y + r * 0.28);
+      ctx.lineTo(x - r, y);
+      ctx.lineTo(x - r * 0.28, y - r * 0.28);
+      ctx.closePath();
+      ctx.fill();
+      break;
+  }
+}
 
 function startBgParticles() {
   if (_homeParticleRAF) return;
@@ -1472,23 +1555,81 @@ function startBgParticles() {
   canvas.height = window.innerHeight;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
-  const particles = Array.from({ length: 40 }, () => ({
-    x: Math.random() * W, y: Math.random() * H,
-    vx: (Math.random() - 0.5) * 0.55,
-    vy: (Math.random() - 0.5) * 0.55,
-    r: 2 + Math.random() * 3,
-    alpha: 0.25 + Math.random() * 0.28,
-    color: _HOME_PARTICLE_COLORS[Math.floor(Math.random() * 3)],
-  }));
+
+  const particles = Array.from({ length: _fxParticleCount(30) }, () => {
+    const def = _HOME_SHAPES[Math.floor(Math.random() * _HOME_SHAPES.length)];
+    return {
+      x: Math.random() * W, y: Math.random() * H,
+      vy: -(0.25 + Math.random() * 0.5),
+      vx: (Math.random() - 0.5) * 0.2,
+      r: 2 + Math.random() * 4,
+      shape: def.shape, color: def.color,
+      alpha: 0.3, alphaDir: Math.random() < 0.5 ? 1 : -1,
+      blinkSpeed: 0.004 + Math.random() * 0.006,
+    };
+  });
+
+  const kiWaves = Array.from({ length: 3 }, (_, i) => ({ radius: i * 90, delay: i * 60 }));
+  const KI_MAX_R = () => Math.max(W, H) * 0.6;
+
+  let lightning = null; // { x1,y1,x2,y2, life }
+  const scheduleLightning = () => {
+    _homeLightningTimer = setTimeout(() => {
+      lightning = { x1: Math.random() * W, y1: 0, x2: Math.random() * W, y2: H, life: 6 };
+      scheduleLightning();
+    }, 4000 + Math.random() * 2000);
+  };
+  scheduleLightning();
+
+  let frame = 0;
   const tick = () => {
+    if (_fxPaused) { _homeParticleRAF = requestAnimationFrame(tick); return; }
+    frame++;
     ctx.clearRect(0, 0, W, H);
+
+    // decaimiento del boost de velocidad hacia 1x
+    _bgSpeedBoost += (1 - _bgSpeedBoost) * 0.02;
+
+    // ondas de energía KI
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,211,0,0.05)';
+    kiWaves.forEach(w => {
+      if (frame < w.delay) return;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(W / 2, H * 0.42, w.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      w.radius += 0.6;
+      if (w.radius > KI_MAX_R()) w.radius = 0;
+    });
+    ctx.restore();
+
+    // relámpago ocasional
+    if (lightning) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0,212,255,0.15)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(lightning.x1, lightning.y1);
+      ctx.lineTo(lightning.x2, lightning.y2);
+      ctx.stroke();
+      ctx.restore();
+      lightning.life--;
+      if (lightning.life <= 0) lightning = null;
+    }
+
+    // partículas mixtas
     particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
-      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
-      ctx.globalAlpha = p.alpha;
-      ctx.fillStyle   = p.color;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      p.x += p.vx * _bgSpeedBoost;
+      p.y += p.vy * _bgSpeedBoost;
+      if (p.y < -12) { p.y = H + 12; p.x = Math.random() * W; }
+      if (p.x < -12) p.x = W + 12; if (p.x > W + 12) p.x = -12;
+
+      p.alpha += p.blinkSpeed * p.alphaDir;
+      if (p.alpha >= 0.8) { p.alpha = 0.8; p.alphaDir = -1; }
+      if (p.alpha <= 0.3) { p.alpha = 0.3; p.alphaDir = 1; }
+
+      _drawFxShape(ctx, p.shape, p.x, p.y, p.r, p.color, p.alpha);
     });
     ctx.globalAlpha = 1;
     _homeParticleRAF = requestAnimationFrame(tick);
@@ -1498,6 +1639,7 @@ function startBgParticles() {
 
 function stopBgParticles() {
   if (_homeParticleRAF) { cancelAnimationFrame(_homeParticleRAF); _homeParticleRAF = null; }
+  if (_homeLightningTimer) { clearTimeout(_homeLightningTimer); _homeLightningTimer = null; }
   const canvas = document.getElementById('bg-particles');
   if (canvas) { const c = canvas.getContext('2d'); c.clearRect(0, 0, canvas.width, canvas.height); }
 }
@@ -1519,7 +1661,7 @@ function startReactionBgParticles() {
   canvas.height = window.innerHeight;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
-  const particles = Array.from({ length: 28 }, () => ({
+  const particles = Array.from({ length: _fxParticleCount(28) }, () => ({
     x: Math.random() * W,
     y: H + Math.random() * H,
     vx: (Math.random() - 0.5) * 0.5,
@@ -1529,9 +1671,10 @@ function startReactionBgParticles() {
     color: '#FFD300',
   }));
   const tick = () => {
+    if (_fxPaused) { _reactionBgRAF = requestAnimationFrame(tick); return; }
     ctx.clearRect(0, 0, W, H);
     particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy;
+      p.x += p.vx * _bgSpeedBoost; p.y += p.vy * _bgSpeedBoost;
       if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
       if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
       ctx.globalAlpha = p.alpha;
@@ -1697,13 +1840,12 @@ function showScreen(id, instant) {
     doSwitch();
     return;
   }
-  current.style.opacity = '0';
-  current.style.pointerEvents = 'none';
-  setTimeout(() => {
-    current.style.opacity = '';
-    current.style.pointerEvents = '';
-    doSwitch();
-  }, 180);
+  // Portal de energía: la pantalla entrante hace zoom-in por encima
+  // mientras la saliente hace zoom-out + fade, en simultáneo (0.3s).
+  const next = document.getElementById(id);
+  if (next) next.style.zIndex = '2';
+  doSwitch();
+  setTimeout(() => { if (next) next.style.zIndex = ''; }, 320);
 }
 
 function setNavActive(id) {
@@ -1936,12 +2078,102 @@ function onDeviceMotion(e) {
 function registerPunch(gForce, speed) {
   if (!APP.sessionActive) return;
   const punch = { g: gForce, speed: speed || gForce * 9.81, time: Date.now() };
+
+  if (!APP.hitWindowActive) {
+    handleEarlyPunch();
+    return;
+  }
+
   vibrate([15]);
   const tier = triggerHitFeedback(gForce);
   if (APP.mode === 'training')                              handleTrainingPunch(punch, tier);
   else if (APP.comboConfig.submode === 'simple')            handleReactionPunch(punch);
   else if (APP.comboConfig.submode === 'colors')            handleColorsPunch(punch);
   else                                                      handleComboPunch(punch);
+}
+
+// ═══════════════════════════════════════════════════
+// PENALIZACIÓN — golpe fuera de la ventana válida
+// ═══════════════════════════════════════════════════
+function applyXPPenalty(amount) {
+  const prevTotal = loadGamificationXP();
+  saveGamificationXP(prevTotal - amount);
+  if (APP.gamification) {
+    APP.gamification.totalXP = loadGamificationXP();
+    APP.gamification.sessionXP -= amount;
+  }
+  updateGlobalXPBar();
+}
+
+function playPenaltySound() {
+  if (!APP.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const t0 = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(280, t0);
+    o.frequency.exponentialRampToValueAtTime(90, t0 + 0.2);
+    g.gain.setValueAtTime(0.22, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.24);
+    o.start(t0); o.stop(t0 + 0.26);
+  } catch (e) {}
+}
+
+function showPenaltyPopup(message, color, xpText) {
+  const container = document.getElementById('hit-popup-container');
+  if (!container) return;
+
+  while (container.children.length >= 3) {
+    const oldest = container.firstChild;
+    if (oldest._removeTimer) clearTimeout(oldest._removeTimer);
+    oldest.remove();
+  }
+
+  const card = document.createElement('div');
+  card.className = 'hit-popup-card hit-popup-penalty';
+  card.style.setProperty('--tc', color);
+
+  const lbl = document.createElement('div');
+  lbl.className = 'hit-popup-label';
+  lbl.textContent = message;
+  card.appendChild(lbl);
+
+  if (xpText) {
+    const xpEl = document.createElement('div');
+    xpEl.className = 'hit-popup-xp';
+    xpEl.textContent = xpText;
+    card.appendChild(xpEl);
+  }
+
+  container.appendChild(card);
+  card._removeTimer = setTimeout(() => {
+    card.classList.add('hit-popup-out');
+    setTimeout(() => card.remove(), 250);
+  }, 1000);
+}
+
+function handleEarlyPunch() {
+  if (APP.mode === 'training') {
+    showPenaltyPopup('¡DESCANSA!', '#00D4FF', null);
+    return;
+  }
+  if (APP.comboConfig.submode === 'combo') {
+    applyXPPenalty(5);
+    showPenaltyPopup('¡ESPERA LA SEÑAL!', '#FF8C00', '-5 XP');
+    playPenaltySound();
+    vibrate([100, 50, 100]);
+    return;
+  }
+  // Reacción y Colores comparten el mismo sistema de penalización
+  applyXPPenalty(5);
+  showPenaltyPopup('¡DEMASIADO PRONTO!', '#FF1A1A', '-5 XP');
+  playPenaltySound();
+  vibrate([100, 50, 100]);
+  APP.round.misses++;
+  if (APP.comboConfig.submode === 'simple') updateReactionMetricsUI();
 }
 
 // ═══════════════════════════════════════════════════
@@ -2409,6 +2641,8 @@ function initMenuScreen() {
   if (measureBtn) {
     measureBtn.onclick = e => {
       addRipple(e, measureBtn);
+      const r = measureBtn.getBoundingClientRect();
+      spawnHitParticles('#FFD300', r.left + r.width / 2, r.top + r.height / 2);
       stopBgParticles();
       showCalibrationScreen('screen-menu');
     };
@@ -2420,13 +2654,34 @@ function initMenuScreen() {
     initConfigScreen();
   });
 
-  // Card tap animations (Bug 5)
+  // Entrada escalonada de las tarjetas de modos
+  document.querySelectorAll('.home-modes-col .hmc').forEach((card, i) => {
+    card.classList.remove('hmc-enter');
+    void card.offsetWidth;
+    card.style.animationDelay = (i * 100) + 'ms';
+    card.classList.add('hmc-enter');
+  });
+
+  // Card tap animations: ripple + flash + partículas + vibración
   document.querySelectorAll('.hmc').forEach(card => {
-    card.addEventListener('touchstart', () => {
+    const onTap = e => {
+      const now = Date.now();
+      if (card._lastTapFx && now - card._lastTapFx < 300) return;
+      card._lastTapFx = now;
+
       navigator.vibrate && navigator.vibrate(30);
       card.classList.add('tapped');
       setTimeout(() => card.classList.remove('tapped'), 200);
-    }, { passive: true });
+
+      const touch = e.touches && e.touches[0];
+      const r = card.getBoundingClientRect();
+      const x = touch ? touch.clientX : (e.clientX || r.left + r.width / 2);
+      const y = touch ? touch.clientY : (e.clientY || r.top + r.height / 2);
+      addRipple({ clientX: x, clientY: y }, card);
+      spawnDomParticles(x, y, hmcColor(card), 8);
+    };
+    card.addEventListener('touchstart', onTap, { passive: true });
+    card.addEventListener('click', onTap);
   });
 
   // Calibration hint link (Bug 2)
@@ -2701,6 +2956,7 @@ function startSession() {
   APP.combo.results = [];
   APP.sessionSaved  = false;
   APP.sessionActive = true;
+  APP.hitWindowActive = false;
   acquireWakeLock();
   activateAccelerometer();
   initGamificationSession();
@@ -2725,6 +2981,7 @@ function startRound(roundNum) {
   playBell('round');
 
   if (APP.mode === 'training') {
+    APP.hitWindowActive = true;
     showTrainingScreen(roundNum);
     startRoundTimer(() => endRound());
   } else if (APP.comboConfig.submode === 'simple') {
@@ -2758,6 +3015,7 @@ function startRoundTimer(onEnd) {
 
 function endRound() {
   clearInterval(APP.round.timerInterval);
+  APP.hitWindowActive = false;
   if (APP.mode === 'combo') {
     if (APP.comboConfig.submode === 'simple') {
       stopReactionCycle();
@@ -2970,6 +3228,7 @@ function startComboWait() {
   APP.combo.currentHits = 0;
   APP.combo.reactionMs  = null;
   APP.combo.state       = 'wait';
+  APP.hitWindowActive   = false;
 
   document.getElementById('wait-hits-text').textContent =
     target + (APP.lang === 'de' ? ' SCHLÄGE' : APP.lang === 'en' ? ' HITS' : APP.lang === 'pt' ? ' GOLPES' : ' GOLPES');
@@ -3001,6 +3260,7 @@ function startComboWait() {
 // ─── SEÑAL: fondo rojo, texto HIT ─────────────────
 function showComboSignal() {
   APP.combo.state    = 'signal';
+  APP.hitWindowActive = true;
   APP.combo.signalAt = Date.now();
   APP.combo.currentHits = 0;
 
@@ -3096,6 +3356,7 @@ function endCombo(ok, noHits) {
   clearInterval(APP.combo.waitTickInterval);
 
   APP.combo.state = 'result';
+  APP.hitWindowActive = false;
 
   // For completed combos use exact last-hit timestamp; for timeouts use now
   const endAt    = (ok && APP.combo.lastHitAt) ? APP.combo.lastHitAt : Date.now();
@@ -3276,8 +3537,17 @@ function setReactionStimulus(state, icon, text, sub, rank, xp) {
 function startReactionWait() {
   if (APP.round.secondsLeft <= 0) return;
   APP.reaction.state = 'wait';
+  APP.hitWindowActive = false;
   setReactionStimulus('state-wait', '', 'PREPÁRATE', '', '', '');
   const delay = 1000 + Math.random() * 2000;
+  if (delay > 500) {
+    setTimeout(() => {
+      if (APP.reaction.state === 'wait') {
+        const c = getReactionCircleCenter();
+        spawnConvergeParticles(c.x, c.y, 480);
+      }
+    }, delay - 500);
+  }
   APP.reaction.waitTimeout = setTimeout(() => {
     if (APP.round.secondsLeft > 0) showReactionStimulus();
   }, delay);
@@ -3285,9 +3555,15 @@ function startReactionWait() {
 
 function showReactionStimulus() {
   APP.reaction.state      = 'hit';
+  APP.hitWindowActive     = true;
   APP.reaction.stimulusAt = Date.now();
   triggerBodyFlash('white');
-  setTimeout(() => setReactionStimulus('state-hit', '⚡', 'HIT', '', '', ''), 60);
+  setTimeout(() => {
+    setReactionStimulus('state-hit', '⚡', 'HIT', '', '', '');
+    const c = getReactionCircleCenter();
+    spawnHitParticles('#FF1A1A', c.x, c.y);
+    showHitRays();
+  }, 60);
   vibrate([50, 30, 50]);
   playBeep(880, 0.18);
   APP.reaction.missTimeout = setTimeout(() => {
@@ -3298,6 +3574,7 @@ function showReactionStimulus() {
 function missReaction() {
   clearTimeout(APP.reaction.missTimeout);
   APP.reaction.state = 'miss';
+  APP.hitWindowActive = false;
   APP.round.misses++;
   setReactionStimulus('state-miss', '✗', 'FALLO', '', '', '');
   vibrate([80]);
@@ -3310,6 +3587,7 @@ function missReaction() {
 
 function handleReactionPunch(punch) {
   if (APP.reaction.state !== 'hit') return;
+  APP.hitWindowActive = false;
   clearTimeout(APP.reaction.missTimeout);
   const reactionMs = Date.now() - APP.reaction.stimulusAt;
   APP.reaction.state = 'result';
@@ -3581,7 +3859,7 @@ function showSummaryScreen() {
 
   if (APP.mode === 'training' && APP.gamification) renderGamificationSummary();
 
-  const sessionXP = APP.gamification ? APP.gamification.sessionXP : 0;
+  const sessionXP = APP.gamification ? Math.max(0, APP.gamification.sessionXP) : 0;
   showResultSplash(sess.allPunches, sessionXP, () => showScreen('screen-summary', true));
 }
 
@@ -3895,6 +4173,26 @@ function initSettingsModal() {
 // ═══════════════════════════════════════════════════
 // INICIALIZACIÓN
 // ═══════════════════════════════════════════════════
+const HMC_COLORS = { blue: '#00D4FF', green: '#FFD300', yellow: '#FF0000', purple: '#9B59B6' };
+function hmcColor(card) {
+  for (const k in HMC_COLORS) if (card.classList.contains('hmc--' + k)) return HMC_COLORS[k];
+  return '#FFD300';
+}
+
+function spawnDomParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.3;
+    const dist  = 30 + Math.random() * 30;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    const el = document.createElement('span');
+    el.className = 'dom-particle';
+    el.style.cssText = `left:${x}px;top:${y}px;background:${color};--dx:${dx}px;--dy:${dy}px`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 500);
+  }
+}
+
 function addRipple(e, btn) {
   const r    = btn.getBoundingClientRect();
   const size = Math.max(r.width, r.height);
@@ -4897,6 +5195,7 @@ function setColorsStage(colorId, textOverride) {
 function startColorsWait() {
   if (APP.round.secondsLeft <= 0) return;
   APP.colorMode.state = 'wait';
+  APP.hitWindowActive = false;
   setColorsStage(null);
   const pauseMs = APP.comboConfig.pauseBetween * 1000;
   APP.colorMode.waitTimeout = setTimeout(() => {
@@ -4917,6 +5216,7 @@ function showColorsStimulus() {
   const colorId = getNextColor();
   APP.colorMode.currentColor = colorId;
   APP.colorMode.state        = 'active';
+  APP.hitWindowActive        = true;
   APP.colorMode.stimulusAt   = Date.now();
 
   setColorsStage(colorId);
@@ -4932,6 +5232,7 @@ function showColorsStimulus() {
 function missColors() {
   clearTimeout(APP.colorMode.missTimeout);
   APP.colorMode.state = 'miss';
+  APP.hitWindowActive = false;
   APP.round.misses++;
 
   const stage  = document.getElementById('colors-stage');
@@ -4949,6 +5250,7 @@ function missColors() {
 
 function handleColorsPunch(punch) {
   if (APP.colorMode.state !== 'active') return;
+  APP.hitWindowActive = false;
   clearTimeout(APP.colorMode.missTimeout);
   const reactionMs = Date.now() - APP.colorMode.stimulusAt;
   APP.colorMode.state = 'result';
@@ -4983,6 +5285,61 @@ document.addEventListener('DOMContentLoaded', init);
 // PARTE 2 — VISUAL EFFECTS
 // ═══════════════════════════════════════════════════
 
+function getReactionCircleCenter() {
+  const wrap = document.querySelector('.rsc-circle-wrap');
+  if (!wrap) return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  const r = wrap.getBoundingClientRect();
+  return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+}
+
+function spawnConvergeParticles(cx, cy, duration) {
+  const canvas = document.getElementById('hit-particle-canvas');
+  if (!canvas) return;
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const particles = Array.from({ length: _fxParticleCount(14) }, () => {
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 100 + Math.random() * 100;
+    return { angle, startDist: dist, r: 2 + Math.random() * 3 };
+  });
+  const totalFrames = Math.max(1, Math.round(duration / 16.67));
+  let frame = 0;
+  const tick = () => {
+    if (_fxPaused) { requestAnimationFrame(tick); return; }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const t = frame / totalFrames;
+    particles.forEach(p => {
+      const dist = p.startDist * (1 - t);
+      const x = cx + Math.cos(p.angle) * dist;
+      const y = cy + Math.sin(p.angle) * dist;
+      ctx.globalAlpha = 0.25 + t * 0.65;
+      ctx.fillStyle = '#FFD300';
+      ctx.beginPath(); ctx.arc(x, y, p.r, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    frame++;
+    if (frame < totalFrames) requestAnimationFrame(tick);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+  tick();
+}
+
+function showHitRays() {
+  const W = window.innerWidth, H = window.innerHeight;
+  const cx = W / 2, cy = H / 2;
+  [[0, 0], [W, 0], [0, H], [W, H]].forEach(([x, y]) => {
+    const angle = Math.atan2(cy - y, cx - x) * 180 / Math.PI;
+    const ray = document.createElement('div');
+    ray.className = 'hit-ray';
+    ray.style.left = x + 'px';
+    ray.style.top  = y + 'px';
+    ray.style.setProperty('--ray-rot', angle + 'deg');
+    document.body.appendChild(ray);
+    setTimeout(() => ray.remove(), 400);
+  });
+}
+
 function showHitRings() {
   const wrap = document.querySelector('.rsc-circle-wrap');
   if (!wrap) return;
@@ -4996,12 +5353,27 @@ function showHitRings() {
   });
 }
 
+const IMPACT_WORDS = ['POW!', 'BAM!', 'WHAM!', 'CRACK!'];
+function showImpactText(color) {
+  const el = document.createElement('div');
+  el.className = 'impact-text';
+  el.textContent = IMPACT_WORDS[Math.floor(Math.random() * IMPACT_WORDS.length)];
+  const rot = (Math.random() * 30 - 15).toFixed(1);
+  el.style.color = color;
+  el.style.textShadow = `0 0 14px ${color}, 0 0 40px ${color}`;
+  el.style.top  = (15 + Math.random() * 55) + 'vh';
+  el.style.left = (12 + Math.random() * 60) + 'vw';
+  el.style.setProperty('--rot', rot + 'deg');
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 500);
+}
+
 function applyTierScreenEffect(tier) {
   switch (tier.label) {
-    case 'GREAT':      showEdgeWave(); break;
-    case 'EXCELLENT':  showBorderFlash(false); break;
-    case 'MASTER':     showBorderFlash(true);  break;
-    case 'SIFU LEVEL': showBorderFlash(true); showSifuCenterText(); break;
+    case 'GREAT':      showEdgeWave(); showImpactText(tier.color); break;
+    case 'EXCELLENT':  showBorderFlash(false); showImpactText(tier.color); break;
+    case 'MASTER':     showBorderFlash(true); showImpactText(tier.color); break;
+    case 'SIFU LEVEL': showBorderFlash(true); showSifuCenterText(); showImpactText(tier.color); break;
   }
 }
 
