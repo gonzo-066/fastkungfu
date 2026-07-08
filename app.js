@@ -2515,10 +2515,13 @@ function initRegisterScreen() {
     btn.textContent = 'CREANDO...';
 
     try {
+      const redirectUrl = window.location.hostname === 'localhost'
+        ? 'http://localhost:3000'
+        : 'https://fastkungfu.vercel.app';
       const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: getRedirectTo() },
+        options: { emailRedirectTo: redirectUrl },
       });
       if (error) throw error;
       if (!data.user) throw new Error('No se pudo crear el usuario');
