@@ -167,9 +167,22 @@ const TRANSLATIONS = {
     calib_threshold:      'Umbral',
     calib_debounce:       'Debounce',
     calib_save:           'GUARDAR CALIBRACIÓN',
-    calib_again:          'RECALIBRAR',
+    calib_again:          'REPETIR CALIBRACIÓN',
     calib_notice:         'Calibra tu dispositivo para mayor precisión',
     calib_notice_btn:     'CALIBRAR',
+    calib_peak_detected:  'Pico detectado: {g}G',
+    calib_repeat_punch:   'REPETIR ESTE GOLPE',
+    calib_no_punch:       'No se detectó ningún golpe. Inténtalo de nuevo.',
+    calib_retry_btn:      'REINTENTAR',
+    calib_err_medium_weak: 'El golpe medio debe ser más fuerte que el suave',
+    calib_err_hard_weak:  'El golpe fuerte debe ser más fuerte que el medio',
+    calib_err_same_intensity: 'Los golpes deben tener intensidades diferentes. Intenta de nuevo con más diferencia entre ellos.',
+    calib_result_soft:    'Golpe suave detectado',
+    calib_result_medium:  'Golpe medio detectado',
+    calib_result_hard:    'Golpe fuerte detectado',
+    calib_result_threshold: 'Umbral configurado',
+    calib_result_sensitivity: 'Sensibilidad',
+    calib_ms_debounce:    '{n} ms debounce',
     sound_label:          'SONIDO',
     sound_on:             'ACTIVADO',
     sound_off:            'SILENCIADO',
@@ -334,9 +347,22 @@ const TRANSLATIONS = {
     calib_threshold:      'Threshold',
     calib_debounce:       'Debounce',
     calib_save:           'SAVE CALIBRATION',
-    calib_again:          'RECALIBRATE',
+    calib_again:          'REPEAT CALIBRATION',
     calib_notice:         'Calibrate your device for better precision',
     calib_notice_btn:     'CALIBRATE',
+    calib_peak_detected:  'Peak detected: {g}G',
+    calib_repeat_punch:   'REPEAT THIS PUNCH',
+    calib_no_punch:       'No punch detected. Try again.',
+    calib_retry_btn:      'RETRY',
+    calib_err_medium_weak: 'The medium punch must be harder than the soft one',
+    calib_err_hard_weak:  'The hard punch must be harder than the medium one',
+    calib_err_same_intensity: 'The punches must have different intensities. Try again with more difference between them.',
+    calib_result_soft:    'Soft punch detected',
+    calib_result_medium:  'Medium punch detected',
+    calib_result_hard:    'Hard punch detected',
+    calib_result_threshold: 'Configured threshold',
+    calib_result_sensitivity: 'Sensitivity',
+    calib_ms_debounce:    '{n} ms debounce',
     sound_label:          'SOUND',
     sound_on:             'ON',
     sound_off:            'MUTED',
@@ -501,9 +527,22 @@ const TRANSLATIONS = {
     calib_threshold:      'Limiar',
     calib_debounce:       'Debounce',
     calib_save:           'SALVAR CALIBRAÇÃO',
-    calib_again:          'RECALIBRAR',
+    calib_again:          'REPETIR CALIBRAÇÃO',
     calib_notice:         'Calibre seu dispositivo para maior precisão',
     calib_notice_btn:     'CALIBRAR',
+    calib_peak_detected:  'Pico detectado: {g}G',
+    calib_repeat_punch:   'REPETIR ESTE SOCO',
+    calib_no_punch:       'Nenhum soco detectado. Tente novamente.',
+    calib_retry_btn:      'TENTAR NOVAMENTE',
+    calib_err_medium_weak: 'O soco médio deve ser mais forte que o leve',
+    calib_err_hard_weak:  'O soco forte deve ser mais forte que o médio',
+    calib_err_same_intensity: 'Os socos devem ter intensidades diferentes. Tente novamente com mais diferença entre eles.',
+    calib_result_soft:    'Soco leve detectado',
+    calib_result_medium:  'Soco médio detectado',
+    calib_result_hard:    'Soco forte detectado',
+    calib_result_threshold: 'Limiar configurado',
+    calib_result_sensitivity: 'Sensibilidade',
+    calib_ms_debounce:    '{n} ms debounce',
     sound_label:          'SOM',
     sound_on:             'ATIVADO',
     sound_off:            'SILENCIADO',
@@ -668,9 +707,22 @@ const TRANSLATIONS = {
     calib_threshold:      'Schwellenwert',
     calib_debounce:       'Entprellzeit',
     calib_save:           'KALIBRIERUNG SPEICHERN',
-    calib_again:          'NEU KALIBRIEREN',
+    calib_again:          'KALIBRIERUNG WIEDERHOLEN',
     calib_notice:         'Kalibriere dein Gerät für bessere Präzision',
     calib_notice_btn:     'KALIBRIEREN',
+    calib_peak_detected:  'Erkannter Spitzenwert: {g}G',
+    calib_repeat_punch:   'SCHLAG WIEDERHOLEN',
+    calib_no_punch:       'Kein Schlag erkannt. Versuche es erneut.',
+    calib_retry_btn:      'ERNEUT VERSUCHEN',
+    calib_err_medium_weak: 'Der mittlere Schlag muss stärker sein als der leichte',
+    calib_err_hard_weak:  'Der harte Schlag muss stärker sein als der mittlere',
+    calib_err_same_intensity: 'Die Schläge müssen unterschiedliche Intensitäten haben. Versuche es mit mehr Unterschied erneut.',
+    calib_result_soft:    'Leichter Schlag erkannt',
+    calib_result_medium:  'Mittlerer Schlag erkannt',
+    calib_result_hard:    'Harter Schlag erkannt',
+    calib_result_threshold: 'Eingestellter Schwellenwert',
+    calib_result_sensitivity: 'Empfindlichkeit',
+    calib_ms_debounce:    '{n} ms Entprellzeit',
     sound_label:          'TON',
     sound_on:             'AN',
     sound_off:            'STUMM',
@@ -806,6 +858,7 @@ const APP = {
     ringEnd: null,
     fromScreen: 'screen-menu',
   },
+  calibration: null, // { soft, medium, hard, threshold, debounce, calibrated, date } — resultado final persistido
   avatar: null,
 };
 
@@ -4875,9 +4928,9 @@ function speakVoice(text) {
 // CALIBRACIÓN DE DISPOSITIVO
 // ═══════════════════════════════════════════════════
 const CALIB_STEPS = [
-  { key: 'suave',  label: { es: 'GOLPE SUAVE',  en: 'SOFT PUNCH',   pt: 'GOLPE LEVE',   de: 'LEICHTER SCHLAG' }, bg: '#001533' },
-  { key: 'medio',  label: { es: 'GOLPE MEDIO',  en: 'MEDIUM PUNCH', pt: 'GOLPE MÉDIO',  de: 'MITTLERER SCHLAG' }, bg: '#1a1100' },
-  { key: 'fuerte', label: { es: 'GOLPE FUERTE', en: 'HARD PUNCH',   pt: 'GOLPE FORTE',  de: 'HARTER SCHLAG' }, bg: '#001500' },
+  { key: 'suave',  label: { es: 'GOLPE SUAVE',  en: 'SOFT PUNCH',   pt: 'GOLPE LEVE',   de: 'LEICHTER SCHLAG' }, bg: '#001533', color: '#00FF66' },
+  { key: 'medio',  label: { es: 'GOLPE MEDIO',  en: 'MEDIUM PUNCH', pt: 'GOLPE MÉDIO',  de: 'MITTLERER SCHLAG' }, bg: '#1a1100', color: '#FFD300' },
+  { key: 'fuerte', label: { es: 'GOLPE FUERTE', en: 'HARD PUNCH',   pt: 'GOLPE FORTE',  de: 'HARTER SCHLAG' }, bg: '#001500', color: '#FF1A1A' },
 ];
 
 function loadCalibration() {
@@ -4885,6 +4938,7 @@ function loadCalibration() {
   if (!raw) return false;
   try {
     const c = JSON.parse(raw);
+    APP.calibration = c;
     APP.accel.THRESHOLD = Math.max(APP.accel.ABSOLUTE_MIN_G, c.threshold);
     APP.accel.COOLDOWN  = c.debounce;
     APP.accel.COMBO_HIT_COOLDOWN = Math.max(55, c.debounce - 45);
@@ -4892,9 +4946,19 @@ function loadCalibration() {
   } catch(e) { return false; }
 }
 
-function saveCalibration(threshold, debounce) {
+function saveCalibration(soft, medium, hard, threshold, debounce) {
   const safeThreshold = Math.max(APP.accel.ABSOLUTE_MIN_G, threshold);
-  localStorage.setItem('fkf_calibration', JSON.stringify({ threshold: safeThreshold, debounce, at: Date.now() }));
+  const calibration = {
+    soft:       Math.round(soft   * 100) / 100,
+    medium:     Math.round(medium * 100) / 100,
+    hard:       Math.round(hard   * 100) / 100,
+    threshold:  safeThreshold,
+    debounce,
+    calibrated: true,
+    date:       Date.now(),
+  };
+  localStorage.setItem('fkf_calibration', JSON.stringify(calibration));
+  APP.calibration = calibration;
   APP.accel.THRESHOLD = safeThreshold;
   APP.accel.COOLDOWN  = debounce;
   APP.accel.COMBO_HIT_COOLDOWN = Math.max(55, debounce - 45);
@@ -4948,18 +5012,32 @@ function renderCalibStep(stepNum) {
       <div class="calib-step-label">${label}</div>
       <div class="calib-step-instruction">${t('calib_step_instruction')}</div>
       <canvas id="calib-graph"></canvas>
+      <div class="calib-live-peak" id="calib-live-peak"></div>
       <div class="calib-step-status" id="calib-status">${t('calib_press_ready')}</div>
-      <button class="btn-primary btn-calib-ready" id="btn-calib-ready">${t('calib_ready_btn')}</button>
+      <div class="calib-step-actions" id="calib-step-actions">
+        <button class="btn-primary btn-calib-ready" id="btn-calib-ready">${t('calib_ready_btn')}</button>
+      </div>
     </div>`;
 
   document.getElementById('btn-calib-ready').onclick = () => activateCalibListening(stepNum);
+}
+
+function updateCalibLivePeak(stepNum, g) {
+  const el = document.getElementById('calib-live-peak');
+  if (!el) return;
+  const step = CALIB_STEPS[stepNum - 1];
+  el.style.color = step.color;
+  el.textContent = t('calib_peak_detected', { g: g.toFixed(1) });
 }
 
 function activateCalibListening(stepNum) {
   const btn  = document.getElementById('btn-calib-ready');
   const stat = document.getElementById('calib-status');
   if (btn)  { btn.disabled = true; btn.textContent = t('calib_listening'); }
-  if (stat) stat.textContent = t('calib_detecting');
+  if (stat) { stat.textContent = t('calib_detecting'); stat.classList.remove('calib-error'); stat.style.color = ''; }
+
+  const liveEl = document.getElementById('calib-live-peak');
+  if (liveEl) liveEl.textContent = '';
 
   APP.calib.state     = 'listening';
   APP.calib.peakG     = 0;
@@ -4986,7 +5064,10 @@ function activateCalibListening(stepNum) {
     if (!APP.calib.triggerAt && g > TRIG_G) APP.calib.triggerAt = now;
 
     if (APP.calib.triggerAt) {
-      if (g > APP.calib.peakG) APP.calib.peakG = g;
+      if (g > APP.calib.peakG) {
+        APP.calib.peakG = g;
+        updateCalibLivePeak(stepNum, g);
+      }
       if (g > RING_G)          APP.calib.ringEnd = now;
       if (now - APP.calib.triggerAt > 2000) finishCalibStep(stepNum);
     }
@@ -5008,25 +5089,63 @@ function stopCalibListener() {
   clearInterval(APP.calib.graphInterval);
 }
 
+// Vuelve a mostrar solo el botón "LISTO" para reintentar el golpe actual sin avanzar de paso
+function retryCalibStep(stepNum, message) {
+  const stat = document.getElementById('calib-status');
+  if (stat) { stat.classList.add('calib-error'); stat.style.color = ''; stat.textContent = message; }
+  const actions = document.getElementById('calib-step-actions');
+  if (actions) {
+    actions.innerHTML = `<button class="btn-primary btn-calib-ready" id="btn-calib-retry">${t('calib_retry_btn')}</button>`;
+    document.getElementById('btn-calib-retry').onclick = () => renderCalibStep(stepNum);
+  }
+}
+
 function finishCalibStep(stepNum) {
   if (APP.calib.state !== 'listening') return;
   APP.calib.state = 'captured';
   stopCalibListener();
 
-  const peakG  = APP.calib.peakG  || 1.8;
+  // Ningún golpe cruzó el umbral de disparo durante la ventana de escucha
+  if (!APP.calib.triggerAt || !APP.calib.peakG) {
+    retryCalibStep(stepNum, t('calib_no_punch'));
+    return;
+  }
+
+  const peakG  = APP.calib.peakG;
   const ringMs = (APP.calib.triggerAt && APP.calib.ringEnd)
     ? Math.max(60, APP.calib.ringEnd - APP.calib.triggerAt)
     : 120;
-  APP.calib.data.push({ peakG, ringMs });
 
+  // Validación progresiva: cada golpe debe ser claramente más fuerte que el anterior
+  if (stepNum === 2 && peakG <= APP.calib.data[0].peakG * 1.3) {
+    retryCalibStep(stepNum, t('calib_err_medium_weak'));
+    return;
+  }
+  if (stepNum === 3 && peakG <= APP.calib.data[1].peakG * 1.3) {
+    retryCalibStep(stepNum, t('calib_err_hard_weak'));
+    return;
+  }
+
+  const step = CALIB_STEPS[stepNum - 1];
   const stat = document.getElementById('calib-status');
-  if (stat) stat.textContent = `✓ ${peakG.toFixed(2)}G`;
+  if (stat) {
+    stat.classList.remove('calib-error');
+    stat.style.color = step.color;
+    stat.textContent = `✓ ${t('calib_peak_detected', { g: peakG.toFixed(1) })}`;
+  }
 
-  const btn = document.getElementById('btn-calib-ready');
-  if (btn) {
-    btn.disabled = false;
-    btn.textContent = stepNum < 3 ? t('calib_next_step') : t('calib_see_results');
-    btn.onclick = () => stepNum < 3 ? renderCalibStep(stepNum + 1) : showCalibResults();
+  // No se confirma en APP.calib.data hasta que el usuario decida continuar —
+  // así "Repetir este golpe" puede descartar la medición sin tocar los pasos previos
+  const actions = document.getElementById('calib-step-actions');
+  if (actions) {
+    actions.innerHTML = `
+      <button class="btn-secondary" id="btn-calib-repeat">${t('calib_repeat_punch')}</button>
+      <button class="btn-primary btn-calib-ready" id="btn-calib-continue">${stepNum < 3 ? t('calib_next_step') : t('calib_see_results')}</button>`;
+    document.getElementById('btn-calib-repeat').onclick = () => renderCalibStep(stepNum);
+    document.getElementById('btn-calib-continue').onclick = () => {
+      APP.calib.data[stepNum - 1] = { peakG, ringMs };
+      stepNum < 3 ? renderCalibStep(stepNum + 1) : showCalibResults();
+    };
   }
 }
 
@@ -5070,19 +5189,34 @@ function drawCalibGraph() {
 
 function showCalibResults() {
   const data = APP.calib.data;
-  if (!data.length) return;
-
-  const peakSuave = data[0]?.peakG || 1.8;
-  const avgRing   = data.reduce((a, d) => a + d.ringMs, 0) / data.length;
-  const threshold = Math.round(peakSuave * 0.6 * 100) / 100;
-  const debounce  = Math.round(avgRing + 50);
+  if (data.length < 3) return;
 
   const content = document.getElementById('calib-content');
   content.style.background = '';
-  const stepsHtml = data.map((d, i) => {
-    const lbl = CALIB_STEPS[i]?.label[APP.lang] || CALIB_STEPS[i]?.label.es || '';
-    return `<div class="calib-step-dot">${lbl}: ${d.peakG.toFixed(2)}G</div>`;
-  }).join('');
+
+  const soft   = data[0].peakG;
+  const medium = data[1].peakG;
+  const hard   = data[2].peakG;
+
+  // Salvaguarda final: las 3 intensidades deben quedar claramente diferenciadas
+  const tooClose = (a, b) => a <= 0 || Math.abs(b - a) / a < 0.15;
+  if (tooClose(soft, medium) || tooClose(medium, hard) || tooClose(soft, hard)) {
+    content.innerHTML = `
+      <div class="calib-results calib-results-error">
+        <div class="calib-results-icon">⚠️</div>
+        <h3 class="calib-title">${t('calib_err_same_intensity')}</h3>
+        <button class="btn-primary btn-calib-ready" id="btn-calib-restart">${t('calib_again')}</button>
+      </div>`;
+    document.getElementById('btn-calib-restart').onclick = () => {
+      APP.calib.data = [];
+      renderCalibIntro();
+    };
+    return;
+  }
+
+  const avgRing   = data.reduce((a, d) => a + d.ringMs, 0) / data.length;
+  const threshold = Math.round(soft * 0.8 * 100) / 100;
+  const debounce  = Math.round(avgRing + 50);
 
   content.innerHTML = `
     <div class="calib-results">
@@ -5090,21 +5224,32 @@ function showCalibResults() {
       <h3 class="calib-title">${t('calib_results_title')}</h3>
       <div class="calib-result-values">
         <div class="calib-result-row">
-          <span class="calib-result-label">${t('calib_threshold')}</span>
+          <span class="calib-result-label">${t('calib_result_soft')}</span>
+          <span class="calib-result-value" style="color:${CALIB_STEPS[0].color}">${soft.toFixed(1)}G</span>
+        </div>
+        <div class="calib-result-row">
+          <span class="calib-result-label">${t('calib_result_medium')}</span>
+          <span class="calib-result-value" style="color:${CALIB_STEPS[1].color}">${medium.toFixed(1)}G</span>
+        </div>
+        <div class="calib-result-row">
+          <span class="calib-result-label">${t('calib_result_hard')}</span>
+          <span class="calib-result-value" style="color:${CALIB_STEPS[2].color}">${hard.toFixed(1)}G</span>
+        </div>
+        <div class="calib-result-row">
+          <span class="calib-result-label">${t('calib_result_threshold')}</span>
           <span class="calib-result-value">${threshold.toFixed(2)}G</span>
         </div>
         <div class="calib-result-row">
-          <span class="calib-result-label">${t('calib_debounce')}</span>
-          <span class="calib-result-value">${debounce}ms</span>
+          <span class="calib-result-label">${t('calib_result_sensitivity')}</span>
+          <span class="calib-result-value">${t('calib_ms_debounce', { n: debounce })}</span>
         </div>
       </div>
-      <div class="calib-step-data">${stepsHtml}</div>
       <button class="btn-primary btn-calib-ready" id="btn-calib-save">${t('calib_save')}</button>
       <button class="btn-secondary" id="btn-calib-again">${t('calib_again')}</button>
     </div>`;
 
   document.getElementById('btn-calib-save').onclick = () => {
-    saveCalibration(threshold, debounce);
+    saveCalibration(soft, medium, hard, threshold, debounce);
     const notice = document.getElementById('calib-notice');
     if (notice) notice.classList.add('hidden');
     showScreen(APP.calib.fromScreen || 'screen-menu');

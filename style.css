@@ -2141,12 +2141,32 @@ canvas {
   line-height: 1.4;
 }
 
+.calib-live-peak {
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  min-height: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
 .calib-step-status {
   font-size: 0.9rem;
   color: rgba(255,255,255,0.7);
   font-weight: 600;
   letter-spacing: 0.5px;
   min-height: 24px;
+}
+
+.calib-step-status.calib-error {
+  color: #FF4444;
+}
+
+.calib-step-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  align-items: center;
 }
 
 .btn-calib-ready {
@@ -2223,10 +2243,8 @@ canvas {
   font-variant-numeric: tabular-nums;
 }
 
-.calib-step-data {
-  font-size: 0.78rem;
-  color: rgba(255,255,255,0.4);
-  line-height: 1.8;
+.calib-results-error .calib-title {
+  color: #FF4444;
 }
 
 /* ═══════════════════════════════════
