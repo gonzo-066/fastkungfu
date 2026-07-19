@@ -1,6 +1,12 @@
 'use strict';
 
 // ═══════════════════════════════════════════════════
+// GATE GLOBAL DEL ACELERÓMETRO — solo true mientras
+// un round está en curso (false en descanso/home/config)
+// ═══════════════════════════════════════════════════
+window.IMPACT_SESSION_ACTIVE = false;
+
+// ═══════════════════════════════════════════════════
 // SERVICE WORKER
 // ═══════════════════════════════════════════════════
 if ('serviceWorker' in navigator) {
@@ -1864,27 +1870,32 @@ function getAudioCtx() {
   return APP.audioCtx;
 }
 
+function boxingBellStrike(ctx, t0, decay) {
+  const osc  = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(800, t0);
+  gain.gain.setValueAtTime(0.6, t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + decay);
+  osc.start(t0);
+  osc.stop(t0 + decay + 0.05);
+}
+
 function playBell(type = 'round') {
   if (!APP.soundEnabled) return;
   try {
-    const ctx  = getAudioCtx();
+    const ctx = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
-    const freqs    = type === 'round' ? [880, 660, 440] : [440];
-    const duration = type === 'round' ? 1.8 : 0.4;
-    freqs.forEach((freq, i) => {
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'sine';
-      const t0 = ctx.currentTime + i * 0.08;
-      osc.frequency.setValueAtTime(freq, t0);
-      osc.frequency.exponentialRampToValueAtTime(freq * 0.5, t0 + duration);
-      gain.gain.setValueAtTime(0.4, t0);
-      gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
-      osc.start(t0);
-      osc.stop(t0 + duration + 0.05);
-    });
+    if (type === 'round') {
+      boxingBellStrike(ctx, ctx.currentTime, 0.8);
+    } else {
+      const t0 = ctx.currentTime;
+      boxingBellStrike(ctx, t0, 0.4);
+      boxingBellStrike(ctx, t0 + 0.2, 0.4);
+      boxingBellStrike(ctx, t0 + 0.4, 0.4);
+    }
   } catch (e) {}
 }
 
@@ -1996,13 +2007,10 @@ async function supabaseSignOut() {
   try {
     if (supabaseClient) await supabaseClient.auth.signOut();
   } catch (e) {}
-  localStorage.removeItem('fkf_profile');
-  localStorage.removeItem('fkf_sessions');
-  localStorage.removeItem('fkf_avatar');
-  APP.profile = null;
-  closeSettingsModal();
-  showScreen('screen-lang');
-  initLangScreen();
+  const lang = localStorage.getItem('fkf_lang');
+  localStorage.clear();
+  if (lang) localStorage.setItem('fkf_lang', lang);
+  window.location.reload();
 }
 
 // ═══════════════════════════════════════════════════
@@ -2035,6 +2043,7 @@ function deactivateAccelerometer() {
 }
 
 function onDeviceMotion(e) {
+  if (!window.IMPACT_SESSION_ACTIVE) return;
   if (!APP.sessionActive) return;
   const acc = e.accelerationIncludingGravity;
   if (!acc) return;
@@ -2638,6 +2647,11 @@ function updateHomeHeader() {
 // PANTALLA: MENÚ
 // ═══════════════════════════════════════════════════
 function initMenuScreen() {
+  // Al volver al home, el acelerómetro nunca debe seguir escuchando
+  window.IMPACT_SESSION_ACTIVE = false;
+  window.removeEventListener('devicemotion', onDeviceMotion);
+  deactivateAccelerometer();
+
   startHomeParticles();
 
   const measureBtn = document.getElementById('btn-training-mode');
@@ -2690,6 +2704,10 @@ function initMenuScreen() {
   // Calibration hint link (Bug 2)
   const calibHint = document.getElementById('home-calib-hint');
   if (calibHint) calibHint.onclick = () => { stopHomeParticles(); showCalibrationScreen('screen-menu'); };
+
+  // FIX TEMPORAL: recalibrar / cerrar sesión accesibles mientras se arregla el menú ⚙️
+  document.getElementById('btn-home-recalibrate').onclick = () => { stopHomeParticles(); showCalibrationScreen('screen-menu'); };
+  document.getElementById('btn-home-logout').onclick = () => supabaseSignOut();
 
   document.getElementById('btn-settings').onclick = toggleSettingsDropdown;
   document.getElementById('btn-header-avatar').onclick = () => {
@@ -2754,10 +2772,10 @@ function initConfigScreen() {
     colors:   './assets/card-colores4.jpg',
   };
   const modeOverlays = {
-    training: 'linear-gradient(rgba(20,14,0,0.75) 0%, rgba(28,18,0,0.88) 100%)',
-    simple:   'linear-gradient(rgba(0,5,20,0.75) 0%, rgba(0,10,30,0.85) 100%)',
-    combo:    'linear-gradient(rgba(20,0,0,0.75) 0%, rgba(30,0,0,0.88) 100%)',
-    colors:   'linear-gradient(rgba(15,0,22,0.75) 0%, rgba(20,0,30,0.88) 100%)',
+    training: 'linear-gradient(rgba(5,3,0,0.80), rgba(5,3,0,0.80))',
+    simple:   'linear-gradient(rgba(0,5,20,0.80), rgba(0,5,20,0.80))',
+    combo:    'linear-gradient(rgba(20,0,0,0.80), rgba(20,0,0,0.80))',
+    colors:   'linear-gradient(rgba(5,0,20,0.80), rgba(5,0,20,0.80))',
   };
   const modeShadows = {
     training: '0 0 20px rgba(255,211,0,0.5)',
@@ -2778,9 +2796,8 @@ function initConfigScreen() {
     colors:   'rgba(155,89,182,0.28)',
   };
   const modeKey = isTraining ? 'training' : isSimple ? 'simple' : isComboSubmode ? 'combo' : 'colors';
-  screenEl.style.backgroundImage    = `${modeOverlays[modeKey]}, url('${modeCardImages[modeKey]}')`;
-  screenEl.style.backgroundSize     = 'cover';
-  screenEl.style.backgroundPosition = 'center';
+  screenEl.style.setProperty('--config-bg-image', `url('${modeCardImages[modeKey]}')`);
+  screenEl.style.setProperty('--config-overlay',  modeOverlays[modeKey]);
   screenEl.style.setProperty('--mode-shadow',         modeShadows[modeKey]);
   screenEl.style.setProperty('--mode-summary-bg',     modeSummaryBgs[modeKey]);
   screenEl.style.setProperty('--mode-summary-border', modeSummaryBorders[modeKey]);
@@ -2972,6 +2989,7 @@ function startSession() {
 // ROUNDS
 // ═══════════════════════════════════════════════════
 function startRound(roundNum) {
+  window.IMPACT_SESSION_ACTIVE = true;
   APP.session.currentRound = roundNum;
   APP.round = {
     punches: [], reactionTimes: [],
@@ -3017,6 +3035,7 @@ function startRoundTimer(onEnd) {
 }
 
 function endRound() {
+  window.IMPACT_SESSION_ACTIVE = false;
   clearInterval(APP.round.timerInterval);
   APP.hitWindowActive = false;
   if (APP.mode === 'combo') {
@@ -3068,6 +3087,7 @@ function showTrainingScreen(roundNum) {
       if (APP.gamification && APP.gamification.streakTimer) clearTimeout(APP.gamification.streakTimer);
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
+      window.IMPACT_SESSION_ACTIVE = false;
       APP.sessionActive = false;
       deactivateAccelerometer();
       hideGlobalXPOverlay();
@@ -3196,6 +3216,7 @@ function showComboScreen(roundNum) {
       stopComboCycle();
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
+      window.IMPACT_SESSION_ACTIVE = false;
       APP.sessionActive = false;
       deactivateAccelerometer();
       hideGlobalXPOverlay();
@@ -3467,6 +3488,7 @@ function showReactionScreen(roundNum) {
       stopReactionCycle();
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
+      window.IMPACT_SESSION_ACTIVE = false;
       APP.sessionActive = false;
       deactivateAccelerometer();
       stopReactionBgParticles();
@@ -3670,10 +3692,9 @@ function showRestScreen(doneRound, nextRound) {
     seconds--;
     const el = document.getElementById('rest-countdown');
     el.textContent = seconds;
-    el.classList.toggle('ending', seconds <= 5);
-    if (seconds <= 3 && seconds > 0) { vibrate([50]); playBeep(600, 0.05); }
-    if (seconds > 0 && seconds % 10 === 0) playRestBeep();
-    if (seconds <= 0) startNext();
+    el.classList.toggle('ending', seconds <= 10);
+    if (seconds > 0 && seconds <= 10) { vibrate([50]); playBeep(1000, 0.1); }
+    if (seconds <= 0) { playBeep(1200, 0.5); startNext(); }
   }, 1000);
 }
 
@@ -3725,6 +3746,7 @@ function renderRestStats() {
 // ═══════════════════════════════════════════════════
 function showSummaryScreen() {
   releaseWakeLock();
+  window.IMPACT_SESSION_ACTIVE = false;
   APP.sessionActive = false;
   deactivateAccelerometer();
   hideGlobalXPOverlay();
@@ -4835,11 +4857,6 @@ function playComboFail() {
   } catch(e) {}
 }
 
-function playRestBeep() {
-  if (!APP.soundEnabled) return;
-  playBeep(440, 0.07);
-}
-
 function speakVoice(text) {
   if (!APP.soundEnabled) return;
   if (!window.speechSynthesis) return;
@@ -5164,6 +5181,7 @@ function showColorsScreen(roundNum) {
       stopColorsCycle();
       clearInterval(APP.round.timerInterval);
       releaseWakeLock();
+      window.IMPACT_SESSION_ACTIVE = false;
       APP.sessionActive = false;
       deactivateAccelerometer();
       hideGlobalXPOverlay();

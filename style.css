@@ -54,7 +54,7 @@ html, body {
 .screen {
   position: fixed;
   inset: 0;
-  background: var(--bg);
+  background: transparent;
   overflow-y: auto;
   overflow-x: hidden;
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -493,10 +493,10 @@ button:active {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: rgba(13,13,13,0.75);
+  background: rgba(0,0,0,0.6);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,211,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 12px;
   padding: 14px 16px;
 }
@@ -698,6 +698,24 @@ button:active {
 #screen-config {
   --mode-color: var(--yellow);
   --mode-bg:    #1A1500;
+  background: transparent;
+}
+
+/* Background image layer — sits above particles (z-index 0), below content */
+#screen-config::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image: var(--config-overlay), var(--config-bg-image);
+  background-size: cover;
+  background-position: center;
+  pointer-events: none;
+}
+
+#screen-config .screen-inner {
+  position: relative;
+  z-index: 2;
 }
 
 /* Title */
@@ -2892,6 +2910,36 @@ canvas {
   gap: 10px;
 }
 
+/* ── FIX TEMPORAL: recalibrar / cerrar sesión accesibles desde el home ── */
+.home-quick-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.home-quick-btn {
+  flex: 1;
+  background: transparent;
+  border-radius: 12px;
+  padding: 12px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-quick-recalib {
+  border: 1px solid #FFD300;
+  color: #FFD300;
+}
+
+.home-quick-logout {
+  border: 1px solid #FF4444;
+  color: #FF4444;
+}
+
 .hmc {
   position: relative;
   width: 100%;
@@ -4048,6 +4096,7 @@ canvas {
   z-index: 0;
   width: 100%;
   height: 100%;
+  opacity: 0.4;
 }
 
 /* ═══════════════════════════════════
@@ -4062,12 +4111,13 @@ canvas {
   top: calc(100% + 6px);
   right: 0;
   background: #111111;
-  border: 1.5px solid #FFD300;
+  border: 1px solid #FFD300;
   border-radius: 12px;
   min-width: 200px;
-  z-index: 9000;
+  z-index: 99999;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  padding: 8px;
 }
 .settings-dropdown.hidden { display: none; }
 
@@ -4849,11 +4899,7 @@ canvas {
    PARTE 2 — VISUAL & GAMIFICATION
 ════════════════════════════════════ */
 
-/* Item 1 — Particles on ALL screens */
-.bg-particles-global {
-  z-index: 2 !important;
-  opacity: 0.15;
-}
+/* Item 1 — Particles on ALL screens (see base rule above: fixed, z-index 0, opacity 0.4) */
 
 /* Item 2 — Hit rings expanding from circle */
 .hit-ring {

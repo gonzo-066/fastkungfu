@@ -29,7 +29,10 @@
       "Bash(mkdir -p /tmp/shot)",
       "Bash('/c/Program Files/Google/Chrome/Application/chrome.exe' --headless=new --disable-gpu --no-sandbox --hide-scrollbars --window-size=420,900 --virtual-time-budget=4000 --screenshot=/tmp/shot/home.png http://localhost:8791/index.html)",
       "Bash(npm init *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(npx --yes playwright --version)",
+      "Bash(npx playwright *)",
+      "Bash(pkill -f \"http.server 8843\")"
     ]
   }
 }
