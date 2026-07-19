@@ -236,28 +236,6 @@ button:active {
   flex-shrink: 0;
 }
 
-.btn-fallback {
-  width: 100%;
-  max-width: 320px;
-  padding: 20px;
-  font-size: 1.5rem;
-  background: var(--bg3);
-  color: var(--text);
-  border: 2px solid var(--border);
-  border-radius: 20px;
-  margin-top: 12px;
-  transition: all 0.1s;
-  text-transform: none;
-  letter-spacing: 0;
-}
-
-.btn-fallback:active {
-  background: var(--bg4);
-  border-color: var(--yellow);
-  transform: scale(0.95);
-  box-shadow: 0 0 24px rgba(255, 224, 0, 0.35);
-}
-
 /* ═══════════════════════════════════
    TOPBAR
 ════════════════════════════════════ */
@@ -978,6 +956,36 @@ canvas {
 }
 
 /* ═══════════════════════════════════
+   PANTALLA: PENALIZACIÓN POR ABANDONO
+════════════════════════════════════ */
+#screen-abandon-penalty {
+  background: #1A0000;
+}
+
+.abandon-penalty-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #FF1A1A;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+  text-shadow: 0 0 20px rgba(255,26,26,0.5);
+}
+
+.abandon-penalty-xp {
+  font-size: clamp(3rem, 18vw, 5rem);
+  font-weight: 900;
+  color: #FF1A1A;
+  letter-spacing: -2px;
+  animation: abandonXpBlink 0.5s ease-in-out infinite;
+}
+
+@keyframes abandonXpBlink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.25; }
+}
+
+/* ═══════════════════════════════════
    COMBO SCREEN BASE
 ════════════════════════════════════ */
 #screen-combo {
@@ -1089,14 +1097,6 @@ canvas {
   letter-spacing: 0.5px;
   margin-top: 20px;
   text-align: center;
-}
-
-/* Always visible at the bottom of every combo panel */
-.btn-fallback-combo {
-  position: relative;
-  z-index: 1;
-  margin-top: auto;
-  flex-shrink: 0;
 }
 
 /* ═══════════════════════════════════
@@ -2276,19 +2276,6 @@ canvas {
   text-shadow: 0 2px 24px rgba(0,0,0,0.25);
   z-index: 2;
   max-width: 90vw;
-}
-
-.btn-fallback-colors {
-  position: absolute;
-  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 30;
-  width: calc(100% - 32px);
-  max-width: 320px;
-  background: rgba(0,0,0,0.5);
-  border-color: rgba(255,255,255,0.2);
-  backdrop-filter: blur(8px);
 }
 
 /* ═══════════════════════════════════
@@ -4790,12 +4777,6 @@ canvas {
 .state-wait .rsc-circle-xp,
 .state-hit  .rsc-circle-xp,
 .state-miss .rsc-circle-xp { display: none; }
-
-/* Fallback button */
-#screen-reaction .btn-fallback {
-  margin-top: 10px;
-  flex-shrink: 0;
-}
 
 /* ── FOOTER ── */
 .rsc-footer {

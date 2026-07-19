@@ -604,8 +604,6 @@
       </div>
       <div class="gam-xp-bar-progress" id="gam-xp-bar-progress">0 / 500 XP</div>
     </div>
-
-    <button class="btn-fallback" id="btn-fallback-punch" data-i18n="fallback_punch">👊 GOLPEAR</button>
   </div>
 
   <!-- GAMIFICATION: Milestone overlay (no bloquea interacción) -->
@@ -684,7 +682,6 @@
           <div class="rsc-circle-xp" id="reaction-circle-xp"></div>
         </div>
       </div>
-      <button class="btn-fallback" id="btn-fallback-reaction" data-i18n="fallback_punch">👊 GOLPEAR</button>
     </div>
 
   </div>
@@ -736,7 +733,6 @@
       <div class="combo-max-time" id="wait-max-time">2.0s MÁXIMO</div>
       <div class="combo-wait-footer" id="wait-countdown-text">Siguiente señal en breve...</div>
     </div>
-    <button class="btn-fallback btn-fallback-combo" id="btn-fallback-wait">👊 GOLPEAR</button>
   </div>
 
   <!-- PANEL 2: SEÑAL HIT -->
@@ -746,7 +742,6 @@
     <div class="signal-hit-text">HIT</div>
     <div class="signal-counter" id="signal-counter">0/3</div>
     <div class="signal-sub">¡Empieza ahora!</div>
-    <button class="btn-fallback btn-fallback-combo" id="btn-fallback-signal">👊 GOLPEAR</button>
   </div>
 
   <!-- PANEL 3: COMBO ACTIVO -->
@@ -771,7 +766,6 @@
         <div class="combo-metric-value" id="active-speed">—</div>
       </div>
     </div>
-    <button class="btn-fallback btn-fallback-combo" id="btn-fallback-active">👊 GOLPEAR</button>
   </div>
 
   <!-- PANEL 4: RESULTADO COMBO -->
@@ -806,6 +800,16 @@
     <div class="rest-next" id="rest-next">Próximo: Round 2</div>
     <div class="rest-stats" id="rest-stats"></div>
     <button class="btn-secondary" id="btn-skip-rest" data-i18n="skip_rest">SALTAR DESCANSO</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PANTALLA: PENALIZACIÓN POR ABANDONO
+════════════════════════════════════ -->
+<div id="screen-abandon-penalty" class="screen hidden">
+  <div class="screen-inner center-content">
+    <div class="abandon-penalty-title" data-i18n="abandon_penalty_title">⚠️ SESIÓN ABANDONADA</div>
+    <div class="abandon-penalty-xp">-500 XP</div>
   </div>
 </div>
 
@@ -1055,9 +1059,6 @@
   <div class="colors-stage" id="colors-stage">
     <div class="colors-center-text" id="colors-center-text"></div>
   </div>
-
-  <!-- Botón fallback (sobre el stage) -->
-  <button class="btn-fallback btn-fallback-colors" id="btn-fallback-colors">👊 GOLPEAR</button>
 
 </div>
 

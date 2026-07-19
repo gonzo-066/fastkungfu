@@ -6,6 +6,12 @@
 // ═══════════════════════════════════════════════════
 window.IMPACT_SESSION_ACTIVE = false;
 
+// ID único de la "sesión de sonido/timers" en curso. Se regenera en cada
+// stopEverything(), así cualquier setTimeout/setInterval/RAF creado por un
+// modo anterior se auto-cancela al ejecutarse aunque no haya sido barrido
+// del array de tracking (defensa extra, no sustituye la limpieza normal).
+window.IMPACT_SESSION_ID = Date.now();
+
 // ═══════════════════════════════════════════════════
 // TRACKING GLOBAL DE TIMERS Y ANIMACIONES
 // Todo setTimeout/setInterval/requestAnimationFrame propio
@@ -19,19 +25,31 @@ window.IMPACT_TIMERS = [];
 window.IMPACT_RAFS   = [];
 
 function trackedTimeout(fn, delay, ...args) {
-  const id = window.setTimeout(fn, delay, ...args);
+  const mySessionId = window.IMPACT_SESSION_ID;
+  const id = window.setTimeout((...cbArgs) => {
+    if (window.IMPACT_SESSION_ID !== mySessionId) return;
+    fn(...cbArgs);
+  }, delay, ...args);
   window.IMPACT_TIMERS.push(id);
   return id;
 }
 
 function trackedInterval(fn, delay, ...args) {
-  const id = window.setInterval(fn, delay, ...args);
+  const mySessionId = window.IMPACT_SESSION_ID;
+  const id = window.setInterval((...cbArgs) => {
+    if (window.IMPACT_SESSION_ID !== mySessionId) return;
+    fn(...cbArgs);
+  }, delay, ...args);
   window.IMPACT_TIMERS.push(id);
   return id;
 }
 
 function trackedRAF(callback) {
-  const id = window.requestAnimationFrame(callback);
+  const mySessionId = window.IMPACT_SESSION_ID;
+  const id = window.requestAnimationFrame((ts) => {
+    if (window.IMPACT_SESSION_ID !== mySessionId) return;
+    callback(ts);
+  });
   window.IMPACT_RAFS.push(id);
   return id;
 }
@@ -40,6 +58,10 @@ function trackedRAF(callback) {
 // LIMPIEZA TOTAL — abandonar sesión / STOP / volver al home
 // ═══════════════════════════════════════════════════
 function stopEverything() {
+  // 0. Invalida cualquier timer/sonido/RAF de la sesión anterior que
+  //    estuviera "en vuelo" en el instante exacto de la limpieza
+  window.IMPACT_SESSION_ID = Date.now();
+
   // 1. Sonidos: suspender el AudioContext compartido
   if (APP.audioCtx && APP.audioCtx.state === 'running') {
     try { APP.audioCtx.suspend(); } catch (e) {}
@@ -126,9 +148,8 @@ const TRANSLATIONS = {
     ios_permission_text:  'iOS requiere permiso para el acelerómetro',
     ios_permission_btn:   '🎯 Activar sensor de movimiento',
     ios_granted:          '✓ Sensor activado',
-    ios_denied:           '✗ Permiso denegado — se usará botón manual',
+    ios_denied:           '✗ Permiso denegado — no se podrán detectar golpes',
     round_indicator:      'ROUND {n}/{total}',
-    fallback_punch:       '👊 GOLPEAR',
     punches:              'Golpes',
     speed_label:          'Velocidad m/s',
     power_label:          'Potencia',
@@ -188,6 +209,7 @@ const TRANSLATIONS = {
     alert_weight_s:       'Peso inválido',
     alert_age_s:          'Edad inválida',
     confirm_stop:         '¿Abandonar la sesión?',
+    abandon_penalty_title: '⚠️ SESIÓN ABANDONADA',
     rank_master:          '⚫ Maestro',
     rank_fast:            '🟤 Rápido',
     rank_good:            '🟡 Bueno',
@@ -302,9 +324,8 @@ const TRANSLATIONS = {
     ios_permission_text:  'iOS requires permission for the accelerometer',
     ios_permission_btn:   '🎯 Activate motion sensor',
     ios_granted:          '✓ Sensor activated',
-    ios_denied:           '✗ Permission denied — manual button will be used',
+    ios_denied:           '✗ Permission denied — punches cannot be detected',
     round_indicator:      'ROUND {n}/{total}',
-    fallback_punch:       '👊 PUNCH',
     punches:              'Punches',
     speed_label:          'Speed m/s',
     power_label:          'Power',
@@ -364,6 +385,7 @@ const TRANSLATIONS = {
     alert_weight_s:       'Invalid weight',
     alert_age_s:          'Invalid age',
     confirm_stop:         'Abandon the session?',
+    abandon_penalty_title: '⚠️ SESSION ABANDONED',
     rank_master:          '⚫ Master',
     rank_fast:            '🟤 Fast',
     rank_good:            '🟡 Good',
@@ -478,9 +500,8 @@ const TRANSLATIONS = {
     ios_permission_text:  'iOS requer permissão para o acelerômetro',
     ios_permission_btn:   '🎯 Ativar sensor de movimento',
     ios_granted:          '✓ Sensor ativado',
-    ios_denied:           '✗ Permissão negada — botão manual será usado',
+    ios_denied:           '✗ Permissão negada — não será possível detectar socos',
     round_indicator:      'ROUND {n}/{total}',
-    fallback_punch:       '👊 SOCAR',
     punches:              'Golpes',
     speed_label:          'Velocidade m/s',
     power_label:          'Potência',
@@ -540,6 +561,7 @@ const TRANSLATIONS = {
     alert_weight_s:       'Peso inválido',
     alert_age_s:          'Idade inválida',
     confirm_stop:         'Abandonar a sessão?',
+    abandon_penalty_title: '⚠️ SESSÃO ABANDONADA',
     rank_master:          '⚫ Mestre',
     rank_fast:            '🟤 Rápido',
     rank_good:            '🟡 Bom',
@@ -654,9 +676,8 @@ const TRANSLATIONS = {
     ios_permission_text:  'iOS benötigt Erlaubnis für den Beschleunigungssensor',
     ios_permission_btn:   '🎯 Bewegungssensor aktivieren',
     ios_granted:          '✓ Sensor aktiviert',
-    ios_denied:           '✗ Berechtigung verweigert — manueller Button wird verwendet',
+    ios_denied:           '✗ Berechtigung verweigert — Schläge können nicht erkannt werden',
     round_indicator:      'RUNDE {n}/{total}',
-    fallback_punch:       '👊 SCHLAGEN',
     punches:              'Schläge',
     speed_label:          'Geschwindigkeit m/s',
     power_label:          'Kraft',
@@ -716,6 +737,7 @@ const TRANSLATIONS = {
     alert_weight_s:       'Ungültiges Gewicht',
     alert_age_s:          'Ungültiges Alter',
     confirm_stop:         'Session abbrechen?',
+    abandon_penalty_title: '⚠️ SITZUNG ABGEBROCHEN',
     rank_master:          '⚫ Meister',
     rank_fast:            '🟤 Schnell',
     rank_good:            '🟡 Gut',
@@ -2355,6 +2377,18 @@ function playPenaltySound() {
   } catch (e) {}
 }
 
+// Abandonar la sesión con el round en curso (no en descanso): -500 XP y
+// pantalla de penalización 2s antes de volver al home.
+function showAbandonPenaltyScreen() {
+  applyXPPenalty(500);
+  showScreen('screen-abandon-penalty');
+  playPenaltySound();
+  trackedTimeout(() => {
+    showScreen('screen-menu');
+    initMenuScreen();
+  }, 2000);
+}
+
 function showPenaltyPopup(message, color, xpText) {
   const container = document.getElementById('hit-popup-container');
   if (!container) return;
@@ -3190,6 +3224,10 @@ function updateConfigSummary() {
 // SESIÓN
 // ═══════════════════════════════════════════════════
 function startSession() {
+  // Limpieza total antes de arrancar: ningún sonido/timer/animación de un
+  // modo anterior debe seguir vivo cuando empieza uno nuevo.
+  stopEverything();
+
   APP.session = {
     startTime: Date.now(),
     currentRound: 0,
@@ -3304,19 +3342,20 @@ function showTrainingScreen(roundNum) {
 
   document.getElementById('btn-mute-training').onclick = toggleSound;
   updateMuteButtons();
-  document.getElementById('btn-fallback-punch').onclick = () => {
-    const g = 2.0 + Math.random() * 3;
-    registerPunch(g, g * 9.81);
-  };
   document.getElementById('btn-training-stop').onclick = () => {
     if (confirm(t('confirm_stop'))) {
+      const wasRoundActive = window.IMPACT_SESSION_ACTIVE;
       APP.sessionActive = false;
       stopEverything();
       releaseWakeLock();
       hideGlobalXPOverlay();
       resetStreakCounter();
-      showScreen('screen-menu');
-      startHomeParticles();
+      if (wasRoundActive) {
+        showAbandonPenaltyScreen();
+      } else {
+        showScreen('screen-menu');
+        startHomeParticles();
+      }
     }
   };
 
@@ -3423,26 +3462,22 @@ function showComboScreen(roundNum) {
     t('round_indicator', { n: roundNum, total: APP.config.rounds });
   updateComboTimer();
 
-  // Fallback buttons
-  const fallbackHandler = () => {
-    const g = 2.0 + Math.random() * 3;
-    registerPunch(g, g * 9.81);
-  };
-  document.getElementById('btn-fallback-wait').onclick   = fallbackHandler;
-  document.getElementById('btn-fallback-signal').onclick = fallbackHandler;
-  document.getElementById('btn-fallback-active').onclick = fallbackHandler;
-
   document.getElementById('btn-mute-combo').onclick = toggleSound;
   updateMuteButtons();
   document.getElementById('btn-combo-stop').onclick = () => {
     if (confirm(t('confirm_stop'))) {
+      const wasRoundActive = window.IMPACT_SESSION_ACTIVE;
       stopComboCycle();
       APP.sessionActive = false;
       stopEverything();
       releaseWakeLock();
       hideGlobalXPOverlay();
-      showScreen('screen-menu');
-      startHomeParticles();
+      if (wasRoundActive) {
+        showAbandonPenaltyScreen();
+      } else {
+        showScreen('screen-menu');
+        startHomeParticles();
+      }
     }
   };
 }
@@ -3698,19 +3733,20 @@ function showReactionScreen(roundNum) {
 
   document.getElementById('btn-mute-reaction').onclick = toggleSound;
   updateMuteButtons();
-  document.getElementById('btn-fallback-reaction').onclick = () => {
-    const g = 2.0 + Math.random() * 3;
-    registerPunch(g, g * 9.81);
-  };
   document.getElementById('btn-reaction-stop').onclick = () => {
     if (confirm(t('confirm_stop'))) {
+      const wasRoundActive = window.IMPACT_SESSION_ACTIVE;
       stopReactionCycle();
       APP.sessionActive = false;
       stopEverything();
       releaseWakeLock();
       hideGlobalXPOverlay();
-      showScreen('screen-menu');
-      startHomeParticles();
+      if (wasRoundActive) {
+        showAbandonPenaltyScreen();
+      } else {
+        showScreen('screen-menu');
+        startHomeParticles();
+      }
     }
   };
 }
@@ -5463,19 +5499,20 @@ function showColorsScreen(roundNum) {
   document.getElementById('btn-mute-colors').onclick = toggleSound;
   updateMuteButtons();
 
-  document.getElementById('btn-fallback-colors').onclick = () => {
-    const g = 2.0 + Math.random() * 3;
-    registerPunch(g, g * 9.81);
-  };
   document.getElementById('btn-colors-stop').onclick = () => {
     if (confirm(t('confirm_stop'))) {
+      const wasRoundActive = window.IMPACT_SESSION_ACTIVE;
       stopColorsCycle();
       APP.sessionActive = false;
       stopEverything();
       releaseWakeLock();
       hideGlobalXPOverlay();
-      showScreen('screen-menu');
-      startHomeParticles();
+      if (wasRoundActive) {
+        showAbandonPenaltyScreen();
+      } else {
+        showScreen('screen-menu');
+        startHomeParticles();
+      }
     }
   };
   setColorsStage(null);
