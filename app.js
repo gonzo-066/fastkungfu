@@ -200,6 +200,8 @@ const TRANSLATIONS = {
     reaction_chart_title: 'Tiempo de Reacción (últimas 10)',
     calories_chart_title: 'Calorías por sesión (últimas 10)',
     no_sessions:          'Sin sesiones aún 🥊',
+    hist_empty_title:     'Aún no tienes sesiones. ¡Empieza a entrenar!',
+    rank_empty_title:     'Completa sesiones para aparecer en el ranking',
     settings_title:       'Ajustes',
     language_label:       'Idioma',
     save_settings:        'GUARDAR',
@@ -376,6 +378,8 @@ const TRANSLATIONS = {
     reaction_chart_title: 'Reaction Time (last 10)',
     calories_chart_title: 'Calories per session (last 10)',
     no_sessions:          'No sessions yet 🥊',
+    hist_empty_title:     'You don\'t have any sessions yet. Start training!',
+    rank_empty_title:     'Complete sessions to appear in the ranking',
     settings_title:       'Settings',
     language_label:       'Language',
     save_settings:        'SAVE',
@@ -552,6 +556,8 @@ const TRANSLATIONS = {
     reaction_chart_title: 'Tempo de Reação (últimas 10)',
     calories_chart_title: 'Calorias por sessão (últimas 10)',
     no_sessions:          'Sem sessões ainda 🥊',
+    hist_empty_title:     'Você ainda não tem sessões. Comece a treinar!',
+    rank_empty_title:     'Complete sessões para aparecer no ranking',
     settings_title:       'Configurações',
     language_label:       'Idioma',
     save_settings:        'SALVAR',
@@ -728,6 +734,8 @@ const TRANSLATIONS = {
     reaction_chart_title: 'Reaktionszeit (letzte 10)',
     calories_chart_title: 'Kalorien pro Session (letzte 10)',
     no_sessions:          'Noch keine Sessions 🥊',
+    hist_empty_title:     'Du hast noch keine Sessions. Fang jetzt an zu trainieren!',
+    rank_empty_title:     'Schließe Sessions ab, um im Ranking zu erscheinen',
     settings_title:       'Einstellungen',
     language_label:       'Sprache',
     save_settings:        'SPEICHERN',
@@ -4113,20 +4121,19 @@ function showSummaryScreen() {
     bestComboDuration: bestDurSave === Infinity ? null : bestDurSave,
   };
 
+  // Guardar de inmediato — no depender de que el usuario pulse un botón antes
+  // de cerrar/abandonar la pantalla (si no, la sesión se perdía en silencio
+  // y el historial/ranking quedaban vacíos).
+  if (!APP.sessionSaved) {
+    saveSession(sessionData);
+    APP.sessionSaved = true;
+  }
+
   const saveBtn = document.getElementById('btn-save-session');
-  saveBtn.textContent = t('save_session');
-  saveBtn.disabled = false;
-  saveBtn.onclick = () => {
-    if (!APP.sessionSaved) {
-      saveSession(sessionData);
-      APP.sessionSaved = true;
-      saveBtn.textContent = t('session_saved_txt');
-      saveBtn.disabled = true;
-    }
-  };
+  saveBtn.textContent = t('session_saved_txt');
+  saveBtn.disabled = true;
 
   document.getElementById('btn-summary-menu').onclick = () => {
-    if (!APP.sessionSaved) { saveSession(sessionData); APP.sessionSaved = true; }
     showScreen('screen-menu');
     startHomeParticles();
   };
@@ -4170,6 +4177,9 @@ function buildComparison(totalPunches, avgPower, bestReaction) {
 // HISTORIAL
 // ═══════════════════════════════════════════════════
 function initHistoryScreen(tab) {
+  console.log('Sesiones guardadas:', localStorage.getItem('fkf_sessions'));
+  console.log('Records:', 'XP total =', localStorage.getItem('fkf_gam_xp'), '| Mejor racha =', localStorage.getItem('fkf_best_streak'));
+
   document.getElementById('btn-history-back').onclick = () => { startBgParticles(); showScreen('screen-menu'); };
 
   const tabH = document.getElementById('tab-historial');
@@ -4193,17 +4203,16 @@ function initHistoryScreen(tab) {
 
 function renderHistorialContent() {
   const sessions = getSessions();
+  const emptyEl  = document.getElementById('hist-empty-state');
+  const sections = document.querySelectorAll('#hist-body-historial .hist-section');
 
   if (!sessions.length) {
-    ['hist-best-reaction', 'hist-best-power', 'hist-most-punches'].forEach(id => {
-      document.getElementById(id).textContent = '—';
-    });
-    document.getElementById('hist-total-sessions').textContent = '0';
-    document.getElementById('hist-total-punches').textContent  = '0';
-    document.getElementById('hist-total-calories').textContent = '0';
-    document.getElementById('hist-streak').textContent = t('no_sessions');
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    sections.forEach(s => s.classList.add('hidden'));
     return;
   }
+  if (emptyEl) emptyEl.classList.add('hidden');
+  sections.forEach(s => s.classList.remove('hidden'));
 
   const reactions  = sessions.filter(s => s.bestReaction).map(s => s.bestReaction);
   const bestReact  = reactions.length ? Math.min(...reactions) : null;
@@ -4260,16 +4269,19 @@ function renderRankingContent() {
       b.classList.toggle('rank-subtab-active', b.dataset.sub === sub));
     const listEl = bodyR.querySelector('.rank-list');
     if (!listEl) return;
+    const emptyHtml = `<p class="rank-empty">${t('rank_empty_title')}</p>`;
     if (sub === 'potencia') {
       listEl.innerHTML = bestPower > 0
         ? rankRow(1, name, bestPower.toFixed(1), 'G', '#FFD300')
-        : '<p class="rank-empty">Sin sesiones aún</p>';
+        : emptyHtml;
     } else if (sub === 'velocidad') {
       listEl.innerHTML = bestSpeed > 0
         ? rankRow(1, name, bestSpeed.toFixed(1), 'm/s', '#00D4FF')
-        : '<p class="rank-empty">Sin sesiones aún</p>';
+        : emptyHtml;
     } else {
-      listEl.innerHTML = rankRow(1, name, xp, ' XP', '#9B59B6');
+      listEl.innerHTML = xp > 0
+        ? rankRow(1, name, xp, ' XP', '#9B59B6')
+        : emptyHtml;
     }
   };
 
