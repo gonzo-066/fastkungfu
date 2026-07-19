@@ -7,6 +7,62 @@
 window.IMPACT_SESSION_ACTIVE = false;
 
 // ═══════════════════════════════════════════════════
+// TRACKING GLOBAL DE TIMERS Y ANIMACIONES
+// Todo setTimeout/setInterval/requestAnimationFrame propio
+// de la app pasa por aquí para poder cancelarlo en bloque
+// desde stopEverything() (abandonar sesión / volver al home).
+// No se toca window.setTimeout/setInterval directamente para
+// no interferir con temporizadores internos de librerías de
+// terceros (p.ej. el auto-refresh de sesión de Supabase).
+// ═══════════════════════════════════════════════════
+window.IMPACT_TIMERS = [];
+window.IMPACT_RAFS   = [];
+
+function trackedTimeout(fn, delay, ...args) {
+  const id = window.setTimeout(fn, delay, ...args);
+  window.IMPACT_TIMERS.push(id);
+  return id;
+}
+
+function trackedInterval(fn, delay, ...args) {
+  const id = window.setInterval(fn, delay, ...args);
+  window.IMPACT_TIMERS.push(id);
+  return id;
+}
+
+function trackedRAF(callback) {
+  const id = window.requestAnimationFrame(callback);
+  window.IMPACT_RAFS.push(id);
+  return id;
+}
+
+// ═══════════════════════════════════════════════════
+// LIMPIEZA TOTAL — abandonar sesión / STOP / volver al home
+// ═══════════════════════════════════════════════════
+function stopEverything() {
+  // 1. Sonidos: suspender el AudioContext compartido
+  if (APP.audioCtx && APP.audioCtx.state === 'running') {
+    try { APP.audioCtx.suspend(); } catch (e) {}
+  }
+
+  // 2. Timers: cancelar todo lo pendiente (sonidos, cuentas atrás, mensajes...)
+  window.IMPACT_TIMERS.forEach(id => { clearTimeout(id); clearInterval(id); });
+  window.IMPACT_TIMERS = [];
+
+  // 3. Acelerómetro
+  window.IMPACT_SESSION_ACTIVE = false;
+  window.removeEventListener('devicemotion', onDeviceMotion);
+  deactivateAccelerometer();
+
+  // 4. Partículas y animaciones — cancelar RAFs trackeados y resetear
+  //    los flags internos de cada sistema para que puedan reiniciarse después
+  window.IMPACT_RAFS.forEach(id => cancelAnimationFrame(id));
+  window.IMPACT_RAFS = [];
+  stopBgParticles();
+  stopReactionBgParticles();
+}
+
+// ═══════════════════════════════════════════════════
 // SERVICE WORKER
 // ═══════════════════════════════════════════════════
 if ('serviceWorker' in navigator) {
@@ -193,10 +249,6 @@ const TRANSLATIONS = {
     color_yellow_ph:      'Ej: Piernas',
     color_red_ph:         'Ej: Torso',
     color_blue_ph:        'Ej: Cara',
-    voice_ok:             '¡Bien!',
-    voice_master:         '¡Maestro!',
-    voice_fail:           '¡Sigue intentando!',
-    voice_session_done:   '¡Sesión completada!',
     mode_colors:          '🎨 Modo Colores',
     color_stats_title:    'Estadísticas por color',
     help_title:           'AYUDA',
@@ -373,10 +425,6 @@ const TRANSLATIONS = {
     color_yellow_ph:      'e.g. Legs',
     color_red_ph:         'e.g. Torso',
     color_blue_ph:        'e.g. Head',
-    voice_ok:             'Good!',
-    voice_master:         'Master!',
-    voice_fail:           'Keep trying!',
-    voice_session_done:   'Session complete!',
     mode_colors:          '🎨 Color Mode',
     color_stats_title:    'Stats by color',
     help_title:           'HELP',
@@ -553,10 +601,6 @@ const TRANSLATIONS = {
     color_yellow_ph:      'Ex: Pernas',
     color_red_ph:         'Ex: Tronco',
     color_blue_ph:        'Ex: Cabeça',
-    voice_ok:             'Muito bem!',
-    voice_master:         'Mestre!',
-    voice_fail:           'Continue tentando!',
-    voice_session_done:   'Sessão completa!',
     mode_colors:          '🎨 Modo Cores',
     color_stats_title:    'Estatísticas por cor',
     help_title:           'AJUDA',
@@ -733,10 +777,6 @@ const TRANSLATIONS = {
     color_yellow_ph:      'z.B. Beine',
     color_red_ph:         'z.B. Rumpf',
     color_blue_ph:        'z.B. Kopf',
-    voice_ok:             'Gut!',
-    voice_master:         'Meister!',
-    voice_fail:           'Weiter üben!',
-    voice_session_done:   'Training abgeschlossen!',
     mode_colors:          '🎨 Farbmodus',
     color_stats_title:    'Statistik nach Farbe',
     help_title:           'HILFE',
@@ -1020,7 +1060,7 @@ function handleGamificationPunch(punch, tier) {
   clearTimeout(gam.streakTimer);
   gam.currentStreak++;
   if (gam.currentStreak > gam.bestStreak) gam.bestStreak = gam.currentStreak;
-  gam.streakTimer = setTimeout(() => {
+  gam.streakTimer = trackedTimeout(() => {
     gam.currentStreak = 0;
     updateStreakUI();
   }, 3000);
@@ -1102,6 +1142,7 @@ function resetStreakCounter() {
 }
 
 function checkStreakMilestone(streak) {
+  if (streak === 5)  { playComboStreakSound(5); }
   if (streak === 10) { playComboStreakSound(10); showMilestone(pickEpicMsg('streak10')); }
   if (streak === 20) { playComboStreakSound(20); showMilestone(pickEpicMsg('streak20')); flashScreen(); }
   if (streak === 25) { showMilestone(pickEpicMsg('streak25')); }
@@ -1143,11 +1184,11 @@ function showLevelUp(levelName) {
   ov.className = 'level-up-overlay';
   ov.innerHTML = `<div class="lu-tag">LEVEL UP</div><div class="lu-name">${levelName.toUpperCase()}</div>`;
   document.body.appendChild(ov);
-  setTimeout(() => ov.remove(), 2600);
+  trackedTimeout(() => ov.remove(), 2600);
   const fill = document.getElementById('gam-xp-bar-fill');
   if (fill) {
     fill.classList.add('gam-xp-flash');
-    setTimeout(() => fill.classList.remove('gam-xp-flash'), 1000);
+    trackedTimeout(() => fill.classList.remove('gam-xp-flash'), 1000);
   }
 }
 
@@ -1167,10 +1208,10 @@ function drainMilestoneQueue() {
   el.classList.remove('hidden', 'gam-milestone-show');
   void el.offsetWidth;
   el.classList.add('gam-milestone-show');
-  setTimeout(() => {
+  trackedTimeout(() => {
     el.classList.remove('gam-milestone-show');
     el.classList.add('hidden');
-    setTimeout(drainMilestoneQueue, 120);
+    trackedTimeout(drainMilestoneQueue, 120);
   }, 1500);
 }
 
@@ -1180,7 +1221,7 @@ function flashScreen() {
   sc.classList.remove('gam-screen-flash');
   void sc.offsetWidth;
   sc.classList.add('gam-screen-flash');
-  setTimeout(() => sc.classList.remove('gam-screen-flash'), 400);
+  trackedTimeout(() => sc.classList.remove('gam-screen-flash'), 400);
 }
 
 function renderGamificationSummary() {
@@ -1247,72 +1288,91 @@ function playHitRatingSound(rating) {
       g.gain.setValueAtTime(0.28, t0);
       g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.18);
       o.start(t0); o.stop(t0 + 0.22);
-    } else if (rating === 'GOOD') {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.type = 'sine'; o.frequency.value = 1800;
-      g.gain.setValueAtTime(0.12, t0);
-      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.07);
-      o.start(t0); o.stop(t0 + 0.08);
 
-    } else if (rating === 'GREAT') {
+    } else if (rating === 'GOOD') {
+      // "thud" suave: sine 200Hz→80Hz en 80ms + ruido blanco 40ms
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.connect(g); g.connect(ctx.destination);
       o.type = 'sine';
-      o.frequency.setValueAtTime(400, t0);
-      o.frequency.exponentialRampToValueAtTime(900, t0 + 0.15);
-      g.gain.setValueAtTime(0.18, t0);
-      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.18);
-      o.start(t0); o.stop(t0 + 0.2);
+      o.frequency.setValueAtTime(200, t0);
+      o.frequency.exponentialRampToValueAtTime(80, t0 + 0.08);
+      g.gain.setValueAtTime(SFX_MAX_GAIN, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.08);
+      o.start(t0); o.stop(t0 + 0.1);
+      playNoiseBurst(ctx, t0, 0.04, 0.15);
+
+    } else if (rating === 'GREAT') {
+      // "crack" medio: sawtooth 300Hz→100Hz en 120ms + ruido 60ms
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(300, t0);
+      o.frequency.exponentialRampToValueAtTime(100, t0 + 0.12);
+      g.gain.setValueAtTime(SFX_MAX_GAIN, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.12);
+      o.start(t0); o.stop(t0 + 0.14);
+      playNoiseBurst(ctx, t0, 0.06, 0.2);
 
     } else if (rating === 'EXCELLENT') {
-      [220, 330, 440].forEach((f, i) => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.connect(g); g.connect(ctx.destination);
-        o.type = 'triangle'; o.frequency.value = f;
-        const ti = t0 + i * 0.04;
-        g.gain.setValueAtTime(0.2, ti);
-        g.gain.exponentialRampToValueAtTime(0.001, ti + 0.28);
-        o.start(ti); o.stop(ti + 0.32);
-      });
+      // "POW" arcade: square 400Hz→150Hz en 150ms + tono ascendente 500Hz→800Hz en 80ms
+      const o1 = ctx.createOscillator(), g1 = ctx.createGain();
+      o1.connect(g1); g1.connect(ctx.destination);
+      o1.type = 'square';
+      o1.frequency.setValueAtTime(400, t0);
+      o1.frequency.exponentialRampToValueAtTime(150, t0 + 0.15);
+      g1.gain.setValueAtTime(SFX_MAX_GAIN, t0);
+      g1.gain.exponentialRampToValueAtTime(0.001, t0 + 0.15);
+      o1.start(t0); o1.stop(t0 + 0.17);
+
+      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+      o2.connect(g2); g2.connect(ctx.destination);
+      o2.type = 'sine';
+      o2.frequency.setValueAtTime(500, t0);
+      o2.frequency.linearRampToValueAtTime(800, t0 + 0.08);
+      g2.gain.setValueAtTime(0.25, t0);
+      g2.gain.exponentialRampToValueAtTime(0.001, t0 + 0.08);
+      o2.start(t0); o2.stop(t0 + 0.1);
 
     } else if (rating === 'MASTER') {
+      // "BOOM" pesado: capa1 sawtooth 500Hz→100Hz/200ms con distorsión suave
+      // + capa2 tono 800Hz→1200Hz/100ms con delay de 50ms
+      const shaper = ctx.createWaveShaper();
+      shaper.curve = makeDistortionCurve(18);
+      shaper.oversample = '2x';
       const o1 = ctx.createOscillator(), g1 = ctx.createGain();
-      o1.connect(g1); g1.connect(ctx.destination);
+      o1.connect(shaper); shaper.connect(g1); g1.connect(ctx.destination);
       o1.type = 'sawtooth';
-      o1.frequency.setValueAtTime(150, t0);
-      o1.frequency.exponentialRampToValueAtTime(70, t0 + 0.18);
-      g1.gain.setValueAtTime(0.28, t0);
-      g1.gain.exponentialRampToValueAtTime(0.001, t0 + 0.22);
-      o1.start(t0); o1.stop(t0 + 0.25);
-      [440, 660, 880].forEach((f, i) => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.connect(g); g.connect(ctx.destination);
-        const ti = t0 + 0.08 + i * 0.07;
-        o.frequency.value = f;
-        g.gain.setValueAtTime(0.18, ti);
-        g.gain.exponentialRampToValueAtTime(0.001, ti + 0.18);
-        o.start(ti); o.stop(ti + 0.22);
-      });
+      o1.frequency.setValueAtTime(500, t0);
+      o1.frequency.exponentialRampToValueAtTime(100, t0 + 0.2);
+      g1.gain.setValueAtTime(SFX_MAX_GAIN, t0);
+      g1.gain.exponentialRampToValueAtTime(0.001, t0 + 0.2);
+      o1.start(t0); o1.stop(t0 + 0.22);
+
+      const t1 = t0 + 0.05;
+      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+      o2.connect(g2); g2.connect(ctx.destination);
+      o2.type = 'sine';
+      o2.frequency.setValueAtTime(800, t1);
+      o2.frequency.linearRampToValueAtTime(1200, t1 + 0.1);
+      g2.gain.setValueAtTime(0.3, t1);
+      g2.gain.exponentialRampToValueAtTime(0.001, t1 + 0.1);
+      o2.start(t1); o2.stop(t1 + 0.12);
 
     } else if (rating === 'SIFU LEVEL') {
-      const o1 = ctx.createOscillator(), g1 = ctx.createGain();
-      o1.connect(g1); g1.connect(ctx.destination);
-      o1.type = 'sawtooth';
-      o1.frequency.setValueAtTime(200, t0);
-      o1.frequency.exponentialRampToValueAtTime(50, t0 + 0.3);
-      g1.gain.setValueAtTime(0.38, t0);
-      g1.gain.exponentialRampToValueAtTime(0.001, t0 + 0.42);
-      o1.start(t0); o1.stop(t0 + 0.46);
-      [261, 329, 392, 523, 659].forEach((f, i) => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.connect(g); g.connect(ctx.destination);
-        const ti = t0 + 0.05 + i * 0.06;
-        o.frequency.value = f;
-        g.gain.setValueAtTime(0.16, ti);
-        g.gain.exponentialRampToValueAtTime(0.001, ti + 0.42);
-        o.start(ti); o.stop(ti + 0.48);
-      });
+      // Explosión sónica: ruido 200ms + tono épico 200→600→200Hz/300ms, ambos con reverb sintético
+      const reverb = createSyntheticReverb(ctx, 0.08, 0.3);
+
+      playNoiseBurst(ctx, t0, 0.2, SFX_MAX_GAIN, reverb);
+
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination); g.connect(reverb);
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(200, t0);
+      o.frequency.linearRampToValueAtTime(600, t0 + 0.15);
+      o.frequency.linearRampToValueAtTime(200, t0 + 0.3);
+      g.gain.setValueAtTime(SFX_MAX_GAIN, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.3);
+      o.start(t0); o.stop(t0 + 0.32);
     }
   } catch(e) {}
 }
@@ -1323,18 +1383,54 @@ function playComboStreakSound(milestone) {
     const ctx = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
     const t0 = ctx.currentTime;
-    const freqs = milestone === 10
-      ? [880, 1100, 1320]
-      : [330, 440, 550, 660, 880];
-    freqs.forEach((f, i) => {
+
+    const ding = (t, fFrom, fTo, dur) => {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.connect(g); g.connect(ctx.destination);
-      const ti = t0 + i * (milestone === 10 ? 0.1 : 0.06);
-      o.frequency.value = f;
-      g.gain.setValueAtTime(0.2 + i * 0.02, ti);
-      g.gain.exponentialRampToValueAtTime(0.001, ti + 0.28);
-      o.start(ti); o.stop(ti + 0.32);
-    });
+      o.type = 'sine';
+      o.frequency.setValueAtTime(fFrom, t);
+      o.frequency.linearRampToValueAtTime(fTo, t + dur);
+      g.gain.setValueAtTime(SFX_MAX_GAIN, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.start(t); o.stop(t + dur + 0.02);
+    };
+
+    if (milestone === 5) {
+      // "ding" metálico ascendente, como moneda de videojuego
+      ding(t0, 1000, 1500, 0.15);
+
+    } else if (milestone === 10) {
+      // doble "ding-ding", frecuencia más alta
+      ding(t0, 1200, 1800, 0.15);
+      ding(t0 + 0.1, 1200, 1800, 0.15);
+
+    } else if (milestone === 20) {
+      // triple impacto épico en cascada
+      [800, 1000, 1200].forEach((f, i) => {
+        const ti = t0 + i * 0.08;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'square';
+        o.frequency.value = f;
+        g.gain.setValueAtTime(SFX_MAX_GAIN, ti);
+        g.gain.exponentialRampToValueAtTime(0.001, ti + 0.12);
+        o.start(ti); o.stop(ti + 0.14);
+      });
+
+    } else if (milestone === 50) {
+      // fanfarria de 4 notas (Do Mi Sol Do agudo) con reverb
+      const reverb = createSyntheticReverb(ctx, 0.09, 0.25);
+      [523, 659, 784, 1047].forEach((f, i) => {
+        const ti = t0 + i * 0.06;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination); g.connect(reverb);
+        o.type = 'sine';
+        o.frequency.value = f;
+        g.gain.setValueAtTime(SFX_MAX_GAIN, ti);
+        g.gain.exponentialRampToValueAtTime(0.001, ti + 0.08);
+        o.start(ti); o.stop(ti + 0.1);
+      });
+    }
   } catch(e) {}
 }
 
@@ -1344,14 +1440,16 @@ function playLevelUpSound() {
     const ctx = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
     const t0 = ctx.currentTime;
-    [523, 659, 784].forEach((f, i) => {
+    // Sol Si Re Sol — ascendentes con overlap suave (sensación de logro claro)
+    [392, 494, 587, 784].forEach((f, i) => {
+      const ti = t0 + i * 0.1;
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.connect(g); g.connect(ctx.destination);
-      const ti = t0 + i * 0.14;
+      o.type = 'sine';
       o.frequency.value = f;
-      g.gain.setValueAtTime(0.26, ti);
-      g.gain.exponentialRampToValueAtTime(0.001, ti + 0.24);
-      o.start(ti); o.stop(ti + 0.28);
+      g.gain.setValueAtTime(SFX_MAX_GAIN, ti);
+      g.gain.exponentialRampToValueAtTime(0.001, ti + 0.15);
+      o.start(ti); o.stop(ti + 0.17);
     });
   } catch(e) {}
 }
@@ -1362,14 +1460,20 @@ function playRecordSound() {
     const ctx = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
     const t0 = ctx.currentTime;
-    [392, 523, 659, 784, 1047].forEach((f, i) => {
+    // Do Mi Sol Do(alto) Mi(alto) — volumen crescendo, última nota con sustain largo
+    const notes = [523, 659, 784, 1047, 1319];
+    notes.forEach((f, i) => {
+      const ti     = t0 + i * 0.11;
+      const isLast = i === notes.length - 1;
+      const dur    = isLast ? 0.4 : 0.1;
+      const peak   = Math.min(SFX_MAX_GAIN, 0.2 + i * 0.04);
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.connect(g); g.connect(ctx.destination);
-      const ti = t0 + i * 0.11;
+      o.type = 'sine';
       o.frequency.value = f;
-      g.gain.setValueAtTime(0.24, ti);
-      g.gain.exponentialRampToValueAtTime(0.001, ti + 0.28);
-      o.start(ti); o.stop(ti + 0.32);
+      g.gain.setValueAtTime(peak, ti);
+      g.gain.exponentialRampToValueAtTime(0.001, ti + dur);
+      o.start(ti); o.stop(ti + dur + 0.02);
     });
   } catch(e) {}
 }
@@ -1454,9 +1558,9 @@ function showGlobalHitPopup(label, xp, color) {
   container.appendChild(card);
 
   // Animate out at 1.0s, remove at 1.25s
-  card._removeTimer = setTimeout(() => {
+  card._removeTimer = trackedTimeout(() => {
     card.classList.add('hit-popup-out');
-    setTimeout(() => card.remove(), 250);
+    trackedTimeout(() => card.remove(), 250);
   }, 1000);
 }
 
@@ -1504,7 +1608,7 @@ function spawnHitParticles(color, originX, originY) {
   let frame = 0;
   const MAX = 28;
   const tick = () => {
-    if (_fxPaused) { requestAnimationFrame(tick); return; }
+    if (_fxPaused) { trackedRAF(tick); return; }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     particles.forEach(p => {
       p.x     += p.vx;
@@ -1518,10 +1622,10 @@ function spawnHitParticles(color, originX, originY) {
       ctx.fill();
     });
     ctx.globalAlpha = 1;
-    if (++frame < MAX) requestAnimationFrame(tick);
+    if (++frame < MAX) trackedRAF(tick);
     else ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
-  requestAnimationFrame(tick);
+  trackedRAF(tick);
 }
 
 function triggerBodyFlash(type) {
@@ -1529,14 +1633,14 @@ function triggerBodyFlash(type) {
   document.body.classList.remove(cls);
   void document.body.offsetWidth;
   document.body.classList.add(cls);
-  setTimeout(() => document.body.classList.remove(cls), 400);
+  trackedTimeout(() => document.body.classList.remove(cls), 400);
 }
 
 function triggerBodyShake() {
   document.body.classList.remove('screen-shake-body');
   void document.body.offsetWidth;
   document.body.classList.add('screen-shake-body');
-  setTimeout(() => document.body.classList.remove('screen-shake-body'), 350);
+  trackedTimeout(() => document.body.classList.remove('screen-shake-body'), 350);
 }
 
 // ═══════════════════════════════════════════════════
@@ -1633,7 +1737,7 @@ function startBgParticles() {
 
   let lightning = null; // { x1,y1,x2,y2, life }
   const scheduleLightning = () => {
-    _homeLightningTimer = setTimeout(() => {
+    _homeLightningTimer = trackedTimeout(() => {
       lightning = { x1: Math.random() * W, y1: 0, x2: Math.random() * W, y2: H, life: 6 };
       scheduleLightning();
     }, 4000 + Math.random() * 2000);
@@ -1642,7 +1746,7 @@ function startBgParticles() {
 
   let frame = 0;
   const tick = () => {
-    if (_fxPaused) { _homeParticleRAF = requestAnimationFrame(tick); return; }
+    if (_fxPaused) { _homeParticleRAF = trackedRAF(tick); return; }
     frame++;
     ctx.clearRect(0, 0, W, H);
 
@@ -1691,7 +1795,7 @@ function startBgParticles() {
       _drawFxShape(ctx, p.shape, p.x, p.y, p.r, p.color, p.alpha);
     });
     ctx.globalAlpha = 1;
-    _homeParticleRAF = requestAnimationFrame(tick);
+    _homeParticleRAF = trackedRAF(tick);
   };
   tick();
 }
@@ -1730,7 +1834,7 @@ function startReactionBgParticles() {
     color: '#FFD300',
   }));
   const tick = () => {
-    if (_fxPaused) { _reactionBgRAF = requestAnimationFrame(tick); return; }
+    if (_fxPaused) { _reactionBgRAF = trackedRAF(tick); return; }
     ctx.clearRect(0, 0, W, H);
     particles.forEach(p => {
       p.x += p.vx * _bgSpeedBoost; p.y += p.vy * _bgSpeedBoost;
@@ -1741,7 +1845,7 @@ function startReactionBgParticles() {
       ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
     });
     ctx.globalAlpha = 1;
-    _reactionBgRAF = requestAnimationFrame(tick);
+    _reactionBgRAF = trackedRAF(tick);
   };
   tick();
 }
@@ -1805,7 +1909,7 @@ function showResultSplash(punches, sessionXP, onDone) {
   if (targetXP > 0) {
     let cur = 0;
     const step = Math.max(1, Math.round(targetXP / 30));
-    const iv = setInterval(() => {
+    const iv = trackedInterval(() => {
       cur = Math.min(cur + step, targetXP);
       xpEl.textContent = '+' + cur + ' XP';
       if (cur >= targetXP) clearInterval(iv);
@@ -1818,7 +1922,7 @@ function showResultSplash(punches, sessionXP, onDone) {
   // Confetti for S and A
   if (grade === 'S' || grade === 'A') spawnSplashConfetti();
 
-  setTimeout(() => {
+  trackedTimeout(() => {
     onDone && onDone();
   }, 2200);
 }
@@ -1879,10 +1983,10 @@ function spawnSplashConfetti() {
       ctx.restore();
     });
     ctx.globalAlpha = 1;
-    if (++frame < 120) requestAnimationFrame(tick);
+    if (++frame < 120) trackedRAF(tick);
     else ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
-  requestAnimationFrame(tick);
+  trackedRAF(tick);
 }
 
 // ═══════════════════════════════════════════════════
@@ -1904,7 +2008,7 @@ function showScreen(id, instant) {
   const next = document.getElementById(id);
   if (next) next.style.zIndex = '2';
   doSwitch();
-  setTimeout(() => { if (next) next.style.zIndex = ''; }, 320);
+  trackedTimeout(() => { if (next) next.style.zIndex = ''; }, 320);
 }
 
 function setNavActive(id) {
@@ -1923,6 +2027,53 @@ function getAudioCtx() {
   return APP.audioCtx;
 }
 
+const SFX_MAX_GAIN = 0.4;
+
+// ─── Helpers compartidos por los sonidos arcade ───────
+function createNoiseBuffer(ctx, durationSec) {
+  const size   = Math.max(1, Math.floor(ctx.sampleRate * durationSec));
+  const buffer = ctx.createBuffer(1, size, ctx.sampleRate);
+  const data   = buffer.getChannelData(0);
+  for (let i = 0; i < size; i++) data[i] = Math.random() * 2 - 1;
+  return buffer;
+}
+
+function playNoiseBurst(ctx, t0, durationSec, peakGain, extraOutput) {
+  const src  = ctx.createBufferSource();
+  src.buffer = createNoiseBuffer(ctx, durationSec);
+  const gain = ctx.createGain();
+  src.connect(gain);
+  gain.connect(ctx.destination);
+  if (extraOutput) gain.connect(extraOutput);
+  gain.gain.setValueAtTime(Math.min(peakGain, SFX_MAX_GAIN), t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + durationSec);
+  src.start(t0);
+  src.stop(t0 + durationSec + 0.02);
+  return gain;
+}
+
+function makeDistortionCurve(amount) {
+  const n = 44100;
+  const curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2) / n - 1;
+    curve[i] = ((3 + amount) * x * (20 * Math.PI / 180)) / (Math.PI + amount * Math.abs(x));
+  }
+  return curve;
+}
+
+// DelayNode + feedback como reverb sintético simple, compartible por varios osciladores
+function createSyntheticReverb(ctx, delayTimeSec, feedbackAmount) {
+  const delay = ctx.createDelay();
+  delay.delayTime.value = delayTimeSec;
+  const feedback = ctx.createGain();
+  feedback.gain.value = feedbackAmount;
+  delay.connect(feedback);
+  feedback.connect(delay);
+  delay.connect(ctx.destination);
+  return delay;
+}
+
 function boxingBellStrike(ctx, t0, decay) {
   const osc  = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -1930,7 +2081,7 @@ function boxingBellStrike(ctx, t0, decay) {
   gain.connect(ctx.destination);
   osc.type = 'sine';
   osc.frequency.setValueAtTime(800, t0);
-  gain.gain.setValueAtTime(0.6, t0);
+  gain.gain.setValueAtTime(SFX_MAX_GAIN, t0);
   gain.gain.exponentialRampToValueAtTime(0.001, t0 + decay);
   osc.start(t0);
   osc.stop(t0 + decay + 0.05);
@@ -1942,12 +2093,12 @@ function playBell(type = 'round') {
     const ctx = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
     if (type === 'round') {
-      boxingBellStrike(ctx, ctx.currentTime, 0.8);
+      boxingBellStrike(ctx, ctx.currentTime, 1.2);
     } else {
       const t0 = ctx.currentTime;
-      boxingBellStrike(ctx, t0, 0.4);
-      boxingBellStrike(ctx, t0 + 0.2, 0.4);
-      boxingBellStrike(ctx, t0 + 0.4, 0.4);
+      boxingBellStrike(ctx, t0, 0.6);
+      boxingBellStrike(ctx, t0 + 0.25, 0.6);
+      boxingBellStrike(ctx, t0 + 0.5, 0.6);
     }
   } catch (e) {}
 }
@@ -1962,10 +2113,30 @@ function playBeep(freq = 1200, dur = 0.08) {
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.setValueAtTime(SFX_MAX_GAIN, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
     osc.start();
     osc.stop(ctx.currentTime + dur + 0.01);
+  } catch (e) {}
+}
+
+// HIT — señal de reacción/combo: alerta eléctrica, inmediata e inconfundible
+function playHitAlertSound() {
+  if (!APP.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const t0 = ctx.currentTime;
+    for (let i = 0; i < 3; i++) {
+      const ti = t0 + i * 0.05;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'square';
+      o.frequency.value = 600;
+      g.gain.setValueAtTime(SFX_MAX_GAIN, ti);
+      g.gain.exponentialRampToValueAtTime(0.001, ti + 0.04);
+      o.start(ti); o.stop(ti + 0.045);
+    }
   } catch (e) {}
 }
 
@@ -2176,11 +2347,11 @@ function playPenaltySound() {
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.connect(g); g.connect(ctx.destination);
     o.type = 'sawtooth';
-    o.frequency.setValueAtTime(280, t0);
-    o.frequency.exponentialRampToValueAtTime(90, t0 + 0.2);
-    g.gain.setValueAtTime(0.22, t0);
-    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.24);
-    o.start(t0); o.stop(t0 + 0.26);
+    o.frequency.setValueAtTime(400, t0);
+    o.frequency.exponentialRampToValueAtTime(100, t0 + 0.2);
+    g.gain.setValueAtTime(0.3, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.2);
+    o.start(t0); o.stop(t0 + 0.22);
   } catch (e) {}
 }
 
@@ -2211,9 +2382,9 @@ function showPenaltyPopup(message, color, xpText) {
   }
 
   container.appendChild(card);
-  card._removeTimer = setTimeout(() => {
+  card._removeTimer = trackedTimeout(() => {
     card.classList.add('hit-popup-out');
-    setTimeout(() => card.remove(), 250);
+    trackedTimeout(() => card.remove(), 250);
   }, 1000);
 }
 
@@ -2373,7 +2544,7 @@ function flashEl(el) {
   el.classList.remove('flash');
   void el.offsetWidth;
   el.classList.add('flash');
-  setTimeout(() => el.classList.remove('flash'), 280);
+  trackedTimeout(() => el.classList.remove('flash'), 280);
 }
 
 // ═══════════════════════════════════════════════════
@@ -2700,10 +2871,9 @@ function updateHomeHeader() {
 // PANTALLA: MENÚ
 // ═══════════════════════════════════════════════════
 function initMenuScreen() {
-  // Al volver al home, el acelerómetro nunca debe seguir escuchando
-  window.IMPACT_SESSION_ACTIVE = false;
-  window.removeEventListener('devicemotion', onDeviceMotion);
-  deactivateAccelerometer();
+  // Al volver al home: sonidos, timers, acelerómetro y animaciones de la
+  // sesión anterior (si la había) quedan completamente detenidos primero.
+  stopEverything();
 
   startHomeParticles();
 
@@ -2741,7 +2911,7 @@ function initMenuScreen() {
 
       navigator.vibrate && navigator.vibrate(30);
       card.classList.add('tapped');
-      setTimeout(() => card.classList.remove('tapped'), 200);
+      trackedTimeout(() => card.classList.remove('tapped'), 200);
 
       const touch = e.touches && e.touches[0];
       const r = card.getBoundingClientRect();
@@ -2757,10 +2927,6 @@ function initMenuScreen() {
   // Calibration hint link (Bug 2)
   const calibHint = document.getElementById('home-calib-hint');
   if (calibHint) calibHint.onclick = () => { stopHomeParticles(); showCalibrationScreen('screen-menu'); };
-
-  // FIX TEMPORAL: recalibrar / cerrar sesión accesibles mientras se arregla el menú ⚙️
-  document.getElementById('btn-home-recalibrate').onclick = () => { stopHomeParticles(); showCalibrationScreen('screen-menu'); };
-  document.getElementById('btn-home-logout').onclick = () => supabaseSignOut();
 
   document.getElementById('btn-settings').onclick = toggleSettingsDropdown;
   document.getElementById('btn-header-avatar').onclick = () => {
@@ -3081,7 +3247,7 @@ function startRound(roundNum) {
 }
 
 function startRoundTimer(onEnd) {
-  APP.round.timerInterval = setInterval(() => {
+  APP.round.timerInterval = trackedInterval(() => {
     APP.round.secondsLeft--;
     if (APP.mode === 'training')                     updateTrainingTimer();
     else if (APP.comboConfig.submode === 'simple')   updateReactionTimer();
@@ -3144,12 +3310,9 @@ function showTrainingScreen(roundNum) {
   };
   document.getElementById('btn-training-stop').onclick = () => {
     if (confirm(t('confirm_stop'))) {
-      if (APP.gamification && APP.gamification.streakTimer) clearTimeout(APP.gamification.streakTimer);
-      clearInterval(APP.round.timerInterval);
-      releaseWakeLock();
-      window.IMPACT_SESSION_ACTIVE = false;
       APP.sessionActive = false;
-      deactivateAccelerometer();
+      stopEverything();
+      releaseWakeLock();
       hideGlobalXPOverlay();
       resetStreakCounter();
       showScreen('screen-menu');
@@ -3274,11 +3437,9 @@ function showComboScreen(roundNum) {
   document.getElementById('btn-combo-stop').onclick = () => {
     if (confirm(t('confirm_stop'))) {
       stopComboCycle();
-      clearInterval(APP.round.timerInterval);
-      releaseWakeLock();
-      window.IMPACT_SESSION_ACTIVE = false;
       APP.sessionActive = false;
-      deactivateAccelerometer();
+      stopEverything();
+      releaseWakeLock();
       hideGlobalXPOverlay();
       showScreen('screen-menu');
       startHomeParticles();
@@ -3325,7 +3486,7 @@ function startComboWait() {
   let remaining = APP.comboConfig.pauseBetween;
 
   clearInterval(APP.combo.waitTickInterval);
-  APP.combo.waitTickInterval = setInterval(() => {
+  APP.combo.waitTickInterval = trackedInterval(() => {
     remaining -= 0.1;
     document.getElementById('wait-countdown-text').textContent =
       'Siguiente señal en ' + Math.max(0, remaining).toFixed(1) + 's';
@@ -3335,7 +3496,7 @@ function startComboWait() {
   document.getElementById('wait-countdown-text').textContent =
     'Siguiente señal en ' + remaining.toFixed(1) + 's';
 
-  APP.combo.waitTimeout = setTimeout(() => {
+  APP.combo.waitTimeout = trackedTimeout(() => {
     clearInterval(APP.combo.waitTickInterval);
     if (APP.round.secondsLeft > 0) showComboSignal();
   }, pauseMs);
@@ -3352,10 +3513,10 @@ function showComboSignal() {
     '0/' + APP.combo.targetHits;
   showComboPanel('signal');
   vibrate([30]);
-  playBeep(880, 0.12);
+  playHitAlertSound();
 
   // If no first hit within 3s → fail (no reaction)
-  APP.combo.signalTimeout = setTimeout(() => {
+  APP.combo.signalTimeout = trackedTimeout(() => {
     if (APP.combo.state === 'signal') {
       endCombo(false, true); // failed, no hits
     }
@@ -3415,7 +3576,7 @@ function startComboTimer() {
   const timeEl = document.getElementById('active-time-remaining');
 
   clearInterval(APP.combo.tickInterval);
-  APP.combo.tickInterval = setInterval(() => {
+  APP.combo.tickInterval = trackedInterval(() => {
     if (APP.combo.state !== 'active') { clearInterval(APP.combo.tickInterval); return; }
     const elapsed   = Date.now() - APP.combo.activeAt;
     const remaining = Math.max(0, maxMs - elapsed);
@@ -3427,7 +3588,7 @@ function startComboTimer() {
     }
   }, 50);
 
-  APP.combo.expireTimeout = setTimeout(() => {
+  APP.combo.expireTimeout = trackedTimeout(() => {
     if (APP.combo.state === 'active') endCombo(false, false);
   }, maxMs + 50);
 }
@@ -3472,11 +3633,9 @@ function endCombo(ok, noHits) {
   if (ok) {
     vibrate([20, 30, 20]);
     playComboOk();
-    speakVoice(t('voice_ok'));
   } else {
     vibrate([50, 30, 50]);
     playComboFail();
-    speakVoice(t('voice_fail'));
   }
 
   if (APP.round.secondsLeft > 0) {
@@ -3489,7 +3648,7 @@ function endCombo(ok, noHits) {
     const startAt = Date.now();
 
     clearInterval(APP.combo.progressInterval);
-    APP.combo.progressInterval = setInterval(() => {
+    APP.combo.progressInterval = trackedInterval(() => {
       const elapsed = Date.now() - startAt;
       progressEl.style.width = Math.min(100, (elapsed / pauseMs) * 100) + '%';
       if (elapsed >= pauseMs) {
@@ -3546,12 +3705,9 @@ function showReactionScreen(roundNum) {
   document.getElementById('btn-reaction-stop').onclick = () => {
     if (confirm(t('confirm_stop'))) {
       stopReactionCycle();
-      clearInterval(APP.round.timerInterval);
-      releaseWakeLock();
-      window.IMPACT_SESSION_ACTIVE = false;
       APP.sessionActive = false;
-      deactivateAccelerometer();
-      stopReactionBgParticles();
+      stopEverything();
+      releaseWakeLock();
       hideGlobalXPOverlay();
       showScreen('screen-menu');
       startHomeParticles();
@@ -3626,14 +3782,14 @@ function startReactionWait() {
   setReactionStimulus('state-wait', '', 'PREPÁRATE', '', '', '');
   const delay = 1000 + Math.random() * 2000;
   if (delay > 500) {
-    setTimeout(() => {
+    trackedTimeout(() => {
       if (APP.reaction.state === 'wait') {
         const c = getReactionCircleCenter();
         spawnConvergeParticles(c.x, c.y, 480);
       }
     }, delay - 500);
   }
-  APP.reaction.waitTimeout = setTimeout(() => {
+  APP.reaction.waitTimeout = trackedTimeout(() => {
     if (APP.round.secondsLeft > 0) showReactionStimulus();
   }, delay);
 }
@@ -3643,15 +3799,15 @@ function showReactionStimulus() {
   APP.hitWindowActive     = true;
   APP.reaction.stimulusAt = Date.now();
   triggerBodyFlash('white');
-  setTimeout(() => {
+  trackedTimeout(() => {
     setReactionStimulus('state-hit', '⚡', 'HIT', '', '', '');
     const c = getReactionCircleCenter();
     spawnHitParticles('#FF1A1A', c.x, c.y);
     showHitRays();
   }, 60);
   vibrate([50, 30, 50]);
-  playBeep(880, 0.18);
-  APP.reaction.missTimeout = setTimeout(() => {
+  playHitAlertSound();
+  APP.reaction.missTimeout = trackedTimeout(() => {
     if (APP.reaction.state === 'hit') missReaction();
   }, 1000);
 }
@@ -3663,10 +3819,10 @@ function missReaction() {
   APP.round.misses++;
   setReactionStimulus('state-miss', '✗', 'FALLO', '', '', '');
   vibrate([80]);
-  speakVoice(t('voice_fail'));
+  playPenaltySound();
   updateReactionMetricsUI();
   if (APP.round.secondsLeft > 0) {
-    setTimeout(() => startReactionWait(), 1500);
+    trackedTimeout(() => startReactionWait(), 1500);
   }
 }
 
@@ -3692,12 +3848,10 @@ function handleReactionPunch(punch) {
   showReactionHitOverlay(reactionMs);
   showHitRings();
   vibrate([30, 20, 50, 20, 30]);
-  if (reactionMs < 200) speakVoice(t('voice_master'));
-  else speakVoice(t('voice_ok'));
   updateReactionMetricsUI();
   updateReactionFooterXP();
   if (APP.round.secondsLeft > 0) {
-    setTimeout(() => startReactionWait(), 1500);
+    trackedTimeout(() => startReactionWait(), 1500);
   }
 }
 
@@ -3710,7 +3864,7 @@ function showReactionHitOverlay(reactionMs) {
   overlay.querySelector('.rho-time').textContent = reactionMs + 'ms';
   overlay.className = 'reaction-hit-overlay rho-show' + (isPerf ? ' rho-perfect' : '');
   if (isPerf) triggerBodyFlash('white');
-  setTimeout(() => { overlay.classList.remove('rho-show'); }, 2000);
+  trackedTimeout(() => { overlay.classList.remove('rho-show'); }, 2000);
 }
 
 function updateReactionMetricsUI() {
@@ -3748,13 +3902,13 @@ function showRestScreen(doneRound, nextRound) {
   };
 
   document.getElementById('btn-skip-rest').onclick = startNext;
-  APP.rest.interval = setInterval(() => {
+  APP.rest.interval = trackedInterval(() => {
     seconds--;
     const el = document.getElementById('rest-countdown');
     el.textContent = seconds;
     el.classList.toggle('ending', seconds <= 10);
-    if (seconds > 0 && seconds <= 10) { vibrate([50]); playBeep(1000, 0.1); }
-    if (seconds <= 0) { playBeep(1200, 0.5); startNext(); }
+    if (seconds > 0 && seconds <= 10) { vibrate([50]); playBeep(1000, 0.08); }
+    if (seconds <= 0) { playBeep(1200, 0.4); startNext(); }
   }, 1000);
 }
 
@@ -3846,7 +4000,6 @@ function showSummaryScreen() {
   document.getElementById('sum-duration').textContent  = fmtTime(durSec);
   document.getElementById('sum-calories').textContent  = calories + ' kcal';
   document.getElementById('summary-message').textContent = getCalorieMessage(calories);
-  speakVoice(t('voice_session_done'));
 
   const comboRows = ['sum-reaction-row', 'sum-best-reaction-row', 'sum-hits-row', 'sum-misses-row'];
   comboRows.forEach(id => {
@@ -4191,7 +4344,7 @@ function toggleSettingsDropdown() {
       document.removeEventListener('click', closeOutside, true);
     }
   };
-  setTimeout(() => document.addEventListener('click', closeOutside, true), 50);
+  trackedTimeout(() => document.addEventListener('click', closeOutside, true), 50);
 }
 
 // ═══════════════════════════════════════════════════
@@ -4274,7 +4427,7 @@ function spawnDomParticles(x, y, color, count) {
     el.className = 'dom-particle';
     el.style.cssText = `left:${x}px;top:${y}px;background:${color};--dx:${dx}px;--dy:${dy}px`;
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 500);
+    trackedTimeout(() => el.remove(), 500);
   }
 }
 
@@ -4287,7 +4440,7 @@ function addRipple(e, btn) {
   el.className = 'btn-ripple-el';
   el.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
   btn.appendChild(el);
-  setTimeout(() => el.remove(), 600);
+  trackedTimeout(() => el.remove(), 600);
 }
 
 function initAvatarSystem() {
@@ -4339,7 +4492,7 @@ function init() {
     APP.accel.permitted = true;
   }
 
-  setTimeout(() => startBgParticles(), 100);
+  trackedTimeout(() => startBgParticles(), 100);
 }
 
 // ═══════════════════════════════════════════════════
@@ -4917,20 +5070,6 @@ function playComboFail() {
   } catch(e) {}
 }
 
-function speakVoice(text) {
-  if (!APP.soundEnabled) return;
-  if (!window.speechSynthesis) return;
-  try {
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang   = { es: 'es-ES', en: 'en-GB', pt: 'pt-BR', de: 'de-DE' }[APP.lang] || 'es-ES';
-    utter.pitch  = 0.9;
-    utter.rate   = 0.95;
-    utter.volume = 0.9;
-    window.speechSynthesis.speak(utter);
-  } catch(e) {}
-}
-
 // ═══════════════════════════════════════════════════
 // CALIBRACIÓN DE DISPOSITIVO
 // ═══════════════════════════════════════════════════
@@ -5054,7 +5193,7 @@ function activateCalibListening(stepNum) {
   stopCalibListener();
 
   clearInterval(APP.calib.graphInterval);
-  APP.calib.graphInterval = setInterval(drawCalibGraph, 50);
+  APP.calib.graphInterval = trackedInterval(drawCalibGraph, 50);
 
   const TRIG_G = 1.6;
   const RING_G = 1.2;
@@ -5082,7 +5221,7 @@ function activateCalibListening(stepNum) {
 
   window.addEventListener('devicemotion', APP.calib.listener, { passive: true });
 
-  APP.calib.captureTimer = setTimeout(() => {
+  APP.calib.captureTimer = trackedTimeout(() => {
     if (APP.calib.state === 'listening') finishCalibStep(stepNum);
   }, 12000);
 }
@@ -5331,11 +5470,9 @@ function showColorsScreen(roundNum) {
   document.getElementById('btn-colors-stop').onclick = () => {
     if (confirm(t('confirm_stop'))) {
       stopColorsCycle();
-      clearInterval(APP.round.timerInterval);
-      releaseWakeLock();
-      window.IMPACT_SESSION_ACTIVE = false;
       APP.sessionActive = false;
-      deactivateAccelerometer();
+      stopEverything();
+      releaseWakeLock();
       hideGlobalXPOverlay();
       showScreen('screen-menu');
       startHomeParticles();
@@ -5371,7 +5508,7 @@ function startColorsWait() {
   APP.hitWindowActive = false;
   setColorsStage(null);
   const pauseMs = APP.comboConfig.pauseBetween * 1000;
-  APP.colorMode.waitTimeout = setTimeout(() => {
+  APP.colorMode.waitTimeout = trackedTimeout(() => {
     if (APP.round.secondsLeft > 0) showColorsStimulus();
   }, pauseMs);
 }
@@ -5397,7 +5534,7 @@ function showColorsStimulus() {
   playBeep(660, 0.06);
 
   const exposureMs = 1000 + Math.random() * 2000;
-  APP.colorMode.missTimeout = setTimeout(() => {
+  APP.colorMode.missTimeout = trackedTimeout(() => {
     if (APP.colorMode.state === 'active') missColors();
   }, exposureMs);
 }
@@ -5414,9 +5551,9 @@ function missColors() {
   if (textEl) { textEl.textContent = '✗'; textEl.style.color = '#FF5555'; }
 
   vibrate([80]);
-  speakVoice(t('voice_fail'));
+  playPenaltySound();
 
-  setTimeout(() => {
+  trackedTimeout(() => {
     if (APP.round.secondsLeft > 0) startColorsWait();
   }, 800);
 }
@@ -5438,10 +5575,8 @@ function handleColorsPunch(punch) {
   if (textEl) { textEl.textContent = reactionMs + 'ms'; textEl.style.color = def.text; }
 
   vibrate([20, 20, 20]);
-  if (reactionMs < 200) speakVoice(t('voice_master'));
-  else speakVoice(t('voice_ok'));
 
-  setTimeout(() => {
+  trackedTimeout(() => {
     if (APP.round.secondsLeft > 0) startColorsWait();
   }, 900);
 }
@@ -5479,7 +5614,7 @@ function spawnConvergeParticles(cx, cy, duration) {
   const totalFrames = Math.max(1, Math.round(duration / 16.67));
   let frame = 0;
   const tick = () => {
-    if (_fxPaused) { requestAnimationFrame(tick); return; }
+    if (_fxPaused) { trackedRAF(tick); return; }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const t = frame / totalFrames;
     particles.forEach(p => {
@@ -5492,7 +5627,7 @@ function spawnConvergeParticles(cx, cy, duration) {
     });
     ctx.globalAlpha = 1;
     frame++;
-    if (frame < totalFrames) requestAnimationFrame(tick);
+    if (frame < totalFrames) trackedRAF(tick);
     else ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
   tick();
@@ -5509,7 +5644,7 @@ function showHitRays() {
     ray.style.top  = y + 'px';
     ray.style.setProperty('--ray-rot', angle + 'deg');
     document.body.appendChild(ray);
-    setTimeout(() => ray.remove(), 400);
+    trackedTimeout(() => ray.remove(), 400);
   });
 }
 
@@ -5517,11 +5652,11 @@ function showHitRings() {
   const wrap = document.querySelector('.rsc-circle-wrap');
   if (!wrap) return;
   [0, 100, 200].forEach(delay => {
-    setTimeout(() => {
+    trackedTimeout(() => {
       const ring = document.createElement('div');
       ring.className = 'hit-ring';
       wrap.appendChild(ring);
-      setTimeout(() => ring.remove(), 700);
+      trackedTimeout(() => ring.remove(), 700);
     }, delay);
   });
 }
@@ -5538,7 +5673,7 @@ function showImpactText(color) {
   el.style.left = (12 + Math.random() * 60) + 'vw';
   el.style.setProperty('--rot', rot + 'deg');
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 500);
+  trackedTimeout(() => el.remove(), 500);
 }
 
 function applyTierScreenEffect(tier) {
@@ -5555,7 +5690,7 @@ function showEdgeWave() {
     const el = document.createElement('div');
     el.className = 'edge-wave edge-wave-' + side;
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 600);
+    trackedTimeout(() => el.remove(), 600);
   });
 }
 
@@ -5563,7 +5698,7 @@ function showBorderFlash(isMaster) {
   const el = document.createElement('div');
   el.className = 'border-flash-overlay' + (isMaster ? ' bf-master' : '');
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 600);
+  trackedTimeout(() => el.remove(), 600);
 }
 
 function showSifuCenterText() {
@@ -5571,5 +5706,5 @@ function showSifuCenterText() {
   el.className = 'sifu-center-text';
   el.textContent = '⚡ SIFU LEVEL ⚡';
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 1500);
+  trackedTimeout(() => el.remove(), 1500);
 }

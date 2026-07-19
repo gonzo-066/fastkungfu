@@ -32,7 +32,9 @@
       "Bash(npm install *)",
       "Bash(npx --yes playwright --version)",
       "Bash(npx playwright *)",
-      "Bash(pkill -f \"http.server 8843\")"
+      "Bash(pkill -f \"http.server 8843\")",
+      "Bash(cp app.js /tmp/app.js.bak)",
+      "Bash(sed -i -e 's/setTimeout\\(/trackedTimeout\\(/g' -e 's/setInterval\\(/trackedInterval\\(/g' -e 's/requestAnimationFrame\\(/trackedRAF\\(/g' app.js)"
     ]
   }
 }

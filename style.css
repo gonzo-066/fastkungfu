@@ -2928,36 +2928,6 @@ canvas {
   gap: 10px;
 }
 
-/* ── FIX TEMPORAL: recalibrar / cerrar sesión accesibles desde el home ── */
-.home-quick-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.home-quick-btn {
-  flex: 1;
-  background: transparent;
-  border-radius: 12px;
-  padding: 12px 10px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.home-quick-recalib {
-  border: 1px solid #FFD300;
-  color: #FFD300;
-}
-
-.home-quick-logout {
-  border: 1px solid #FF4444;
-  color: #FF4444;
-}
-
 .hmc {
   position: relative;
   width: 100%;
