@@ -2822,7 +2822,13 @@ function initConfigScreen() {
     training: './assets/card-potencia3.png',
     simple:   './assets/Card-reacci%C3%B3n3.png',
     combo:    './assets/card-combo4.png',
-    colors:   './assets/card-colores4.jpg',
+    colors:   './assets/card-colores5.jpg',
+  };
+  const modePositions = {
+    training: 'center',
+    simple:   'center',
+    combo:    'center',
+    colors:   'center right',
   };
   const modeOverlays = {
     training: 'linear-gradient(rgba(5,3,0,0.80), rgba(5,3,0,0.80))',
@@ -2851,6 +2857,7 @@ function initConfigScreen() {
   const modeKey = isTraining ? 'training' : isSimple ? 'simple' : isComboSubmode ? 'combo' : 'colors';
   screenEl.style.setProperty('--config-bg-image', `url('${modeCardImages[modeKey]}')`);
   screenEl.style.setProperty('--config-overlay',  modeOverlays[modeKey]);
+  screenEl.style.setProperty('--config-bg-position', modePositions[modeKey]);
   screenEl.style.setProperty('--mode-shadow',         modeShadows[modeKey]);
   screenEl.style.setProperty('--mode-summary-bg',     modeSummaryBgs[modeKey]);
   screenEl.style.setProperty('--mode-summary-border', modeSummaryBorders[modeKey]);

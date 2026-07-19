@@ -709,7 +709,7 @@ button:active {
   z-index: 1;
   background-image: var(--config-overlay), var(--config-bg-image);
   background-size: cover;
-  background-position: center;
+  background-position: var(--config-bg-position, center);
   pointer-events: none;
 }
 
@@ -3091,8 +3091,10 @@ canvas {
 }
 .hmc-img-colors {
   background-color: #050505;
-  background-image: url('assets/card-colores3.png') !important;
+  background-image: url('assets/card-colores5.jpg') !important;
   background-blend-mode: normal;
+  background-size: cover !important;
+  background-position: center right !important;
 }
 .hmc-img-power {
   background-color: #050505;
