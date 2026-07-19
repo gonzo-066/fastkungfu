@@ -878,6 +878,7 @@ const APP = {
   },
   sessionActive: false,
   hitWindowActive: false,
+  records: { bestPower: 0, bestSpeed: 0, bestReaction: Infinity },
   combo: {
     state: 'idle',       // 'idle'|'wait'|'signal'|'active'|'result'
     targetHits: 3,
@@ -1102,13 +1103,12 @@ function handleGamificationPunch(punch, tier) {
   const bIdx = RATING_ORDER.indexOf(gam.sessionBestRating);
   if (!gam.sessionBestRating || rIdx > bIdx) gam.sessionBestRating = tier.label;
 
-  // Records
+  // Records — la celebración (sonido + overlay dorado) ya la dispara
+  // checkPowerSpeedRecord() en registerPunch() para todos los modos
   let shownPersonal = false;
   if (punch.g > gam.historicBestG) {
     gam.historicBestG = punch.g;
     shownPersonal = true;
-    showMilestone(pickEpicMsg('record'));
-    playRecordSound();
   }
   if (!shownPersonal && punch.g > gam.sessionBestG && gam.sessionBestG > 0) {
     showMilestone(pickEpicMsg('best'));
@@ -1182,8 +1182,7 @@ function checkStreakMilestone(streak) {
     if (gam && streak > gam.historicBestStreak) {
       gam.historicBestStreak = streak;
       localStorage.setItem('fkf_best_streak', String(streak));
-      showMilestone(pickEpicMsg('record'));
-      playRecordSound();
+      celebrateRecord();
     } else {
       showMilestone(pickEpicMsg('streak50'));
     }
@@ -1320,36 +1319,24 @@ function playHitRatingSound(rating) {
       o.start(t0); o.stop(t0 + 0.22);
 
     } else if (rating === 'GOOD') {
-      // "thud" suave: sine 200Hz→80Hz en 80ms + ruido blanco 40ms
+      // Impacto seco + tono corto ascendente: sine 150Hz→400Hz/100ms + ruido 30ms
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.connect(g); g.connect(ctx.destination);
       o.type = 'sine';
-      o.frequency.setValueAtTime(200, t0);
-      o.frequency.exponentialRampToValueAtTime(80, t0 + 0.08);
+      o.frequency.setValueAtTime(150, t0);
+      o.frequency.exponentialRampToValueAtTime(400, t0 + 0.1);
       g.gain.setValueAtTime(SFX_MAX_GAIN, t0);
-      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.08);
-      o.start(t0); o.stop(t0 + 0.1);
-      playNoiseBurst(ctx, t0, 0.04, 0.15);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.1);
+      o.start(t0); o.stop(t0 + 0.12);
+      playNoiseBurst(ctx, t0, 0.03, 0.18);
 
     } else if (rating === 'GREAT') {
-      // "crack" medio: sawtooth 300Hz→100Hz en 120ms + ruido 60ms
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.type = 'sawtooth';
-      o.frequency.setValueAtTime(300, t0);
-      o.frequency.exponentialRampToValueAtTime(100, t0 + 0.12);
-      g.gain.setValueAtTime(SFX_MAX_GAIN, t0);
-      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.12);
-      o.start(t0); o.stop(t0 + 0.14);
-      playNoiseBurst(ctx, t0, 0.06, 0.2);
-
-    } else if (rating === 'EXCELLENT') {
-      // "POW" arcade: square 400Hz→150Hz en 150ms + tono ascendente 500Hz→800Hz en 80ms
+      // Impacto más gordo + destello tonal: sawtooth 200Hz→600Hz/150ms + sine 800Hz decay 80ms
       const o1 = ctx.createOscillator(), g1 = ctx.createGain();
       o1.connect(g1); g1.connect(ctx.destination);
-      o1.type = 'square';
-      o1.frequency.setValueAtTime(400, t0);
-      o1.frequency.exponentialRampToValueAtTime(150, t0 + 0.15);
+      o1.type = 'sawtooth';
+      o1.frequency.setValueAtTime(200, t0);
+      o1.frequency.exponentialRampToValueAtTime(600, t0 + 0.15);
       g1.gain.setValueAtTime(SFX_MAX_GAIN, t0);
       g1.gain.exponentialRampToValueAtTime(0.001, t0 + 0.15);
       o1.start(t0); o1.stop(t0 + 0.17);
@@ -1357,55 +1344,78 @@ function playHitRatingSound(rating) {
       const o2 = ctx.createOscillator(), g2 = ctx.createGain();
       o2.connect(g2); g2.connect(ctx.destination);
       o2.type = 'sine';
-      o2.frequency.setValueAtTime(500, t0);
-      o2.frequency.linearRampToValueAtTime(800, t0 + 0.08);
-      g2.gain.setValueAtTime(0.25, t0);
+      o2.frequency.value = 800;
+      g2.gain.setValueAtTime(0.28, t0);
       g2.gain.exponentialRampToValueAtTime(0.001, t0 + 0.08);
-      o2.start(t0); o2.stop(t0 + 0.1);
+      o2.start(t0); o2.stop(t0 + 0.09);
+
+    } else if (rating === 'EXCELLENT') {
+      // "CRACK" arcade: square 300Hz→800Hz/180ms + acorde doble sine 1000+1200Hz/100ms
+      const o1 = ctx.createOscillator(), g1 = ctx.createGain();
+      o1.connect(g1); g1.connect(ctx.destination);
+      o1.type = 'square';
+      o1.frequency.setValueAtTime(300, t0);
+      o1.frequency.exponentialRampToValueAtTime(800, t0 + 0.18);
+      g1.gain.setValueAtTime(SFX_MAX_GAIN, t0);
+      g1.gain.exponentialRampToValueAtTime(0.001, t0 + 0.18);
+      o1.start(t0); o1.stop(t0 + 0.2);
+
+      [1000, 1200].forEach(f => {
+        const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+        o2.connect(g2); g2.connect(ctx.destination);
+        o2.type = 'sine';
+        o2.frequency.value = f;
+        g2.gain.setValueAtTime(0.22, t0);
+        g2.gain.exponentialRampToValueAtTime(0.001, t0 + 0.1);
+        o2.start(t0); o2.stop(t0 + 0.11);
+      });
 
     } else if (rating === 'MASTER') {
-      // "BOOM" pesado: capa1 sawtooth 500Hz→100Hz/200ms con distorsión suave
-      // + capa2 tono 800Hz→1200Hz/100ms con delay de 50ms
-      const shaper = ctx.createWaveShaper();
-      shaper.curve = makeDistortionCurve(18);
-      shaper.oversample = '2x';
-      const o1 = ctx.createOscillator(), g1 = ctx.createGain();
-      o1.connect(shaper); shaper.connect(g1); g1.connect(ctx.destination);
-      o1.type = 'sawtooth';
-      o1.frequency.setValueAtTime(500, t0);
-      o1.frequency.exponentialRampToValueAtTime(100, t0 + 0.2);
-      g1.gain.setValueAtTime(SFX_MAX_GAIN, t0);
-      g1.gain.exponentialRampToValueAtTime(0.001, t0 + 0.2);
-      o1.start(t0); o1.stop(t0 + 0.22);
+      // "BOOM" pesado: ruido blanco 100ms + 4 tonos rápidos 400→600→800→1000Hz cada 40ms
+      playNoiseBurst(ctx, t0, 0.1, SFX_MAX_GAIN);
 
-      const t1 = t0 + 0.05;
-      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
-      o2.connect(g2); g2.connect(ctx.destination);
-      o2.type = 'sine';
-      o2.frequency.setValueAtTime(800, t1);
-      o2.frequency.linearRampToValueAtTime(1200, t1 + 0.1);
-      g2.gain.setValueAtTime(0.3, t1);
-      g2.gain.exponentialRampToValueAtTime(0.001, t1 + 0.1);
-      o2.start(t1); o2.stop(t1 + 0.12);
+      [400, 600, 800, 1000].forEach((f, i) => {
+        const ti = t0 + i * 0.04;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'square';
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.3, ti);
+        g.gain.exponentialRampToValueAtTime(0.001, ti + 0.04);
+        o.start(ti); o.stop(ti + 0.05);
+      });
 
     } else if (rating === 'SIFU LEVEL') {
-      // Explosión sónica: ruido 200ms + tono épico 200→600→200Hz/300ms, ambos con reverb sintético
-      const reverb = createSyntheticReverb(ctx, 0.08, 0.3);
+      // BOOM épico de 3 capas: ruido 200ms + sub-bass 60Hz decay 300ms + acorde épico 5 notas/200ms, reverb largo 500ms
+      const reverb = createSyntheticReverb(ctx, 0.12, 0.4);
 
       playNoiseBurst(ctx, t0, 0.2, SFX_MAX_GAIN, reverb);
 
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination); g.connect(reverb);
-      o.type = 'sawtooth';
-      o.frequency.setValueAtTime(200, t0);
-      o.frequency.linearRampToValueAtTime(600, t0 + 0.15);
-      o.frequency.linearRampToValueAtTime(200, t0 + 0.3);
-      g.gain.setValueAtTime(SFX_MAX_GAIN, t0);
-      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.3);
-      o.start(t0); o.stop(t0 + 0.32);
+      const sub = ctx.createOscillator(), subG = ctx.createGain();
+      sub.connect(subG); subG.connect(ctx.destination);
+      sub.type = 'sine';
+      sub.frequency.value = 60;
+      subG.gain.setValueAtTime(SFX_MAX_GAIN, t0);
+      subG.gain.exponentialRampToValueAtTime(0.001, t0 + 0.3);
+      sub.start(t0); sub.stop(t0 + 0.32);
+
+      [200, 300, 400, 600, 800].forEach((f, i) => {
+        const ti = t0 + i * 0.02;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination); g.connect(reverb);
+        o.type = 'sawtooth';
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.22, ti);
+        g.gain.exponentialRampToValueAtTime(0.001, ti + 0.2);
+        o.start(ti); o.stop(ti + 0.22);
+      });
     }
   } catch(e) {}
 }
+
+// Cascada estilo Candy Crush: Sol Si Re Fa# La Do Re Sol(agudo) — más notas y más épico
+// cuanto mayor el combo (x5: 3 notas · x10: 4+reverb · x20: 5+explosión · x50: fanfarria de 8)
+const COMBO_STREAK_NOTES = [392, 494, 587, 740, 880, 1047, 1175, 1568];
 
 function playComboStreakSound(milestone) {
   if (!APP.soundEnabled) return;
@@ -1413,54 +1423,42 @@ function playComboStreakSound(milestone) {
     const ctx = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
     const t0 = ctx.currentTime;
+    const noteDur = 0.08, noteSep = 0.04;
 
-    const ding = (t, fFrom, fTo, dur) => {
+    const playNote = (t, f, out) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      if (out) g.connect(out);
+      o.type = 'sine';
+      o.frequency.value = f;
+      g.gain.setValueAtTime(SFX_MAX_GAIN, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + noteDur);
+      o.start(t); o.stop(t + noteDur + 0.02);
+    };
+
+    const sparkle = (t) => {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.connect(g); g.connect(ctx.destination);
       o.type = 'sine';
-      o.frequency.setValueAtTime(fFrom, t);
-      o.frequency.linearRampToValueAtTime(fTo, t + dur);
-      g.gain.setValueAtTime(SFX_MAX_GAIN, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-      o.start(t); o.stop(t + dur + 0.02);
+      o.frequency.value = 1200;
+      g.gain.setValueAtTime(0.25, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+      o.start(t); o.stop(t + 0.07);
     };
 
-    if (milestone === 5) {
-      // "ding" metálico ascendente, como moneda de videojuego
-      ding(t0, 1000, 1500, 0.15);
+    let count, reverb = null, explosion = false;
+    if      (milestone === 5)  { count = 3; }
+    else if (milestone === 10) { count = 4; reverb = createSyntheticReverb(ctx, 0.09, 0.28); }
+    else if (milestone === 20) { count = 5; reverb = createSyntheticReverb(ctx, 0.1, 0.32);  explosion = true; }
+    else if (milestone === 50) { count = 8; reverb = createSyntheticReverb(ctx, 0.12, 0.4);  explosion = true; }
+    else return;
 
-    } else if (milestone === 10) {
-      // doble "ding-ding", frecuencia más alta
-      ding(t0, 1200, 1800, 0.15);
-      ding(t0 + 0.1, 1200, 1800, 0.15);
-
-    } else if (milestone === 20) {
-      // triple impacto épico en cascada
-      [800, 1000, 1200].forEach((f, i) => {
-        const ti = t0 + i * 0.08;
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.connect(g); g.connect(ctx.destination);
-        o.type = 'square';
-        o.frequency.value = f;
-        g.gain.setValueAtTime(SFX_MAX_GAIN, ti);
-        g.gain.exponentialRampToValueAtTime(0.001, ti + 0.12);
-        o.start(ti); o.stop(ti + 0.14);
-      });
-
-    } else if (milestone === 50) {
-      // fanfarria de 4 notas (Do Mi Sol Do agudo) con reverb
-      const reverb = createSyntheticReverb(ctx, 0.09, 0.25);
-      [523, 659, 784, 1047].forEach((f, i) => {
-        const ti = t0 + i * 0.06;
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.connect(g); g.connect(ctx.destination); g.connect(reverb);
-        o.type = 'sine';
-        o.frequency.value = f;
-        g.gain.setValueAtTime(SFX_MAX_GAIN, ti);
-        g.gain.exponentialRampToValueAtTime(0.001, ti + 0.08);
-        o.start(ti); o.stop(ti + 0.1);
-      });
+    for (let i = 0; i < count; i++) {
+      playNote(t0 + i * (noteDur + noteSep), COMBO_STREAK_NOTES[i], reverb);
     }
+    const tEnd = t0 + count * (noteDur + noteSep);
+    sparkle(tEnd);
+    if (explosion) playNoiseBurst(ctx, tEnd, 0.15, SFX_MAX_GAIN, reverb);
   } catch(e) {}
 }
 
@@ -1484,28 +1482,76 @@ function playLevelUpSound() {
   } catch(e) {}
 }
 
+// BOOM de récord histórico batido — 4 fases:
+// 1) impacto brutal (igual que SIFU LEVEL) · 2) silencio dramático 100ms
+// 3) fanfarria épica Do Mi Sol Do Mi Sol crescendo con overlap · 4) reverb larga que se desvanece
 function playRecordSound() {
   if (!APP.soundEnabled) return;
   try {
     const ctx = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
     const t0 = ctx.currentTime;
-    // Do Mi Sol Do(alto) Mi(alto) — volumen crescendo, última nota con sustain largo
-    const notes = [523, 659, 784, 1047, 1319];
-    notes.forEach((f, i) => {
-      const ti     = t0 + i * 0.11;
-      const isLast = i === notes.length - 1;
-      const dur    = isLast ? 0.4 : 0.1;
-      const peak   = Math.min(SFX_MAX_GAIN, 0.2 + i * 0.04);
+    const reverb = createSyntheticReverb(ctx, 0.14, 0.45);
+
+    // Fase 1 (0ms): impacto brutal igual que SIFU LEVEL
+    playNoiseBurst(ctx, t0, 0.2, SFX_MAX_GAIN, reverb);
+
+    const sub = ctx.createOscillator(), subG = ctx.createGain();
+    sub.connect(subG); subG.connect(ctx.destination);
+    sub.type = 'sine';
+    sub.frequency.value = 60;
+    subG.gain.setValueAtTime(SFX_MAX_GAIN, t0);
+    subG.gain.exponentialRampToValueAtTime(0.001, t0 + 0.3);
+    sub.start(t0); sub.stop(t0 + 0.32);
+
+    [200, 300, 400, 600, 800].forEach((f, i) => {
+      const ti = t0 + i * 0.02;
       const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
+      o.connect(g); g.connect(ctx.destination); g.connect(reverb);
+      o.type = 'sawtooth';
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.22, ti);
+      g.gain.exponentialRampToValueAtTime(0.001, ti + 0.2);
+      o.start(ti); o.stop(ti + 0.22);
+    });
+
+    // Fase 2 (200ms→300ms): silencio dramático — nada programado en ese hueco
+
+    // Fase 3 (300ms): fanfarria Do Mi Sol Do(alto) Mi(alto) Sol(alto), crescendo, notas solapadas
+    const t3    = t0 + 0.3;
+    const notes = [261, 329, 392, 523, 659, 784];
+    notes.forEach((f, i) => {
+      const ti     = t3 + i * 0.12;
+      const isLast = i === notes.length - 1;
+      const dur    = isLast ? 0.5 : 0.18;
+      const peak   = Math.min(SFX_MAX_GAIN, 0.14 + i * 0.045);
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination); g.connect(reverb);
       o.type = 'sine';
       o.frequency.value = f;
       g.gain.setValueAtTime(peak, ti);
       g.gain.exponentialRampToValueAtTime(0.001, ti + dur);
       o.start(ti); o.stop(ti + dur + 0.02);
     });
+
+    // Fase 4 (~1000ms): la reverb compartida (delay+feedback) se desvanece de forma natural
   } catch(e) {}
+}
+
+// Overlay dorado a pantalla completa para un récord histórico batido
+function showRecordOverlay() {
+  const ov = document.createElement('div');
+  ov.className = 'record-overlay';
+  ov.innerHTML = '<div class="record-overlay-text">🏆 ¡NUEVO RÉCORD!</div>';
+  document.body.appendChild(ov);
+  spawnHitParticles('#FFD300', window.innerWidth / 2, window.innerHeight / 2, 26);
+  trackedTimeout(() => ov.remove(), 2000);
+}
+
+// Celebración unificada de récord histórico: sonido BOOM + overlay dorado
+function celebrateRecord() {
+  playRecordSound();
+  showRecordOverlay();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1620,7 +1666,7 @@ function hideGlobalXPOverlay() {
   if (el) el.classList.add('hidden');
 }
 
-function spawnHitParticles(color, originX, originY) {
+function spawnHitParticles(color, originX, originY, countBase) {
   const canvas = document.getElementById('hit-particle-canvas');
   if (!canvas) return;
   canvas.width  = window.innerWidth;
@@ -1628,7 +1674,7 @@ function spawnHitParticles(color, originX, originY) {
   const ctx = canvas.getContext('2d');
   const cx  = originX != null ? originX : canvas.width / 2;
   const cy  = originY != null ? originY : canvas.height * 0.42;
-  const count = _fxParticleCount(10);
+  const count = _fxParticleCount(countBase || 10);
   const particles = Array.from({ length: count }, () => {
     const angle = Math.random() * Math.PI * 2;
     const speed = 3 + Math.random() * 5;
@@ -2338,6 +2384,45 @@ function onDeviceMotion(e) {
   }
 }
 
+// ═══════════════════════════════════════════════════
+// RÉCORDS HISTÓRICOS (potencia / velocidad / reacción)
+// ═══════════════════════════════════════════════════
+function loadRecords() {
+  return {
+    bestPower:    parseFloat(localStorage.getItem('fkf_record_power'))    || 0,
+    bestSpeed:    parseFloat(localStorage.getItem('fkf_record_speed'))    || 0,
+    bestReaction: parseFloat(localStorage.getItem('fkf_record_reaction')) || Infinity,
+  };
+}
+
+function saveRecords() {
+  localStorage.setItem('fkf_record_power',    String(APP.records.bestPower));
+  localStorage.setItem('fkf_record_speed',    String(APP.records.bestSpeed));
+  localStorage.setItem('fkf_record_reaction', String(APP.records.bestReaction));
+}
+
+// Récord de potencia (G-force) y/o velocidad — se comprueba en cada golpe registrado
+function checkPowerSpeedRecord(punch) {
+  if (!APP.records) return false;
+  let broke = false;
+  if (punch.g > APP.records.bestPower)     { APP.records.bestPower = punch.g;     broke = true; }
+  if (punch.speed > APP.records.bestSpeed) { APP.records.bestSpeed = punch.speed; broke = true; }
+  if (broke) { saveRecords(); celebrateRecord(); }
+  return broke;
+}
+
+// Récord de reacción (menor tiempo = mejor) — se comprueba donde se calcula cada reactionMs
+function checkReactionRecord(reactionMs) {
+  if (!APP.records || reactionMs == null) return false;
+  if (reactionMs < APP.records.bestReaction) {
+    APP.records.bestReaction = reactionMs;
+    saveRecords();
+    celebrateRecord();
+    return true;
+  }
+  return false;
+}
+
 function registerPunch(gForce, speed) {
   if (!APP.sessionActive) return;
   const punch = { g: gForce, speed: speed || gForce * 9.81, time: Date.now() };
@@ -2349,6 +2434,7 @@ function registerPunch(gForce, speed) {
 
   vibrate([15]);
   const tier = triggerHitFeedback(gForce);
+  checkPowerSpeedRecord(punch);
   if (APP.mode === 'training')                              handleTrainingPunch(punch, tier);
   else if (APP.comboConfig.submode === 'simple')            handleReactionPunch(punch);
   else if (APP.comboConfig.submode === 'colors')            handleColorsPunch(punch);
@@ -3578,6 +3664,7 @@ function handleComboPunch(punch) {
     APP.combo.state       = 'active';
     APP.round.punches.push(punch);
     APP.round.reactionTimes.push(APP.combo.reactionMs);
+    checkReactionRecord(APP.combo.reactionMs);
 
     showComboPanel('active');
     document.getElementById('active-reaction').textContent =
@@ -3875,6 +3962,7 @@ function handleReactionPunch(punch) {
   APP.hitWindowActive = false;
   clearTimeout(APP.reaction.missTimeout);
   const reactionMs = Date.now() - APP.reaction.stimulusAt;
+  checkReactionRecord(reactionMs);
   APP.reaction.state = 'result';
   APP.round.hits++;
   APP.round.punches.push(punch);
@@ -4520,6 +4608,7 @@ function init() {
   loadSoundPref();
   loadCalibration();
   loadColorConfig();
+  APP.records = loadRecords();
   initAvatarSystem();
   initSettingsModal();
 
@@ -5612,6 +5701,7 @@ function handleColorsPunch(punch) {
   APP.hitWindowActive = false;
   clearTimeout(APP.colorMode.missTimeout);
   const reactionMs = Date.now() - APP.colorMode.stimulusAt;
+  checkReactionRecord(reactionMs);
   APP.colorMode.state = 'result';
   APP.round.hits++;
   APP.round.punches.push(punch);

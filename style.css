@@ -3956,6 +3956,59 @@ canvas {
 }
 
 /* ═══════════════════════════════════
+   AAA — RÉCORD HISTÓRICO OVERLAY (flash dorado)
+════════════════════════════════════ */
+.record-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 700;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(255,211,0,0.45) 0%, rgba(255,140,0,0.15) 45%, transparent 75%);
+  animation: recordOverlayFade 2s ease forwards;
+}
+.record-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,215,0,0.9);
+  animation: recordFlashPop 0.35s ease-out forwards;
+}
+@keyframes recordOverlayFade {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  20%  { opacity: 0.85; }
+  80%  { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+@keyframes recordFlashPop {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+.record-overlay-text {
+  font-size: clamp(1.8rem, 9vw, 3.2rem);
+  font-weight: 900;
+  color: #FFD300;
+  text-shadow: 0 0 20px #FFD300, 0 0 40px #FF8C00;
+  letter-spacing: 2px;
+  text-align: center;
+  text-transform: uppercase;
+  padding: 0 20px;
+  animation: recordTextPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.15s both,
+             recordTextPulse 0.6s ease-in-out 0.65s infinite;
+}
+@keyframes recordTextPop {
+  from { transform: scale(0.4); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+@keyframes recordTextPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+
+/* ═══════════════════════════════════
    AAA — XP BAR SHIMMER (training bar)
 ════════════════════════════════════ */
 .gam-xp-bar-track {
