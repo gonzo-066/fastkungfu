@@ -250,19 +250,18 @@ const TRANSLATIONS = {
     calib_again:          'REPETIR CALIBRACIÓN',
     calib_notice:         'Calibra tu dispositivo para mayor precisión',
     calib_notice_btn:     'CALIBRAR',
-    calib_peak_detected:  'Pico detectado: {g}G',
+    calib_peak_detected:  'Golpe detectado: {g}G',
     calib_repeat_punch:   'REPETIR ESTE GOLPE',
-    calib_no_punch:       'No se detectó ningún golpe. Inténtalo de nuevo.',
+    calib_no_punch:       'No se detectó golpe. Intenta de nuevo.',
     calib_retry_btn:      'REINTENTAR',
-    calib_err_medium_weak: 'El golpe medio debe ser más fuerte que el suave',
-    calib_err_hard_weak:  'El golpe fuerte debe ser más fuerte que el medio',
-    calib_err_same_intensity: 'Los golpes deben tener intensidades diferentes. Intenta de nuevo con más diferencia entre ellos.',
     calib_result_soft:    'Golpe suave detectado',
     calib_result_medium:  'Golpe medio detectado',
     calib_result_hard:    'Golpe fuerte detectado',
     calib_result_threshold: 'Umbral configurado',
     calib_result_sensitivity: 'Sensibilidad',
     calib_ms_debounce:    '{n} ms debounce',
+    home_calib_status_yes: '✓ Calibrado',
+    home_calib_status_no: 'Usando sensibilidad estándar',
     sound_label:          'SONIDO',
     sound_on:             'ACTIVADO',
     sound_off:            'SILENCIADO',
@@ -428,19 +427,18 @@ const TRANSLATIONS = {
     calib_again:          'REPEAT CALIBRATION',
     calib_notice:         'Calibrate your device for better precision',
     calib_notice_btn:     'CALIBRATE',
-    calib_peak_detected:  'Peak detected: {g}G',
+    calib_peak_detected:  'Punch detected: {g}G',
     calib_repeat_punch:   'REPEAT THIS PUNCH',
     calib_no_punch:       'No punch detected. Try again.',
     calib_retry_btn:      'RETRY',
-    calib_err_medium_weak: 'The medium punch must be harder than the soft one',
-    calib_err_hard_weak:  'The hard punch must be harder than the medium one',
-    calib_err_same_intensity: 'The punches must have different intensities. Try again with more difference between them.',
     calib_result_soft:    'Soft punch detected',
     calib_result_medium:  'Medium punch detected',
     calib_result_hard:    'Hard punch detected',
     calib_result_threshold: 'Configured threshold',
     calib_result_sensitivity: 'Sensitivity',
     calib_ms_debounce:    '{n} ms debounce',
+    home_calib_status_yes: '✓ Calibrated',
+    home_calib_status_no: 'Using standard sensitivity',
     sound_label:          'SOUND',
     sound_on:             'ON',
     sound_off:            'MUTED',
@@ -606,19 +604,18 @@ const TRANSLATIONS = {
     calib_again:          'REPETIR CALIBRAÇÃO',
     calib_notice:         'Calibre seu dispositivo para maior precisão',
     calib_notice_btn:     'CALIBRAR',
-    calib_peak_detected:  'Pico detectado: {g}G',
+    calib_peak_detected:  'Soco detectado: {g}G',
     calib_repeat_punch:   'REPETIR ESTE SOCO',
     calib_no_punch:       'Nenhum soco detectado. Tente novamente.',
     calib_retry_btn:      'TENTAR NOVAMENTE',
-    calib_err_medium_weak: 'O soco médio deve ser mais forte que o leve',
-    calib_err_hard_weak:  'O soco forte deve ser mais forte que o médio',
-    calib_err_same_intensity: 'Os socos devem ter intensidades diferentes. Tente novamente com mais diferença entre eles.',
     calib_result_soft:    'Soco leve detectado',
     calib_result_medium:  'Soco médio detectado',
     calib_result_hard:    'Soco forte detectado',
     calib_result_threshold: 'Limiar configurado',
     calib_result_sensitivity: 'Sensibilidade',
     calib_ms_debounce:    '{n} ms debounce',
+    home_calib_status_yes: '✓ Calibrado',
+    home_calib_status_no: 'Usando sensibilidade padrão',
     sound_label:          'SOM',
     sound_on:             'ATIVADO',
     sound_off:            'SILENCIADO',
@@ -784,19 +781,18 @@ const TRANSLATIONS = {
     calib_again:          'KALIBRIERUNG WIEDERHOLEN',
     calib_notice:         'Kalibriere dein Gerät für bessere Präzision',
     calib_notice_btn:     'KALIBRIEREN',
-    calib_peak_detected:  'Erkannter Spitzenwert: {g}G',
+    calib_peak_detected:  'Schlag erkannt: {g}G',
     calib_repeat_punch:   'SCHLAG WIEDERHOLEN',
     calib_no_punch:       'Kein Schlag erkannt. Versuche es erneut.',
     calib_retry_btn:      'ERNEUT VERSUCHEN',
-    calib_err_medium_weak: 'Der mittlere Schlag muss stärker sein als der leichte',
-    calib_err_hard_weak:  'Der harte Schlag muss stärker sein als der mittlere',
-    calib_err_same_intensity: 'Die Schläge müssen unterschiedliche Intensitäten haben. Versuche es mit mehr Unterschied erneut.',
     calib_result_soft:    'Leichter Schlag erkannt',
     calib_result_medium:  'Mittlerer Schlag erkannt',
     calib_result_hard:    'Harter Schlag erkannt',
     calib_result_threshold: 'Eingestellter Schwellenwert',
     calib_result_sensitivity: 'Empfindlichkeit',
     calib_ms_debounce:    '{n} ms Entprellzeit',
+    home_calib_status_yes: '✓ Kalibriert',
+    home_calib_status_no: 'Standardempfindlichkeit',
     sound_label:          'TON',
     sound_on:             'AN',
     sound_off:            'STUMM',
@@ -868,10 +864,10 @@ const APP = {
     permitted: false,
     listening: false,
     lastPunchAt: 0,
-    COOLDOWN: 150,
+    COOLDOWN: 120,
     COMBO_HIT_COOLDOWN: 80,
-    THRESHOLD: 2.0,           // G-force mínimo (default sin calibrar)
-    ABSOLUTE_MIN_G: 1.2,      // Nunca bajar de este valor aunque calibración lo pida
+    THRESHOLD: 0.8,           // G-force mínimo (default sin calibrar)
+    ABSOLUTE_MIN_G: 0.6,      // Nunca bajar de este valor aunque calibración lo pida
     _logAt: 0,
     _peakStart: 0,            // Filtro sostenido: timestamp primer cruce de umbral
     _peakMax: 0,              // Pico máximo durante la ventana sostenida
@@ -3054,7 +3050,12 @@ function initMenuScreen() {
 
   // Calibration hint link (Bug 2)
   const calibHint = document.getElementById('home-calib-hint');
-  if (calibHint) calibHint.onclick = () => { stopHomeParticles(); showCalibrationScreen('screen-menu'); };
+  if (calibHint) {
+    calibHint.onclick = () => { stopHomeParticles(); showCalibrationScreen('screen-menu'); };
+    const isCalibrated = !!localStorage.getItem('fkf_calibration');
+    calibHint.textContent = isCalibrated ? t('home_calib_status_yes') : t('home_calib_status_no');
+    calibHint.classList.toggle('home-calib-hint-ok', isCalibrated);
+  }
 
   document.getElementById('btn-settings').onclick = toggleSettingsDropdown;
   document.getElementById('btn-header-avatar').onclick = () => {
@@ -5332,8 +5333,8 @@ function activateCalibListening(stepNum) {
   clearInterval(APP.calib.graphInterval);
   APP.calib.graphInterval = trackedInterval(drawCalibGraph, 50);
 
-  const TRIG_G = 1.6;
-  const RING_G = 1.2;
+  const TRIG_G = 0.3;
+  const RING_G = 0.2;
 
   APP.calib.listener = (e) => {
     const acc = e.accelerationIncludingGravity;
@@ -5399,16 +5400,6 @@ function finishCalibStep(stepNum) {
     ? Math.max(60, APP.calib.ringEnd - APP.calib.triggerAt)
     : 120;
 
-  // Validación progresiva: cada golpe debe ser claramente más fuerte que el anterior
-  if (stepNum === 2 && peakG <= APP.calib.data[0].peakG * 1.3) {
-    retryCalibStep(stepNum, t('calib_err_medium_weak'));
-    return;
-  }
-  if (stepNum === 3 && peakG <= APP.calib.data[1].peakG * 1.3) {
-    retryCalibStep(stepNum, t('calib_err_hard_weak'));
-    return;
-  }
-
   const step = CALIB_STEPS[stepNum - 1];
   const stat = document.getElementById('calib-status');
   if (stat) {
@@ -5449,7 +5440,7 @@ function drawCalibGraph() {
   ctx.fillRect(0, 0, cssW, cssH);
 
   const maxG = 15;
-  const y12  = cssH - (1.2 / maxG) * cssH;
+  const y12  = cssH - (0.3 / maxG) * cssH;
   ctx.strokeStyle = 'rgba(255,200,0,0.35)';
   ctx.lineWidth   = 1;
   ctx.setLineDash([4, 4]);
@@ -5481,25 +5472,8 @@ function showCalibResults() {
   const medium = data[1].peakG;
   const hard   = data[2].peakG;
 
-  // Salvaguarda final: las 3 intensidades deben quedar claramente diferenciadas
-  const tooClose = (a, b) => a <= 0 || Math.abs(b - a) / a < 0.15;
-  if (tooClose(soft, medium) || tooClose(medium, hard) || tooClose(soft, hard)) {
-    content.innerHTML = `
-      <div class="calib-results calib-results-error">
-        <div class="calib-results-icon">⚠️</div>
-        <h3 class="calib-title">${t('calib_err_same_intensity')}</h3>
-        <button class="btn-primary btn-calib-ready" id="btn-calib-restart">${t('calib_again')}</button>
-      </div>`;
-    document.getElementById('btn-calib-restart').onclick = () => {
-      APP.calib.data = [];
-      renderCalibIntro();
-    };
-    return;
-  }
-
-  const avgRing   = data.reduce((a, d) => a + d.ringMs, 0) / data.length;
-  const threshold = Math.round(soft * 0.8 * 100) / 100;
-  const debounce  = Math.round(avgRing + 50);
+  const threshold = Math.round(soft * 0.5 * 100) / 100;
+  const debounce  = 150;
 
   content.innerHTML = `
     <div class="calib-results">

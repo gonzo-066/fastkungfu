@@ -2851,6 +2851,9 @@ canvas {
   margin-top: -6px;
   cursor: pointer;
 }
+.home-calib-hint.home-calib-hint-ok {
+  color: #00FF66;
+}
 .home-calib-hint-link {
   color: #888;
   text-decoration: underline;
