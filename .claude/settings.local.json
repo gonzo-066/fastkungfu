@@ -44,7 +44,8 @@
       "PowerShell(node --check \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\app.js\"; if \\($?\\) { \"app.js OK\" }; node \"C:\\\\Users\\\\gonzo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-gonzo-fastkungfu\\\\6c171c8b-8014-4c11-8870-38639e0c5255\\\\scratchpad\\\\smoke.js\")",
       "PowerShell(node \"C:\\\\Users\\\\gonzo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-gonzo-fastkungfu\\\\6c171c8b-8014-4c11-8870-38639e0c5255\\\\scratchpad\\\\findopaque.js\")",
       "PowerShell(node --check \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\app.js\"; if \\($?\\) { \"app.js OK\" }; node --check \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\sw.js\"; if \\($?\\) { \"sw.js OK\" }; \"=== reglas opacas restantes ===\"; node \"C:\\\\Users\\\\gonzo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-gonzo-fastkungfu\\\\6c171c8b-8014-4c11-8870-38639e0c5255\\\\scratchpad\\\\findopaque.js\" | Select-Object -First 12)",
-      "PowerShell(node \"C:\\\\Users\\\\gonzo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-gonzo-fastkungfu\\\\6c171c8b-8014-4c11-8870-38639e0c5255\\\\scratchpad\\\\particles.js\")"
+      "PowerShell(node \"C:\\\\Users\\\\gonzo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-gonzo-fastkungfu\\\\6c171c8b-8014-4c11-8870-38639e0c5255\\\\scratchpad\\\\particles.js\")",
+      "PowerShell(node --check \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\sw.js\"; if \\($?\\) { \"sw.js sintaxis OK`n\" }; node \"C:\\\\Users\\\\gonzo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-gonzo-fastkungfu\\\\6c171c8b-8014-4c11-8870-38639e0c5255\\\\scratchpad\\\\sw-test.js\")"
     ]
   }
 }
