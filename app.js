@@ -868,9 +868,15 @@ const APP = {
     COMBO_HIT_COOLDOWN: 80,
     THRESHOLD: 0.8,           // G-force mínimo (default sin calibrar)
     ABSOLUTE_MIN_G: 0.6,      // Nunca bajar de este valor aunque calibración lo pida
+    SUSTAIN_READINGS: 2,      // Anti-spike: lecturas consecutivas sobre umbral para validar golpe
+    gravity: { x: 0, y: 0, z: 0 },  // Baseline de gravedad medido en reposo (m/s²)
+    gravityReady: false,      // true cuando el baseline se ha medido en esta sesión
+    calibratingGravity: false,// true mientras se toman las lecturas en reposo
+    _gravListener: null,
+    _gravTimer: null,
     _logAt: 0,
-    _peakStart: 0,            // Filtro sostenido: timestamp primer cruce de umbral
-    _peakMax: 0,              // Pico máximo durante la ventana sostenida
+    _streak: 0,               // Lecturas consecutivas por encima del umbral
+    _peakMax: 0,              // Pico máximo durante la racha
   },
   sessionActive: false,
   hitWindowActive: false,
@@ -2331,52 +2337,131 @@ function activateAccelerometer() {
 }
 
 function deactivateAccelerometer() {
+  stopGravityCalibration();
   if (!APP.accel.listening) return;
   window.removeEventListener('devicemotion', onDeviceMotion);
-  APP.accel.listening  = false;
-  APP.accel._peakStart = 0;
-  APP.accel._peakMax   = 0;
+  APP.accel.listening = false;
+  APP.accel._streak   = 0;
+  APP.accel._peakMax  = 0;
+}
+
+// Aceleración NETA (sin gravedad) en G.
+// Preferimos e.acceleration, que el navegador ya entrega sin gravedad.
+// Si no está disponible (algunos Android/navegadores devuelven null o ejes
+// vacíos), restamos manualmente el baseline de gravedad medido en reposo.
+function netGForce(e) {
+  const lin = e.acceleration;
+  if (lin && (lin.x != null || lin.y != null || lin.z != null)) {
+    const x = lin.x || 0, y = lin.y || 0, z = lin.z || 0;
+    return Math.sqrt(x * x + y * y + z * z) / 9.81;
+  }
+  const acc = e.accelerationIncludingGravity;
+  if (!acc) return null;
+  const g = APP.accel.gravity;
+  const x = (acc.x || 0) - g.x;
+  const y = (acc.y || 0) - g.y;
+  const z = (acc.z || 0) - g.z;
+  return Math.sqrt(x * x + y * y + z * z) / 9.81;
+}
+
+// Mide la gravedad en reposo: ~10 lecturas durante 500ms con el móvil quieto.
+// La media de cada eje queda como baseline que se resta a cada lectura posterior.
+function calibrateGravity(onDone) {
+  const a = APP.accel;
+  stopGravityCalibration();
+  if (typeof DeviceMotionEvent === 'undefined') { if (onDone) onDone(); return; }
+
+  const samples = [];
+  const startedAt = Date.now();
+  a.calibratingGravity = true;
+  a.gravityReady = false;
+  a._streak  = 0;
+  a._peakMax = 0;
+
+  a._gravListener = (ev) => {
+    const acc = ev.accelerationIncludingGravity;
+    if (!acc) return;
+    samples.push({ x: acc.x || 0, y: acc.y || 0, z: acc.z || 0 });
+  };
+  window.addEventListener('devicemotion', a._gravListener, { passive: true });
+
+  const finish = () => {
+    stopGravityCalibration();
+    if (samples.length >= 3) {
+      const n = samples.length;
+      a.gravity = {
+        x: samples.reduce((s, v) => s + v.x, 0) / n,
+        y: samples.reduce((s, v) => s + v.y, 0) / n,
+        z: samples.reduce((s, v) => s + v.z, 0) / n,
+      };
+      a.gravityReady = true;
+      console.log(`[FKF] gravity baseline n=${n} x=${a.gravity.x.toFixed(2)} y=${a.gravity.y.toFixed(2)} z=${a.gravity.z.toFixed(2)}`);
+    } else {
+      console.log('[FKF] gravity baseline: lecturas insuficientes, se mantiene el anterior');
+    }
+    a._streak  = 0;
+    a._peakMax = 0;
+    a.lastPunchAt = Date.now();   // evita registrar el primer pico justo tras calibrar
+    if (onDone) onDone();
+  };
+
+  // 500ms de ventana; si el dispositivo emite pocos eventos, se extiende
+  // hasta 1500ms buscando al menos 10 lecturas.
+  const check = () => {
+    if (!a.calibratingGravity) return;
+    if (samples.length >= 10 || (Date.now() - startedAt) >= 1500) finish();
+    else a._gravTimer = trackedTimeout(check, 250);
+  };
+  a._gravTimer = trackedTimeout(check, 500);
+}
+
+function stopGravityCalibration() {
+  const a = APP.accel;
+  if (a._gravListener) {
+    window.removeEventListener('devicemotion', a._gravListener);
+    a._gravListener = null;
+  }
+  clearTimeout(a._gravTimer);
+  a.calibratingGravity = false;
 }
 
 function onDeviceMotion(e) {
   if (!window.IMPACT_SESSION_ACTIVE) return;
   if (!APP.sessionActive) return;
-  const acc = e.accelerationIncludingGravity;
-  if (!acc) return;
-  const raw    = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
-  const gForce = raw / 9.81;
-  const now    = Date.now();
+  if (APP.accel.calibratingGravity) return;   // midiendo gravedad en reposo
+
+  const gForce = netGForce(e);
+  if (gForce == null) return;
+  const now = Date.now();
 
   if (now - APP.accel._logAt > 100) {
     APP.accel._logAt = now;
-    console.log(`[FKF] accel g=${gForce.toFixed(2)}G thr=${APP.accel.THRESHOLD}G`);
+    console.log(`[FKF] accel net=${gForce.toFixed(2)}G thr=${APP.accel.THRESHOLD}G`);
   }
 
+  // Suelo absoluto: por debajo de 0.6G neto no es un golpe, se ignora
   const effectiveThreshold = Math.max(APP.accel.THRESHOLD, APP.accel.ABSOLUTE_MIN_G);
   const cooldown = (APP.mode === 'combo' && APP.comboConfig.submode === 'combo' && APP.combo.state === 'active')
     ? APP.accel.COMBO_HIT_COOLDOWN
     : APP.accel.COOLDOWN;
 
   if (gForce >= effectiveThreshold) {
-    // Filtro sostenido: el pico debe mantenerse al menos 50ms antes de registrar
-    if (!APP.accel._peakStart) {
-      APP.accel._peakStart = now;
-      APP.accel._peakMax   = gForce;
-    } else {
-      if (gForce > APP.accel._peakMax) APP.accel._peakMax = gForce;
-      if ((now - APP.accel._peakStart) >= 50 && (now - APP.accel.lastPunchAt) > cooldown) {
-        const peakG = APP.accel._peakMax;
-        APP.accel.lastPunchAt = now;
-        APP.accel._peakStart  = 0;
-        APP.accel._peakMax    = 0;
-        console.log(`[FKF] PUNCH g=${peakG.toFixed(2)}G mode=${APP.mode}`);
-        registerPunch(peakG, peakG * 9.81);
-      }
+    // Anti-spike: hacen falta N lecturas consecutivas sobre umbral.
+    // Una lectura aislada de un solo frame se descarta.
+    APP.accel._streak++;
+    if (gForce > APP.accel._peakMax) APP.accel._peakMax = gForce;
+    if (APP.accel._streak >= APP.accel.SUSTAIN_READINGS && (now - APP.accel.lastPunchAt) > cooldown) {
+      const peakG = APP.accel._peakMax;
+      APP.accel.lastPunchAt = now;
+      APP.accel._streak     = 0;
+      APP.accel._peakMax    = 0;
+      console.log(`[FKF] PUNCH g=${peakG.toFixed(2)}G mode=${APP.mode}`);
+      registerPunch(peakG, peakG * 9.81);
     }
   } else {
-    // Cayó por debajo del umbral: resetear la ventana de pico
-    APP.accel._peakStart = 0;
-    APP.accel._peakMax   = 0;
+    // Cayó por debajo del umbral: se rompe la racha
+    APP.accel._streak  = 0;
+    APP.accel._peakMax = 0;
   }
 }
 
@@ -3359,6 +3444,10 @@ function startRound(roundNum) {
   };
   vibrate([100, 50, 100]);
   playBell('round');
+
+  // Baseline de gravedad al iniciar cada round. Se espera a que termine la
+  // vibración de campana (250ms) para no contaminar las lecturas en reposo.
+  trackedTimeout(() => calibrateGravity(), 300);
 
   if (APP.mode === 'training') {
     APP.hitWindowActive = true;
@@ -5222,6 +5311,12 @@ function loadCalibration() {
   if (!raw) return false;
   try {
     const c = JSON.parse(raw);
+    // Las calibraciones anteriores a netG se midieron con la gravedad incluida
+    // (~1G de más): su umbral no sirve para la detección por aceleración neta.
+    if (!c.netG) {
+      localStorage.removeItem('fkf_calibration');
+      return false;
+    }
     APP.calibration = c;
     APP.accel.THRESHOLD = Math.max(APP.accel.ABSOLUTE_MIN_G, c.threshold);
     APP.accel.COOLDOWN  = c.debounce;
@@ -5238,6 +5333,7 @@ function saveCalibration(soft, medium, hard, threshold, debounce) {
     hard:       Math.round(hard   * 100) / 100,
     threshold:  safeThreshold,
     debounce,
+    netG:       true,   // medida sobre aceleración neta (sin gravedad)
     calibrated: true,
     date:       Date.now(),
   };
@@ -5336,35 +5432,41 @@ function activateCalibListening(stepNum) {
   const TRIG_G = 0.3;
   const RING_G = 0.2;
 
-  APP.calib.listener = (e) => {
-    const acc = e.accelerationIncludingGravity;
-    if (!acc) return;
-    const g = Math.sqrt((acc.x||0)**2 + (acc.y||0)**2 + (acc.z||0)**2) / 9.81;
-    const now = Date.now();
+  // La calibración mide los mismos G netos que usa la detección en sesión:
+  // primero baseline de gravedad en reposo, después se escucha el golpe.
+  calibrateGravity(() => {
+    if (APP.calib.state !== 'listening') return;
 
-    APP.calib.graphData.push(g);
-    if (APP.calib.graphData.length > 80) APP.calib.graphData.shift();
+    APP.calib.listener = (e) => {
+      const g = netGForce(e);
+      if (g == null) return;
+      const now = Date.now();
 
-    if (!APP.calib.triggerAt && g > TRIG_G) APP.calib.triggerAt = now;
+      APP.calib.graphData.push(g);
+      if (APP.calib.graphData.length > 80) APP.calib.graphData.shift();
 
-    if (APP.calib.triggerAt) {
-      if (g > APP.calib.peakG) {
-        APP.calib.peakG = g;
-        updateCalibLivePeak(stepNum, g);
+      if (!APP.calib.triggerAt && g > TRIG_G) APP.calib.triggerAt = now;
+
+      if (APP.calib.triggerAt) {
+        if (g > APP.calib.peakG) {
+          APP.calib.peakG = g;
+          updateCalibLivePeak(stepNum, g);
+        }
+        if (g > RING_G)          APP.calib.ringEnd = now;
+        if (now - APP.calib.triggerAt > 2000) finishCalibStep(stepNum);
       }
-      if (g > RING_G)          APP.calib.ringEnd = now;
-      if (now - APP.calib.triggerAt > 2000) finishCalibStep(stepNum);
-    }
-  };
+    };
 
-  window.addEventListener('devicemotion', APP.calib.listener, { passive: true });
+    window.addEventListener('devicemotion', APP.calib.listener, { passive: true });
 
-  APP.calib.captureTimer = trackedTimeout(() => {
-    if (APP.calib.state === 'listening') finishCalibStep(stepNum);
-  }, 12000);
+    APP.calib.captureTimer = trackedTimeout(() => {
+      if (APP.calib.state === 'listening') finishCalibStep(stepNum);
+    }, 12000);
+  });
 }
 
 function stopCalibListener() {
+  stopGravityCalibration();
   if (APP.calib.listener) {
     window.removeEventListener('devicemotion', APP.calib.listener);
     APP.calib.listener = null;
