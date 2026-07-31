@@ -15,6 +15,14 @@
 <body>
 
 <!-- ═══════════════════════════════════
+     FONDO DE PARTÍCULAS GLOBAL
+     Hijo directo de <body> y antes de todos los .screen.
+     Con z-index explícito (0 frente al 1 de .screen) el orden del DOM no
+     decide el apilado, pero así queda claro que va por debajo de todo.
+════════════════════════════════════ -->
+<canvas id="bg-particles" class="bg-particles-global" aria-hidden="true"></canvas>
+
+<!-- ═══════════════════════════════════
      PANTALLA: SELECCIÓN DE IDIOMA
 ════════════════════════════════════ -->
 <div id="screen-lang" class="screen hidden">
@@ -1157,9 +1165,6 @@
   });
 }());
 </script>
-
-<!-- GLOBAL BACKGROUND PARTICLES -->
-<canvas id="bg-particles" class="bg-particles-global" aria-hidden="true"></canvas>
 
 <!-- ═══════════════════════════════════
      AAA — GLOBAL HIT FEEDBACK OVERLAY

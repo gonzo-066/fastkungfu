@@ -960,7 +960,7 @@ canvas {
 ════════════════════════════════════ */
 #screen-abandon-penalty {
   /* Translúcido para que se vean las partículas globales por debajo */
-  background: rgba(26, 0, 0, 0.92);
+  background: rgba(26, 0, 0, 0.85);
 }
 
 .abandon-penalty-title {
@@ -3999,7 +3999,7 @@ canvas {
   align-items: center;
   justify-content: center;
   /* Translúcido para que se vean las partículas globales por debajo */
-  background: rgba(5, 5, 5, 0.92);
+  background: rgba(5, 5, 5, 0.85);
   z-index: 10;
 }
 .result-splash-inner {
@@ -4283,7 +4283,10 @@ canvas {
   z-index: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.4;
+  /* 0.4 dejaba las partículas al 12-32% efectivo (esta opacidad por el alfa
+     0.3-0.8 de cada partícula). En el home se notaban por lo despejado del
+     layout; en las pantallas interiores, llenas de tarjetas, desaparecían. */
+  opacity: 0.75;
 }
 
 /* ═══════════════════════════════════
@@ -4519,8 +4522,9 @@ canvas {
 ════════════════════════════════════ */
 
 #screen-reaction {
-  /* Translúcido para que se vean las partículas globales por debajo */
-  background: rgba(5, 5, 5, 0.92);
+  /* Translúcido para que se vean las partículas globales por debajo.
+     0.92 sólo dejaba pasar un 8%: prácticamente invisible. */
+  background: rgba(5, 5, 5, 0.85);
   overflow: hidden;
   display: flex;
   flex-direction: column;
