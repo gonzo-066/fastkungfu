@@ -35,7 +35,13 @@
       "Bash(pkill -f \"http.server 8843\")",
       "Bash(cp app.js /tmp/app.js.bak)",
       "Bash(sed -i -e 's/setTimeout\\(/trackedTimeout\\(/g' -e 's/setInterval\\(/trackedInterval\\(/g' -e 's/requestAnimationFrame\\(/trackedRAF\\(/g' app.js)",
-      "Bash(git -C \"C:/Users/gonzo/fastkungfu\" diff --stat)"
+      "Bash(git -C \"C:/Users/gonzo/fastkungfu\" diff --stat)",
+      "PowerShell($node = \\(Get-Command node -ErrorAction SilentlyContinue\\); if \\($node\\) { node --check \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\app.js\"; if \\($?\\) { \"app.js OK\" }; node --check \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\sw.js\"; if \\($?\\) { \"sw.js OK\" } } else { \"node no disponible\" })",
+      "PowerShell(node --check \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\app.js\"; if \\($?\\) { \"app.js OK\" }; node --check \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\sw.js\"; if \\($?\\) { \"sw.js OK\" })",
+      "PowerShell(node \"C:\\\\Users\\\\gonzo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-gonzo-fastkungfu\\\\6c171c8b-8014-4c11-8870-38639e0c5255\\\\scratchpad\\\\smoke.js\")",
+      "PowerShell(node --check \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\app.js\"; if \\($?\\) { \"app.js OK\" }; node \"C:\\\\Users\\\\gonzo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-gonzo-fastkungfu\\\\6c171c8b-8014-4c11-8870-38639e0c5255\\\\scratchpad\\\\smoke.js\" | Select-Object -Last 3)",
+      "PowerShell(git *)",
+      "PowerShell(node --check \"C:\\\\Users\\\\gonzo\\\\fastkungfu\\\\app.js\"; if \\($?\\) { \"app.js OK\" }; node \"C:\\\\Users\\\\gonzo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-gonzo-fastkungfu\\\\6c171c8b-8014-4c11-8870-38639e0c5255\\\\scratchpad\\\\smoke.js\")"
     ]
   }
 }

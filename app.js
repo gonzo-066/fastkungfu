@@ -62,7 +62,10 @@ function stopEverything() {
   //    estuviera "en vuelo" en el instante exacto de la limpieza
   window.IMPACT_SESSION_ID = Date.now();
 
-  // 1. Sonidos: suspender el AudioContext compartido
+  // 1. Sonidos: parar la música de menús y suspender el AudioContext compartido.
+  //    La música se para explícitamente: suspender el contexto sólo la pausa,
+  //    y volvería a sonar en cuanto cualquier SFX del round lo reanude.
+  stopMenuMusic();
   if (APP.audioCtx && APP.audioCtx.state === 'running') {
     try { APP.audioCtx.suspend(); } catch (e) {}
   }
@@ -912,19 +915,11 @@ const APP = {
     permitted: false,
     listening: false,
     lastPunchAt: 0,
-    COOLDOWN: 120,
-    COMBO_HIT_COOLDOWN: 80,
-    THRESHOLD: 0.8,           // G-force mínimo (default sin calibrar)
-    ABSOLUTE_MIN_G: 0.6,      // Nunca bajar de este valor aunque calibración lo pida
-    SUSTAIN_READINGS: 2,      // Anti-spike: lecturas consecutivas sobre umbral para validar golpe
-    gravity: { x: 0, y: 0, z: 0 },  // Baseline de gravedad medido en reposo (m/s²)
-    gravityReady: false,      // true cuando el baseline se ha medido en esta sesión
-    calibratingGravity: false,// true mientras se toman las lecturas en reposo
-    _gravListener: null,
-    _gravTimer: null,
+    COOLDOWN: 150,
+    COMBO_HIT_COOLDOWN: 150,
+    THRESHOLD: 1.5,           // G neto mínimo (default sin calibrar)
+    ABSOLUTE_MIN_G: 1.5,      // Nunca bajar de este valor aunque calibración lo pida
     _logAt: 0,
-    _streak: 0,               // Lecturas consecutivas por encima del umbral
-    _peakMax: 0,              // Pico máximo durante la racha
   },
   sessionActive: false,
   hitWindowActive: false,
@@ -954,6 +949,11 @@ const APP = {
   rest: { interval: null },
   wakeLock: null,
   audioCtx: null,
+  audioBuffers: {},     // name -> AudioBuffer ya decodificado (caché)
+  audioLoading: {},     // name -> Promise en vuelo (evita fetches duplicados)
+  musicSource: null,    // handle de la música de fondo de los menús
+  _audioUnlockArmed: false,
+  _homeReached: false,  // true en cuanto se pisa el home (habilita la música)
   sessionSaved: false,
   soundEnabled: true,
   colorConfig: { yellow: '', red: '', blue: '', order: 'random' },
@@ -1024,46 +1024,37 @@ function getLocale() {
 // ═══════════════════════════════════════════════════
 // SISTEMA DE NIVELES
 // ═══════════════════════════════════════════════════
-const RANK_LEVELS = [
-  { name: 'Recluta',       min: 0,    max: 99 },
-  { name: 'Striker',       min: 100,  max: 299 },
-  { name: 'Contender',     min: 300,  max: 599 },
-  { name: 'Power Fighter', min: 600,  max: 999 },
-  { name: 'Knockout',      min: 1000, max: 1499 },
-  { name: 'Dominator',     min: 1500, max: 2199 },
-  { name: 'Champion',      min: 2200, max: 2999 },
-  { name: 'Legend',        min: 3000, max: 3999 },
-  { name: 'Impact Master', min: 4000, max: Infinity },
+// Único escalafón de la app: el nivel se deriva siempre del XP acumulado.
+const LEVELS = [
+  { name: 'Rookie',        xp: 0       },
+  { name: 'Amateur',       xp: 50000   },
+  { name: 'Fighter',       xp: 150000  },
+  { name: 'Contender',     xp: 350000  },
+  { name: 'Warrior',       xp: 700000  },
+  { name: 'Veteran',       xp: 1200000 },
+  { name: 'Expert',        xp: 1900000 },
+  { name: 'Elite',         xp: 2800000 },
+  { name: 'Champion',      xp: 3900000 },
+  { name: 'Grand Master',  xp: 5100000 },
+  { name: 'Legend',        xp: 6500000 },
+  { name: 'Impact Master', xp: 8500000 },
 ];
 
 function getSessionScore(s) {
   return (s.punches || 0) + Math.round((s.maxSpeed || 0) * 10);
 }
 
+// Mantiene la firma antigua (recibe las sesiones) para no tocar los llamantes,
+// pero el nivel sale del XP global, igual que en la barra de gamificación.
 function getRankLevel(sessions) {
-  const score = sessions.reduce((acc, s) => acc + getSessionScore(s), 0);
-  let idx = RANK_LEVELS.findIndex(l => score >= l.min && score <= l.max);
-  if (idx < 0) idx = RANK_LEVELS.length - 1;
-  const level     = RANK_LEVELS[idx];
-  const nextLevel = RANK_LEVELS[idx + 1] || null;
-  return { score, level, nextLevel, idx };
+  const score = loadGamificationXP();
+  const { idx, current, next } = getXPLevelInfo(score);
+  return { score, level: current, nextLevel: next, idx };
 }
 
 // ═══════════════════════════════════════════════════
 // GAMIFICACIÓN — MODO POTENCIA
 // ═══════════════════════════════════════════════════
-const XP_LEVELS = [
-  { name: 'Recluta',       min: 0     },
-  { name: 'Striker',       min: 500   },
-  { name: 'Contender',     min: 1500  },
-  { name: 'Power Fighter', min: 3000  },
-  { name: 'Knockout',      min: 5000  },
-  { name: 'Dominator',     min: 8000  },
-  { name: 'Champion',      min: 12000 },
-  { name: 'Legend',        min: 18000 },
-  { name: 'Impact Master', min: 25000 },
-];
-
 const GLOBAL_HIT_TIERS = [
   { label: 'HIT',        minG: 0,   xp: 5,   color: '#FFFFFF' },
   { label: 'GOOD',       minG: 1.5, xp: 10,  color: '#00FF66' },
@@ -1089,6 +1080,24 @@ function getHitRating(g) {
   return getGlobalTier(g);
 }
 
+// El escalafón antiguo topaba en 25.000 XP y el nuevo pone Amateur en 50.000:
+// sin migrar, todo el mundo volvería a Rookie. Se multiplica el XP guardado
+// por 20 para reubicarlo en la nueva escala. Sólo una vez: el flag evita que
+// una recarga vuelva a multiplicar.
+const XP_MIGRATION_FLAG   = 'xp_migrated_v52';
+const XP_MIGRATION_FACTOR = 20;
+
+function migrateXPToV52() {
+  if (localStorage.getItem(XP_MIGRATION_FLAG) === 'true') return;
+  const stored = parseInt(localStorage.getItem('fkf_gam_xp'), 10);
+  if (stored > 0) {
+    const migrated = stored * XP_MIGRATION_FACTOR;
+    localStorage.setItem('fkf_gam_xp', String(migrated));
+    console.log(`[FKF] XP migrado al escalafón v52: ${stored} -> ${migrated}`);
+  }
+  localStorage.setItem(XP_MIGRATION_FLAG, 'true');
+}
+
 function loadGamificationXP() {
   return parseInt(localStorage.getItem('fkf_gam_xp'), 10) || 0;
 }
@@ -1099,10 +1108,10 @@ function saveGamificationXP(xp) {
 
 function getXPLevelInfo(xp) {
   let idx = 0;
-  for (let i = XP_LEVELS.length - 1; i >= 0; i--) {
-    if (xp >= XP_LEVELS[i].min) { idx = i; break; }
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (xp >= LEVELS[i].xp) { idx = i; break; }
   }
-  return { idx, current: XP_LEVELS[idx], next: XP_LEVELS[idx + 1] || null };
+  return { idx, current: LEVELS[idx], next: LEVELS[idx + 1] || null };
 }
 
 function initGamificationSession() {
@@ -1253,9 +1262,9 @@ function updateXPBar() {
   const progEl = document.getElementById('gam-xp-bar-progress');
   if (lvlEl) lvlEl.textContent = current.name.toUpperCase();
   if (next) {
-    const pct = Math.min(100, Math.round(((gam.totalXP - current.min) / (next.min - current.min)) * 100));
+    const pct = Math.min(100, Math.round(((gam.totalXP - current.xp) / (next.xp - current.xp)) * 100));
     if (fillEl) fillEl.style.width = pct + '%';
-    if (progEl) progEl.textContent = gam.totalXP + ' / ' + next.min + ' XP';
+    if (progEl) progEl.textContent = gam.totalXP + ' / ' + next.xp + ' XP';
   } else {
     if (fillEl) fillEl.style.width = '100%';
     if (progEl) progEl.textContent = gam.totalXP + ' XP · MAX';
@@ -1263,7 +1272,7 @@ function updateXPBar() {
 }
 
 function showLevelUp(levelName) {
-  playLevelUpSound();
+  playSound('level_up');
   const ov = document.createElement('div');
   ov.className = 'level-up-overlay';
   ov.innerHTML = `<div class="lu-tag">LEVEL UP</div><div class="lu-name">${levelName.toUpperCase()}</div>`;
@@ -1313,11 +1322,11 @@ function renderGamificationSummary() {
   if (!gam) return;
   const { current, next } = getXPLevelInfo(gam.totalXP);
   const pct = next
-    ? Math.min(100, Math.round(((gam.totalXP - current.min) / (next.min - current.min)) * 100))
+    ? Math.min(100, Math.round(((gam.totalXP - current.xp) / (next.xp - current.xp)) * 100))
     : 100;
   const leveledUp   = getXPLevelInfo(gam.totalXP).idx > gam.sessionStartLevelIdx;
   const leveledName = getXPLevelInfo(gam.totalXP).current.name;
-  const progText    = next ? gam.totalXP + ' / ' + next.min + ' XP' : gam.totalXP + ' XP · MAX';
+  const progText    = next ? gam.totalXP + ' / ' + next.xp + ' XP' : gam.totalXP + ' XP · MAX';
   const _rTier = GLOBAL_HIT_TIERS.find(t => t.label === gam.sessionBestRating);
   const ratingColor = _rTier ? _rTier.color : '#FFD300';
 
@@ -1705,7 +1714,7 @@ function updateGlobalXPBar() {
   if (lbl) lbl.textContent = inf.current.name.toUpperCase();
   if (fill) {
     const pct = inf.next
-      ? Math.min(100, Math.round(((xp - inf.current.min) / (inf.next.min - inf.current.min)) * 100))
+      ? Math.min(100, Math.round(((xp - inf.current.xp) / (inf.next.xp - inf.current.xp)) * 100))
       : 100;
     fill.style.width = pct + '%';
   }
@@ -2123,8 +2132,26 @@ function spawnSplashConfetti() {
 // ═══════════════════════════════════════════════════
 // NAVEGACIÓN
 // ═══════════════════════════════════════════════════
+// Pantallas de sesión: la música de fondo de los menús no suena aquí.
+// El resto (home, config, historial, perfil, ayuda, calibración…) sí.
+const SESSION_SCREENS = [
+  'screen-training', 'screen-reaction', 'screen-combo', 'screen-colors',
+  'screen-rest', 'screen-abandon-penalty', 'screen-result-splash', 'screen-summary',
+];
+
+// Punto único que decide si la música debe sonar en la pantalla actual.
+// Se aplaza un tick porque varios llamantes hacen showScreen('screen-menu')
+// e inmediatamente después initMenuScreen(), que arranca con stopEverything().
+function syncMenuMusic(screenId) {
+  trackedTimeout(() => {
+    if (SESSION_SCREENS.indexOf(screenId) !== -1) stopMenuMusic();
+    else startMenuMusic();
+  }, 0);
+}
+
 function showScreen(id, instant) {
   const current = document.querySelector('.screen:not(.hidden)');
+  syncMenuMusic(id);
   const doSwitch = () => {
     document.querySelectorAll('.screen').forEach(s => {
       s.classList.toggle('hidden', s.id !== id);
@@ -2159,6 +2186,172 @@ function getAudioCtx() {
 }
 
 const SFX_MAX_GAIN = 0.4;
+
+// ═══════════════════════════════════════════════════
+// AUDIO MANAGER — ARCHIVOS WAV REALES
+// Carga los ficheros de assets/sounds/ con fetch + decodeAudioData
+// y los cachea en APP.audioBuffers para no volver a descargarlos.
+// ═══════════════════════════════════════════════════
+const SOUND_FILES = {
+  good_reaccion:   './assets/sounds/good_reaccion.wav',
+  combo:           './assets/sounds/combo.wav',
+  level_up:        './assets/sounds/level_up.wav',
+  musica_settings: './assets/sounds/musica_settings.wav',
+  puntaje_final:   './assets/sounds/puntaje_final.wav',
+  ring_inicial:    './assets/sounds/ring_inicial.wav',
+  ring_final:      './assets/sounds/ring_final.wav',
+  '10_segundos':   './assets/sounds/10_segundos.wav',
+};
+
+// Volumen de la música de fondo de los menús
+const MUSIC_VOLUME = 0.3;
+
+// SFX cortos: se precargan al arrancar la app (~1.7MB en total).
+const SOUND_PRELOAD_BOOT = ['ring_inicial', 'ring_final', 'good_reaccion', 'combo', 'level_up'];
+// Ficheros grandes que no hacen falta al instante: se piden al empezar la
+// sesión, con más de un round de margen antes de necesitarlos.
+const SOUND_PRELOAD_SESSION = ['10_segundos', 'puntaje_final'];
+// musica_settings.wav pesa ~20MB — carga lazy, sólo al llegar al home.
+
+// Si un WAV no se puede cargar (sin red en el primer uso, decode fallido…)
+// se cae al sintetizador equivalente para no dejar el evento mudo.
+const SOUND_FALLBACKS = {
+  ring_inicial:  () => playBell('round'),
+  ring_final:    () => playBell('end'),
+  good_reaccion: () => playBeep(880, 0.12),
+  combo:         () => playComboOk(),
+  level_up:      () => playLevelUpSound(),
+  puntaje_final: () => playBell('end'),
+  '10_segundos': () => playBeep(1000, 0.08),
+};
+
+function loadSound(name) {
+  if (APP.audioBuffers[name])  return Promise.resolve(APP.audioBuffers[name]);
+  if (APP.audioLoading[name])  return APP.audioLoading[name];
+
+  const url = SOUND_FILES[name];
+  if (!url) return Promise.reject(new Error('sonido desconocido: ' + name));
+
+  const p = fetch(url)
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.arrayBuffer();
+    })
+    .then(raw => new Promise((resolve, reject) => {
+      // decodeAudioData: Safari antiguo sólo soporta la forma con callbacks
+      const ret = getAudioCtx().decodeAudioData(raw, resolve, reject);
+      if (ret && typeof ret.then === 'function') ret.then(resolve, reject);
+    }))
+    .then(buffer => {
+      APP.audioBuffers[name] = buffer;
+      delete APP.audioLoading[name];
+      return buffer;
+    })
+    .catch(err => {
+      delete APP.audioLoading[name];
+      console.log('[FKF] audio load fail ' + name + ': ' + err.message);
+      throw err;
+    });
+
+  APP.audioLoading[name] = p;
+  return p;
+}
+
+function preloadSounds(names) {
+  names.forEach(n => { loadSound(n).catch(() => {}); });
+}
+
+// Reproduce un sonido. Devuelve un handle con .stop() y .source — el
+// BufferSource real, que es null hasta que el buffer termina de cargarse
+// (por eso el handle y no el source pelado: permite parar algo que aún
+// se está descargando, como la música de 20MB).
+function playSound(name, loop = false, volume = 1.0) {
+  const handle = {
+    name,
+    source: null,
+    gain: null,
+    stopped: false,
+    stop() {
+      this.stopped = true;
+      if (this.source) {
+        try { this.source.stop(); } catch (e) {}
+        this.source = null;
+      }
+    },
+  };
+
+  if (!APP.soundEnabled) { handle.stopped = true; return handle; }
+
+  const start = (buffer) => {
+    if (handle.stopped) return;
+    try {
+      const ctx = getAudioCtx();
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      const src  = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      src.buffer = buffer;
+      src.loop   = loop;
+      gain.gain.value = volume;
+      src.connect(gain);
+      gain.connect(ctx.destination);
+      src.onended = () => { if (handle.source === src) handle.source = null; };
+      src.start(0);
+      handle.source = src;
+      handle.gain   = gain;
+    } catch (e) {}
+  };
+
+  const cached = APP.audioBuffers[name];
+  if (cached) { start(cached); return handle; }
+
+  loadSound(name).then(start).catch(() => {
+    if (handle.stopped) return;
+    const fb = SOUND_FALLBACKS[name];
+    if (fb) { try { fb(); } catch (e) {} }
+  });
+  return handle;
+}
+
+// ─── MÚSICA DE FONDO DE LOS MENÚS ─────────────────────
+function startMenuMusic() {
+  if (!APP.soundEnabled) return;
+  // Lazy de verdad: el fichero pesa ~20MB, así que no se pide hasta que el
+  // usuario ha llegado al home (idioma/registro/login se quedan en silencio).
+  if (!APP._homeReached) return;
+  if (APP.musicSource && !APP.musicSource.stopped) return;   // ya sonando
+  const ctx = getAudioCtx();
+  if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+  APP.musicSource = playSound('musica_settings', true, MUSIC_VOLUME);
+}
+
+function stopMenuMusic() {
+  if (APP.musicSource) {
+    APP.musicSource.stop();
+    APP.musicSource = null;
+  }
+}
+
+// ¿Está el usuario en una pantalla de menú? (para reanudar la música
+// al desmutear sin arrancarla en mitad de un round)
+function isOnMenuScreen() {
+  const el = document.querySelector('.screen:not(.hidden)');
+  return !!(el && SESSION_SCREENS.indexOf(el.id) === -1);
+}
+
+// Muchos navegadores dejan el AudioContext suspendido hasta el primer
+// gesto del usuario: lo reanudamos en el primer toque de la sesión.
+function armAudioUnlock() {
+  if (APP._audioUnlockArmed) return;
+  APP._audioUnlockArmed = true;
+  const unlock = () => {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    document.removeEventListener('touchstart', unlock);
+    document.removeEventListener('pointerdown', unlock);
+  };
+  document.addEventListener('touchstart', unlock, { passive: true });
+  document.addEventListener('pointerdown', unlock, { passive: true });
+}
 
 // ─── Helpers compartidos por los sonidos arcade ───────
 function createNoiseBuffer(ctx, durationSec) {
@@ -2390,131 +2583,85 @@ function activateAccelerometer() {
 }
 
 function deactivateAccelerometer() {
-  stopGravityCalibration();
   if (!APP.accel.listening) return;
   window.removeEventListener('devicemotion', onDeviceMotion);
   APP.accel.listening = false;
-  APP.accel._streak   = 0;
-  APP.accel._peakMax  = 0;
+}
+
+// ─── FILTRO DE PASO BAJO: GRAVEDAD EN TIEMPO REAL ─────
+// El baseline medido "en reposo" no servía: al girar el móvil, la gravedad
+// cambia de eje y la resta dejaba de valer, generando falsos positivos.
+// Este filtro sigue la gravedad continuamente, así que la aceleración neta
+// es fiable en cualquier orientación.
+// ALPHA alto a propósito: con 0.85 el filtro se comía ~15% del pico (un
+// impacto real de 5G se leía como 4.25G) porque la propia muestra del golpe
+// arrastraba la estimación de gravedad. Con 0.95 el filtro sigue la
+// orientación pero apenas reacciona al impacto, así que el pico llega entero.
+const GRAV_ALPHA       = 0.95;  // inercia del filtro (más alto = más lento)
+const NET_HIT_G        = 1.5;   // G netos mínimos para contar como golpe
+const HIT_DEBOUNCE_MS  = 150;   // ms mínimos entre dos golpes (anti-doble)
+const FILTER_SETTLE_MS = 600;   // margen para que el filtro converja tras un reset
+                                // (con ALPHA 0.95 tarda más que con 0.85)
+
+let gravX = 0, gravY = 0, gravZ = 0;
+let _filterReadyAt = 0;
+
+// Se llama al empezar cada sesión/round: el filtro arranca de cero y se
+// ignoran las lecturas hasta que converge (si no, el transitorio inicial
+// se leería como un golpe).
+function resetGravityFilter() {
+  gravX = 0; gravY = 0; gravZ = 0;
+  _filterReadyAt = Date.now() + FILTER_SETTLE_MS;
+  APP.accel.lastPunchAt = Date.now();
 }
 
 // Aceleración NETA (sin gravedad) en G.
-// Preferimos e.acceleration, que el navegador ya entrega sin gravedad.
-// Si no está disponible (algunos Android/navegadores devuelven null o ejes
-// vacíos), restamos manualmente el baseline de gravedad medido en reposo.
 function netGForce(e) {
+  const raw = e.accelerationIncludingGravity;
+  if (raw && (raw.x != null || raw.y != null || raw.z != null)) {
+    const rx = raw.x || 0, ry = raw.y || 0, rz = raw.z || 0;
+    gravX = GRAV_ALPHA * gravX + (1 - GRAV_ALPHA) * rx;
+    gravY = GRAV_ALPHA * gravY + (1 - GRAV_ALPHA) * ry;
+    gravZ = GRAV_ALPHA * gravZ + (1 - GRAV_ALPHA) * rz;
+    const netX = rx - gravX, netY = ry - gravY, netZ = rz - gravZ;
+    return Math.sqrt(netX * netX + netY * netY + netZ * netZ) / 9.81;
+  }
+  // Fallback: navegadores que sólo exponen la aceleración ya sin gravedad
   const lin = e.acceleration;
   if (lin && (lin.x != null || lin.y != null || lin.z != null)) {
     const x = lin.x || 0, y = lin.y || 0, z = lin.z || 0;
     return Math.sqrt(x * x + y * y + z * z) / 9.81;
   }
-  const acc = e.accelerationIncludingGravity;
-  if (!acc) return null;
-  const g = APP.accel.gravity;
-  const x = (acc.x || 0) - g.x;
-  const y = (acc.y || 0) - g.y;
-  const z = (acc.z || 0) - g.z;
-  return Math.sqrt(x * x + y * y + z * z) / 9.81;
-}
-
-// Mide la gravedad en reposo: ~10 lecturas durante 500ms con el móvil quieto.
-// La media de cada eje queda como baseline que se resta a cada lectura posterior.
-function calibrateGravity(onDone) {
-  const a = APP.accel;
-  stopGravityCalibration();
-  if (typeof DeviceMotionEvent === 'undefined') { if (onDone) onDone(); return; }
-
-  const samples = [];
-  const startedAt = Date.now();
-  a.calibratingGravity = true;
-  a.gravityReady = false;
-  a._streak  = 0;
-  a._peakMax = 0;
-
-  a._gravListener = (ev) => {
-    const acc = ev.accelerationIncludingGravity;
-    if (!acc) return;
-    samples.push({ x: acc.x || 0, y: acc.y || 0, z: acc.z || 0 });
-  };
-  window.addEventListener('devicemotion', a._gravListener, { passive: true });
-
-  const finish = () => {
-    stopGravityCalibration();
-    if (samples.length >= 3) {
-      const n = samples.length;
-      a.gravity = {
-        x: samples.reduce((s, v) => s + v.x, 0) / n,
-        y: samples.reduce((s, v) => s + v.y, 0) / n,
-        z: samples.reduce((s, v) => s + v.z, 0) / n,
-      };
-      a.gravityReady = true;
-      console.log(`[FKF] gravity baseline n=${n} x=${a.gravity.x.toFixed(2)} y=${a.gravity.y.toFixed(2)} z=${a.gravity.z.toFixed(2)}`);
-    } else {
-      console.log('[FKF] gravity baseline: lecturas insuficientes, se mantiene el anterior');
-    }
-    a._streak  = 0;
-    a._peakMax = 0;
-    a.lastPunchAt = Date.now();   // evita registrar el primer pico justo tras calibrar
-    if (onDone) onDone();
-  };
-
-  // 500ms de ventana; si el dispositivo emite pocos eventos, se extiende
-  // hasta 1500ms buscando al menos 10 lecturas.
-  const check = () => {
-    if (!a.calibratingGravity) return;
-    if (samples.length >= 10 || (Date.now() - startedAt) >= 1500) finish();
-    else a._gravTimer = trackedTimeout(check, 250);
-  };
-  a._gravTimer = trackedTimeout(check, 500);
-}
-
-function stopGravityCalibration() {
-  const a = APP.accel;
-  if (a._gravListener) {
-    window.removeEventListener('devicemotion', a._gravListener);
-    a._gravListener = null;
-  }
-  clearTimeout(a._gravTimer);
-  a.calibratingGravity = false;
+  return null;
 }
 
 function onDeviceMotion(e) {
   if (!window.IMPACT_SESSION_ACTIVE) return;
   if (!APP.sessionActive) return;
-  if (APP.accel.calibratingGravity) return;   // midiendo gravedad en reposo
 
   const gForce = netGForce(e);
   if (gForce == null) return;
   const now = Date.now();
 
+  // El filtro aún no ha convergido: la señal no es fiable todavía
+  if (now < _filterReadyAt) return;
+
+  // Suelo absoluto: por debajo de NET_HIT_G neto no es un golpe
+  const effectiveThreshold = Math.max(APP.accel.THRESHOLD, NET_HIT_G);
+  const cooldown = Math.max(HIT_DEBOUNCE_MS,
+    (APP.mode === 'combo' && APP.comboConfig.submode === 'combo' && APP.combo.state === 'active')
+      ? APP.accel.COMBO_HIT_COOLDOWN
+      : APP.accel.COOLDOWN);
+
   if (now - APP.accel._logAt > 100) {
     APP.accel._logAt = now;
-    console.log(`[FKF] accel net=${gForce.toFixed(2)}G thr=${APP.accel.THRESHOLD}G`);
+    console.log(`[FKF] accel net=${gForce.toFixed(2)}G thr=${effectiveThreshold}G`);
   }
 
-  // Suelo absoluto: por debajo de 0.6G neto no es un golpe, se ignora
-  const effectiveThreshold = Math.max(APP.accel.THRESHOLD, APP.accel.ABSOLUTE_MIN_G);
-  const cooldown = (APP.mode === 'combo' && APP.comboConfig.submode === 'combo' && APP.combo.state === 'active')
-    ? APP.accel.COMBO_HIT_COOLDOWN
-    : APP.accel.COOLDOWN;
-
-  if (gForce >= effectiveThreshold) {
-    // Anti-spike: hacen falta N lecturas consecutivas sobre umbral.
-    // Una lectura aislada de un solo frame se descarta.
-    APP.accel._streak++;
-    if (gForce > APP.accel._peakMax) APP.accel._peakMax = gForce;
-    if (APP.accel._streak >= APP.accel.SUSTAIN_READINGS && (now - APP.accel.lastPunchAt) > cooldown) {
-      const peakG = APP.accel._peakMax;
-      APP.accel.lastPunchAt = now;
-      APP.accel._streak     = 0;
-      APP.accel._peakMax    = 0;
-      console.log(`[FKF] PUNCH g=${peakG.toFixed(2)}G mode=${APP.mode}`);
-      registerPunch(peakG, peakG * 9.81);
-    }
-  } else {
-    // Cayó por debajo del umbral: se rompe la racha
-    APP.accel._streak  = 0;
-    APP.accel._peakMax = 0;
+  if (gForce > effectiveThreshold && (now - APP.accel.lastPunchAt) >= cooldown) {
+    APP.accel.lastPunchAt = now;
+    console.log(`[FKF] PUNCH g=${gForce.toFixed(2)}G mode=${APP.mode}`);
+    registerPunch(gForce, gForce * 9.81);
   }
 }
 
@@ -2730,6 +2877,44 @@ function fmtDateShort(ts) {
 }
 
 // ═══════════════════════════════════════════════════
+// CONTADORES ANIMADOS
+// ═══════════════════════════════════════════════════
+// Anima el número de un elemento de 0 hasta `target` con easeOutCubic.
+// opts.decimals — decimales a mostrar (los G y las velocidades usan 1;
+//                 sin esto, 4.7G se vería como "4G" durante y al final).
+// opts.formatter — formato propio (la duración cuenta como 0:00 → 2:30).
+function animateCounter(el, target, duration, suffix = '', prefix = '', opts = {}) {
+  if (!el) return;
+  const decimals  = opts.decimals || 0;
+  const factor    = Math.pow(10, decimals);
+  const formatter = opts.formatter || null;
+  const render    = v => formatter ? formatter(v) : (prefix + v.toFixed(decimals) + suffix);
+
+  const start = performance.now();
+  const step = (now) => {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased    = 1 - Math.pow(1 - progress, 3);
+    const current  = Math.floor(eased * target * factor) / factor;
+    el.textContent = render(current);
+    if (progress < 1) trackedRAF(step);
+    else el.textContent = render(target);
+  };
+  trackedRAF(step);
+}
+
+const SUMMARY_COUNTER_MS = 5000;
+
+// Anima todos los números del resumen final. `specs` es una lista de
+// [idOrElement, valor, sufijo, prefijo, opts].
+function animateSummaryCounters(specs) {
+  specs.forEach(([target, value, suffix, prefix, opts]) => {
+    const el = typeof target === 'string' ? document.getElementById(target) : target;
+    if (!el) return;
+    animateCounter(el, value, SUMMARY_COUNTER_MS, suffix || '', prefix || '', opts || {});
+  });
+}
+
+// ═══════════════════════════════════════════════════
 // CANVAS CHARTS
 // ═══════════════════════════════════════════════════
 function drawBarChart(canvasId, values, maxVal, colorFn) {
@@ -2887,8 +3072,8 @@ function renderProfileAvatar() {
   if (badgeEl)  badgeEl.textContent  = level.name;
   if (barEl) {
     if (nextLevel) {
-      const range = nextLevel.min - level.min;
-      const pct   = Math.min(100, Math.round(((score - level.min) / range) * 100));
+      const range = nextLevel.xp - level.xp;
+      const pct   = Math.min(100, Math.round(((score - level.xp) / range) * 100));
       barEl.style.width = pct + '%';
     } else {
       barEl.style.width = '100%';
@@ -2896,8 +3081,8 @@ function renderProfileAvatar() {
   }
   if (pointsEl) {
     pointsEl.textContent = nextLevel
-      ? score + ' / ' + nextLevel.min + ' pts'
-      : score + ' pts · NIVEL MÁXIMO';
+      ? score + ' / ' + nextLevel.xp + ' XP'
+      : score + ' XP · NIVEL MÁXIMO';
   }
 }
 
@@ -3144,6 +3329,10 @@ function initMenuScreen() {
   // sesión anterior (si la había) quedan completamente detenidos primero.
   stopEverything();
 
+  // Primera llegada al home: a partir de aquí la música de menús ya puede
+  // descargarse y sonar (antes no, para no pedir 20MB en el arranque).
+  APP._homeReached = true;
+  startMenuMusic();
   startHomeParticles();
 
   const measureBtn = document.getElementById('btn-training-mode');
@@ -3486,8 +3675,12 @@ function startSession() {
   APP.sessionSaved  = false;
   APP.sessionActive = true;
   APP.hitWindowActive = false;
+  // stopEverything() ya paró la música; el descanso y el resumen necesitan
+  // sus WAV grandes, y aquí hay más de un round de margen para bajarlos.
+  preloadSounds(SOUND_PRELOAD_SESSION);
   acquireWakeLock();
   activateAccelerometer();
+  resetGravityFilter();
   initGamificationSession();
   stopHomeParticles();
   showGlobalXPOverlay();
@@ -3508,11 +3701,10 @@ function startRound(roundNum) {
     secondsLeft: APP.config.roundDuration * 60,
   };
   vibrate([100, 50, 100]);
-  playBell('round');
+  playSound('ring_inicial');
 
-  // Baseline de gravedad al iniciar cada round. Se espera a que termine la
-  // vibración de campana (250ms) para no contaminar las lecturas en reposo.
-  trackedTimeout(() => calibrateGravity(), 300);
+  // El filtro de gravedad arranca de cero en cada round
+  resetGravityFilter();
 
   if (APP.mode === 'training') {
     APP.hitWindowActive = true;
@@ -3569,7 +3761,7 @@ function endRound() {
   APP.session.misses += APP.round.misses;
 
   vibrate([200, 100, 200]);
-  playBell('end');
+  playSound('ring_final');
 
   if (APP.session.currentRound >= APP.config.rounds) {
     showSummaryScreen();
@@ -3917,7 +4109,7 @@ function endCombo(ok, noHits) {
 
   if (ok) {
     vibrate([20, 30, 20]);
-    playComboOk();
+    playSound('combo');
   } else {
     vibrate([50, 30, 50]);
     playComboFail();
@@ -4038,7 +4230,7 @@ function updateReactionFooterXP() {
   if (lvlEl)   lvlEl.textContent   = 'NIVEL ' + (inf.idx + 1);
   if (badgeEl) badgeEl.textContent = xp + ' XP';
   if (fillEl && inf.next) {
-    const pct = Math.min(100, Math.round(((xp - inf.current.min) / (inf.next.min - inf.current.min)) * 100));
+    const pct = Math.min(100, Math.round(((xp - inf.current.xp) / (inf.next.xp - inf.current.xp)) * 100));
     fillEl.style.width = pct + '%';
   } else if (fillEl) {
     fillEl.style.width = '100%';
@@ -4134,6 +4326,7 @@ function handleReactionPunch(punch) {
   );
   showReactionHitOverlay(reactionMs);
   showHitRings();
+  playSound('good_reaccion');
   vibrate([30, 20, 50, 20, 30]);
   updateReactionMetricsUI();
   updateReactionFooterXP();
@@ -4188,14 +4381,25 @@ function showRestScreen(doneRound, nextRound) {
     startRound(nextRound);
   };
 
+  // Aviso de "quedan 10 segundos". Si el descanso configurado es más corto
+  // que eso, suena ya al entrar en el descanso.
+  let warned10 = false;
+  const warn10 = () => {
+    if (warned10) return;
+    warned10 = true;
+    playSound('10_segundos');
+  };
+  if (seconds <= 10) warn10();
+
   document.getElementById('btn-skip-rest').onclick = startNext;
   APP.rest.interval = trackedInterval(() => {
     seconds--;
     const el = document.getElementById('rest-countdown');
     el.textContent = seconds;
     el.classList.toggle('ending', seconds <= 10);
-    if (seconds > 0 && seconds <= 10) { vibrate([50]); playBeep(1000, 0.08); }
-    if (seconds <= 0) { playBeep(1200, 0.4); startNext(); }
+    if (seconds === 10) warn10();
+    if (seconds > 0 && seconds <= 10) vibrate([50]);
+    if (seconds <= 0) startNext();
   }, 1000);
 }
 
@@ -4377,14 +4581,38 @@ function showSummaryScreen() {
   saveBtn.disabled = true;
 
   document.getElementById('btn-summary-menu').onclick = () => {
-    showScreen('screen-menu');
+    showScreen('screen-menu');   // showScreen reanuda la música de menús
     startHomeParticles();
   };
 
   if (APP.mode === 'training' && APP.gamification) renderGamificationSummary();
 
   const sessionXP = APP.gamification ? Math.max(0, APP.gamification.sessionXP) : 0;
-  showResultSplash(sess.allPunches, sessionXP, () => showScreen('screen-summary', true));
+
+  // Contadores que se animan de 0 al valor final al mostrar el resumen.
+  // Los valores definitivos ya están escritos arriba: si la animación no
+  // llegara a arrancar, las cifras correctas siguen a la vista.
+  const counterSpecs = [
+    ['sum-punches',   total,    '',      '', { decimals: 0 }],
+    ['sum-avg-power', avgPower, 'G',     '', { decimals: 1 }],
+    ['sum-max-power', maxPower, 'G',     '', { decimals: 1 }],
+    ['sum-avg-speed', avgSpeed, '',      '', { decimals: 1 }],
+    ['sum-max-speed', maxSpeed, '',      '', { decimals: 1 }],
+    ['sum-calories',  calories, ' kcal', '', { decimals: 0 }],
+    ['sum-duration',  durSec,   '',      '', { formatter: v => fmtTime(Math.floor(v)) }],
+  ];
+  if (APP.mode === 'combo') {
+    counterSpecs.push(['sum-hits',   sess.hits,   '', '', { decimals: 0 }]);
+    counterSpecs.push(['sum-misses', sess.misses, '', '', { decimals: 0 }]);
+  }
+  const xpEl = document.querySelector('#gam-summary-section .gam-summary-xp');
+  if (xpEl) counterSpecs.push([xpEl, sessionXP, ' XP', '+', { decimals: 0 }]);
+
+  showResultSplash(sess.allPunches, sessionXP, () => {
+    showScreen('screen-summary', true);
+    playSound('puntaje_final');
+    animateSummaryCounters(counterSpecs);
+  });
 }
 
 function buildComparison(totalPunches, avgPower, bestReaction) {
@@ -4760,7 +4988,11 @@ function initAvatarSystem() {
 
 function init() {
   initSupabase();
+  // Antes que nada: nadie debe leer el XP viejo sin migrar
+  migrateXPToV52();
   loadSoundPref();
+  armAudioUnlock();
+  preloadSounds(SOUND_PRELOAD_BOOT);
   loadCalibration();
   loadColorConfig();
   APP.records = loadRecords();
@@ -4884,7 +5116,8 @@ const HELP_SECTIONS = {
   <li>💥 <strong>Thud</strong> — cada golpe detectado.</li>
   <li>🎵 <strong>Escala ascendente</strong> — combo completado correctamente.</li>
   <li>📉 <strong>Escala descendente</strong> — combo fallido o tiempo agotado.</li>
-  <li>🔔 <strong>Beep suave</strong> — cada 10 s durante el descanso.</li>
+  <li>⏱️ <strong>Aviso</strong> — cuando quedan 10 s de descanso.</li>
+  <li>🎶 <strong>Música de fondo</strong> — en los menús (se corta al empezar el round).</li>
   <li>🗣️ <strong>Voz</strong> — anuncia resultados en tu idioma (¡Bien! / ¡Maestro! / ¡Sigue intentando!).</li>
 </ul>`
     },
@@ -4994,7 +5227,8 @@ const HELP_SECTIONS = {
   <li>💥 <strong>Thud</strong> — every detected punch.</li>
   <li>🎵 <strong>Ascending scale</strong> — combo completed correctly.</li>
   <li>📉 <strong>Descending scale</strong> — combo failed or timed out.</li>
-  <li>🔔 <strong>Soft beep</strong> — every 10 s during rest.</li>
+  <li>⏱️ <strong>Warning</strong> — when 10 s of rest are left.</li>
+  <li>🎶 <strong>Background music</strong> — in the menus (stops when the round starts).</li>
   <li>🗣️ <strong>Voice</strong> — announces results in your language (Good! / Master! / Keep trying!).</li>
 </ul>`
     },
@@ -5104,7 +5338,8 @@ const HELP_SECTIONS = {
   <li>💥 <strong>Thud</strong> — cada golpe detectado.</li>
   <li>🎵 <strong>Escala ascendente</strong> — combo concluído corretamente.</li>
   <li>📉 <strong>Escala descendente</strong> — combo falhou ou tempo esgotado.</li>
-  <li>🔔 <strong>Bipe suave</strong> — a cada 10 s durante o descanso.</li>
+  <li>⏱️ <strong>Aviso</strong> — quando faltam 10 s de descanso.</li>
+  <li>🎶 <strong>Música de fundo</strong> — nos menus (para ao começar o round).</li>
   <li>🗣️ <strong>Voz</strong> — anuncia resultados no seu idioma.</li>
 </ul>`
     },
@@ -5214,7 +5449,8 @@ const HELP_SECTIONS = {
   <li>💥 <strong>Dumpfer Ton</strong> — jeder erkannte Schlag.</li>
   <li>🎵 <strong>Aufsteigende Skala</strong> — Kombo erfolgreich abgeschlossen.</li>
   <li>📉 <strong>Absteigende Skala</strong> — Kombo fehlgeschlagen oder Zeit abgelaufen.</li>
-  <li>🔔 <strong>Leiser Piepton</strong> — alle 10 s in der Pause.</li>
+  <li>⏱️ <strong>Hinweis</strong> — wenn noch 10 s Pause bleiben.</li>
+  <li>🎶 <strong>Hintergrundmusik</strong> — in den Menüs (stoppt beim Rundenstart).</li>
   <li>🗣️ <strong>Stimme</strong> — kündigt Ergebnisse in deiner Sprache an.</li>
 </ul>`
     },
@@ -5292,6 +5528,9 @@ function toggleSound() {
   APP.soundEnabled = !APP.soundEnabled;
   saveSoundPref();
   updateMuteButtons();
+  // La música de menús también obedece al mute global
+  if (!APP.soundEnabled) stopMenuMusic();
+  else if (isOnMenuScreen()) startMenuMusic();
 }
 
 function updateMuteButtons() {
@@ -5662,7 +5901,6 @@ function useCalibTapFallback(stepNum) {
 }
 
 function stopCalibListener() {
-  stopGravityCalibration();
   if (APP.calib.listener) {
     window.removeEventListener('devicemotion', APP.calib.listener);
     APP.calib.listener = null;

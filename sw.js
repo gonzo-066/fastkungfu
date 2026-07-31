@@ -1,4 +1,4 @@
-const CACHE_NAME = 'impactlab-v51';
+const CACHE_NAME = 'impactlab-v52';
 const ASSETS = [
   './',
   './index.html',
@@ -12,7 +12,15 @@ const ASSETS = [
   './assets/Card-reacci%C3%B3n3.png',
   './assets/card-potencia3.png',
   './assets/card-combo4.png',
-  './assets/card-colores5.jpg'
+  './assets/card-colores5.jpg',
+  // SFX cortos. Los pesados (10_segundos, puntaje_final, musica_settings)
+  // se quedan fuera del precache para no alargar la instalación: se cachean
+  // en runtime la primera vez que suenan.
+  './assets/sounds/ring_inicial.wav',
+  './assets/sounds/ring_final.wav',
+  './assets/sounds/good_reaccion.wav',
+  './assets/sounds/combo.wav',
+  './assets/sounds/level_up.wav'
 ];
 
 self.addEventListener('install', e => {
@@ -32,7 +40,19 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const isSound = e.request.url.indexOf('/assets/sounds/') !== -1;
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => cached))
+    caches.match(e.request).then(cached => {
+      if (cached) return cached;
+      return fetch(e.request).then(res => {
+        // Los WAV grandes se guardan al vuelo: a partir de la segunda vez
+        // suenan sin red y sin volver a descargar 20MB.
+        if (isSound && res && res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(e.request, copy));
+        }
+        return res;
+      }).catch(() => cached);
+    })
   );
 });
