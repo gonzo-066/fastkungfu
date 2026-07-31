@@ -2316,6 +2316,64 @@ canvas {
   color: #FF4444;
 }
 
+/* ── Resumen "CALIBRACIÓN ACTUAL" ── */
+/* 6 tarjetas + 2 botones no caben en pantallas bajas: se permite scroll */
+.calib-results.calib-cur-screen {
+  justify-content: flex-start;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.calib-cur-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--yellow);
+  text-transform: uppercase;
+}
+
+.calib-cur-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.calib-cur-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  text-align: left;
+}
+
+.calib-cur-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.calib-cur-label {
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+}
+
+.calib-cur-value {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* Botón outline blanco — "RECALIBRAR" sobre el resumen guardado */
 .btn-calib-outline {
   width: 100%;
@@ -2919,6 +2977,9 @@ canvas {
 }
 .home-calib-hint.home-calib-hint-ok {
   color: #00FF66;
+}
+.home-calib-hint.home-calib-hint-warn {
+  color: #FF9500;
 }
 .home-calib-hint-link {
   color: #888;

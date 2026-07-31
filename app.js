@@ -249,9 +249,12 @@ const TRANSLATIONS = {
     calib_save:           'GUARDAR CALIBRACIÓN',
     calib_again:          'REPETIR CALIBRACIÓN',
     calib_existing_title: '✓ Ya tienes una calibración guardada',
+    calib_current_title:  'CALIBRACIÓN ACTUAL',
+    calib_cur_threshold:  'Umbral detección',
+    calib_cur_debounce:   'Debounce',
     calib_existing_date:  'Fecha',
-    calib_use_existing:   'USAR ESTA CALIBRACIÓN',
-    calib_recalibrate:    'RECALIBRAR',
+    calib_use_existing:   '✓ USAR ESTA CALIBRACIÓN',
+    calib_recalibrate:    '🔄 RECALIBRAR',
     calib_notice:         'Calibra tu dispositivo para mayor precisión',
     calib_notice_btn:     'CALIBRAR',
     calib_peak_detected:  'Golpe detectado: {g}G',
@@ -269,8 +272,8 @@ const TRANSLATIONS = {
     calib_result_threshold: 'Umbral configurado',
     calib_result_sensitivity: 'Sensibilidad',
     calib_ms_debounce:    '{n} ms debounce',
-    home_calib_status_yes: '✓ Calibrado',
-    home_calib_status_no: 'Usando sensibilidad estándar',
+    home_calib_status_yes: '✓ Calibración guardada — {date}',
+    home_calib_status_no: '⚠️ Sin calibrar — toca para calibrar',
     sound_label:          'SONIDO',
     sound_on:             'ACTIVADO',
     sound_off:            'SILENCIADO',
@@ -435,9 +438,12 @@ const TRANSLATIONS = {
     calib_save:           'SAVE CALIBRATION',
     calib_again:          'REPEAT CALIBRATION',
     calib_existing_title: '✓ You already have a saved calibration',
+    calib_current_title:  'CURRENT CALIBRATION',
+    calib_cur_threshold:  'Detection threshold',
+    calib_cur_debounce:   'Debounce',
     calib_existing_date:  'Date',
-    calib_use_existing:   'USE THIS CALIBRATION',
-    calib_recalibrate:    'RECALIBRATE',
+    calib_use_existing:   '✓ USE THIS CALIBRATION',
+    calib_recalibrate:    '🔄 RECALIBRATE',
     calib_notice:         'Calibrate your device for better precision',
     calib_notice_btn:     'CALIBRATE',
     calib_peak_detected:  'Punch detected: {g}G',
@@ -455,8 +461,8 @@ const TRANSLATIONS = {
     calib_result_threshold: 'Configured threshold',
     calib_result_sensitivity: 'Sensitivity',
     calib_ms_debounce:    '{n} ms debounce',
-    home_calib_status_yes: '✓ Calibrated',
-    home_calib_status_no: 'Using standard sensitivity',
+    home_calib_status_yes: '✓ Calibration saved — {date}',
+    home_calib_status_no: '⚠️ Not calibrated — tap to calibrate',
     sound_label:          'SOUND',
     sound_on:             'ON',
     sound_off:            'MUTED',
@@ -621,9 +627,12 @@ const TRANSLATIONS = {
     calib_save:           'SALVAR CALIBRAÇÃO',
     calib_again:          'REPETIR CALIBRAÇÃO',
     calib_existing_title: '✓ Você já tem uma calibração salva',
+    calib_current_title:  'CALIBRAÇÃO ATUAL',
+    calib_cur_threshold:  'Limiar de detecção',
+    calib_cur_debounce:   'Debounce',
     calib_existing_date:  'Data',
-    calib_use_existing:   'USAR ESTA CALIBRAÇÃO',
-    calib_recalibrate:    'RECALIBRAR',
+    calib_use_existing:   '✓ USAR ESTA CALIBRAÇÃO',
+    calib_recalibrate:    '🔄 RECALIBRAR',
     calib_notice:         'Calibre seu dispositivo para maior precisão',
     calib_notice_btn:     'CALIBRAR',
     calib_peak_detected:  'Soco detectado: {g}G',
@@ -641,8 +650,8 @@ const TRANSLATIONS = {
     calib_result_threshold: 'Limiar configurado',
     calib_result_sensitivity: 'Sensibilidade',
     calib_ms_debounce:    '{n} ms debounce',
-    home_calib_status_yes: '✓ Calibrado',
-    home_calib_status_no: 'Usando sensibilidade padrão',
+    home_calib_status_yes: '✓ Calibração salva — {date}',
+    home_calib_status_no: '⚠️ Sem calibrar — toque para calibrar',
     sound_label:          'SOM',
     sound_on:             'ATIVADO',
     sound_off:            'SILENCIADO',
@@ -807,9 +816,12 @@ const TRANSLATIONS = {
     calib_save:           'KALIBRIERUNG SPEICHERN',
     calib_again:          'KALIBRIERUNG WIEDERHOLEN',
     calib_existing_title: '✓ Du hast bereits eine gespeicherte Kalibrierung',
+    calib_current_title:  'AKTUELLE KALIBRIERUNG',
+    calib_cur_threshold:  'Erkennungsschwelle',
+    calib_cur_debounce:   'Debounce',
     calib_existing_date:  'Datum',
-    calib_use_existing:   'DIESE KALIBRIERUNG NUTZEN',
-    calib_recalibrate:    'NEU KALIBRIEREN',
+    calib_use_existing:   '✓ DIESE KALIBRIERUNG NUTZEN',
+    calib_recalibrate:    '🔄 NEU KALIBRIEREN',
     calib_notice:         'Kalibriere dein Gerät für bessere Präzision',
     calib_notice_btn:     'KALIBRIEREN',
     calib_peak_detected:  'Schlag erkannt: {g}G',
@@ -827,8 +839,8 @@ const TRANSLATIONS = {
     calib_result_threshold: 'Eingestellter Schwellenwert',
     calib_result_sensitivity: 'Empfindlichkeit',
     calib_ms_debounce:    '{n} ms Entprellzeit',
-    home_calib_status_yes: '✓ Kalibriert',
-    home_calib_status_no: 'Standardempfindlichkeit',
+    home_calib_status_yes: '✓ Kalibrierung gespeichert — {date}',
+    home_calib_status_no: '⚠️ Nicht kalibriert — zum Kalibrieren tippen',
     sound_label:          'TON',
     sound_on:             'AN',
     sound_off:            'STUMM',
@@ -2710,6 +2722,13 @@ function fmtDate(ts) {
   });
 }
 
+// Solo día/mes/año — para etiquetas cortas como el aviso del home
+function fmtDateShort(ts) {
+  return new Date(ts).toLocaleDateString(getLocale(), {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+  });
+}
+
 // ═══════════════════════════════════════════════════
 // CANVAS CHARTS
 // ═══════════════════════════════════════════════════
@@ -3174,13 +3193,18 @@ function initMenuScreen() {
     card.addEventListener('click', onTap);
   });
 
-  // Calibration hint link (Bug 2)
+  // Aviso de calibración bajo el botón CALIBRAR: verde con la fecha si hay
+  // calibración guardada, naranja si el dispositivo aún no está calibrado
   const calibHint = document.getElementById('home-calib-hint');
   if (calibHint) {
     calibHint.onclick = () => { stopHomeParticles(); showCalibrationScreen('screen-menu'); };
-    const isCalibrated = !!localStorage.getItem('fkf_calibration');
-    calibHint.textContent = isCalibrated ? t('home_calib_status_yes') : t('home_calib_status_no');
-    calibHint.classList.toggle('home-calib-hint-ok', isCalibrated);
+    const cal = APP.calibration;
+    const isCalibrated = !!(cal && cal.calibrated);
+    calibHint.textContent = isCalibrated
+      ? t('home_calib_status_yes', { date: cal.date ? fmtDateShort(cal.date) : '—' })
+      : t('home_calib_status_no');
+    calibHint.classList.toggle('home-calib-hint-ok',   isCalibrated);
+    calibHint.classList.toggle('home-calib-hint-warn', !isCalibrated);
   }
 
   document.getElementById('btn-settings').onclick = toggleSettingsDropdown;
@@ -5410,27 +5434,33 @@ function showCalibrationScreen(fromScreen) {
   else                                               renderCalibIntro();
 }
 
+// Resumen de la calibración guardada. No arranca el sensor: la lectura en
+// vivo y el aviso "Sensor activo" solo aparecen al pulsar RECALIBRAR.
 function renderCalibExisting() {
   const c = APP.calibration;
   const content = document.getElementById('calib-content');
   content.style.background = '';
+  stopCalibListener();
 
-  const row = (label, value, color) => `
-    <div class="calib-result-row">
-      <span class="calib-result-label">${label}</span>
-      <span class="calib-result-value"${color ? ` style="color:${color}"` : ''}>${value}</span>
+  const card = (icon, label, value, color) => `
+    <div class="calib-cur-card">
+      <span class="calib-cur-icon">${icon}</span>
+      <span class="calib-cur-label">${label}</span>
+      <span class="calib-cur-value"${color ? ` style="color:${color}"` : ''}>${value}</span>
     </div>`;
 
+  const stepLabel = i => CALIB_STEPS[i].label[APP.lang] || CALIB_STEPS[i].label.es;
+
   content.innerHTML = `
-    <div class="calib-results">
-      <div class="calib-results-icon">✓</div>
-      <h3 class="calib-title">${t('calib_existing_title')}</h3>
-      <div class="calib-result-values">
-        ${row(CALIB_STEPS[0].label[APP.lang] || CALIB_STEPS[0].label.es, `${(c.soft   || 0).toFixed(1)}G`, CALIB_STEPS[0].color)}
-        ${row(CALIB_STEPS[1].label[APP.lang] || CALIB_STEPS[1].label.es, `${(c.medium || 0).toFixed(1)}G`, CALIB_STEPS[1].color)}
-        ${row(CALIB_STEPS[2].label[APP.lang] || CALIB_STEPS[2].label.es, `${(c.hard   || 0).toFixed(1)}G`, CALIB_STEPS[2].color)}
-        ${row(t('calib_result_threshold'), `${(c.threshold || 0).toFixed(2)}G`)}
-        ${row(t('calib_existing_date'), c.date ? fmtDate(c.date) : '—')}
+    <div class="calib-results calib-cur-screen">
+      <h3 class="calib-cur-title">${t('calib_current_title')}</h3>
+      <div class="calib-cur-cards">
+        ${card('🟢', stepLabel(0), `${(c.soft   || 0).toFixed(1)}G`, CALIB_STEPS[0].color)}
+        ${card('🟡', stepLabel(1), `${(c.medium || 0).toFixed(1)}G`, CALIB_STEPS[1].color)}
+        ${card('🔴', stepLabel(2), `${(c.hard   || 0).toFixed(1)}G`, CALIB_STEPS[2].color)}
+        ${card('⚙️', t('calib_cur_threshold'), `${(c.threshold || 0).toFixed(2)}G`)}
+        ${card('⏱', t('calib_cur_debounce'), `${c.debounce || 0}ms`)}
+        ${card('📅', t('calib_existing_date'), c.date ? fmtDate(c.date) : '—')}
       </div>
       <button class="btn-primary btn-calib-ready" id="btn-calib-keep">${t('calib_use_existing')}</button>
       <button class="btn-calib-outline" id="btn-calib-redo">${t('calib_recalibrate')}</button>
