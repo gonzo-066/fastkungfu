@@ -80,10 +80,11 @@ function stopEverything() {
   deactivateAccelerometer();
 
   // 4. Partículas y animaciones — cancelar RAFs trackeados y resetear
-  //    los flags internos de cada sistema para que puedan reiniciarse después
+  //    los flags internos de cada sistema para que puedan reiniciarse después.
+  //    El fondo global (#bg-particles) queda fuera a propósito: corre con RAF
+  //    sin trackear y no debe pararse nunca, se ve en todas las pantallas.
   window.IMPACT_RAFS.forEach(id => cancelAnimationFrame(id));
   window.IMPACT_RAFS = [];
-  stopBgParticles();
   stopReactionBgParticles();
 }
 
@@ -1850,14 +1851,29 @@ function _drawFxShape(ctx, shape, x, y, r, color, alpha) {
   }
 }
 
+// El fondo de partículas es GLOBAL y permanente: arranca una vez y no se
+// detiene nunca, para que se vea en todas las pantallas.
+//
+// Ojo con el tracking: el loop usa requestAnimationFrame/setTimeout DIRECTOS,
+// no trackedRAF/trackedTimeout. stopEverything() cancela todos los RAF y
+// timers trackeados, y eso era lo que apagaba el fondo en cuanto se salía
+// del home (además de las llamadas explícitas a stopBgParticles()).
 function startBgParticles() {
   if (_homeParticleRAF) return;
   const canvas = document.getElementById('bg-particles');
   if (!canvas) return;
-  canvas.width  = window.innerWidth;
-  canvas.height = window.innerHeight;
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+
+  let W, H;
+  const resize = () => {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  };
+  resize();
+  // Sin esto, al girar el móvil el canvas se quedaba con el tamaño viejo:
+  // antes se disimulaba porque el loop se reiniciaba en cada navegación.
+  window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', resize);
 
   const particles = Array.from({ length: _fxParticleCount(30) }, () => {
     const def = _HOME_SHAPES[Math.floor(Math.random() * _HOME_SHAPES.length)];
@@ -1877,7 +1893,7 @@ function startBgParticles() {
 
   let lightning = null; // { x1,y1,x2,y2, life }
   const scheduleLightning = () => {
-    _homeLightningTimer = trackedTimeout(() => {
+    _homeLightningTimer = window.setTimeout(() => {
       lightning = { x1: Math.random() * W, y1: 0, x2: Math.random() * W, y2: H, life: 6 };
       scheduleLightning();
     }, 4000 + Math.random() * 2000);
@@ -1886,7 +1902,7 @@ function startBgParticles() {
 
   let frame = 0;
   const tick = () => {
-    if (_fxPaused) { _homeParticleRAF = trackedRAF(tick); return; }
+    if (_fxPaused) { _homeParticleRAF = window.requestAnimationFrame(tick); return; }
     frame++;
     ctx.clearRect(0, 0, W, H);
 
@@ -1935,17 +1951,17 @@ function startBgParticles() {
       _drawFxShape(ctx, p.shape, p.x, p.y, p.r, p.color, p.alpha);
     });
     ctx.globalAlpha = 1;
-    _homeParticleRAF = trackedRAF(tick);
+    _homeParticleRAF = window.requestAnimationFrame(tick);
   };
   tick();
 }
 
-function stopBgParticles() {
-  if (_homeParticleRAF) { cancelAnimationFrame(_homeParticleRAF); _homeParticleRAF = null; }
-  if (_homeLightningTimer) { clearTimeout(_homeLightningTimer); _homeLightningTimer = null; }
-  const canvas = document.getElementById('bg-particles');
-  if (canvas) { const c = canvas.getContext('2d'); c.clearRect(0, 0, canvas.width, canvas.height); }
-}
+// No-op deliberado. Una docena de rutas de navegación llamaban a esto al
+// salir del home, que es justo por lo que el fondo sólo se veía ahí. Ahora
+// el fondo es global y permanente, así que "parar" no debe hacer nada; se
+// mantiene la función para no tener que tocar todos esos llamantes (y para
+// que uno nuevo tampoco pueda volver a apagarlo por accidente).
+function stopBgParticles() {}
 
 // Backwards-compat aliases (called from many stop/start paths)
 function startHomeParticles() { startBgParticles(); }
@@ -5016,7 +5032,9 @@ function init() {
     APP.accel.permitted = true;
   }
 
-  trackedTimeout(() => startBgParticles(), 100);
+  // Plain setTimeout: con trackedTimeout, un stopEverything() en los primeros
+  // 100ms cancelaba el arranque y el fondo no aparecía nunca.
+  window.setTimeout(() => startBgParticles(), 100);
 }
 
 // ═══════════════════════════════════════════════════
@@ -6148,7 +6166,7 @@ function setColorsStage(colorId, textOverride) {
   const textEl = document.getElementById('colors-center-text');
   if (!stage || !textEl) return;
   if (!colorId) {
-    stage.style.background  = '#0A0A0A';
+    stage.style.background  = 'rgba(10,10,10,0.92)';   // deja ver las partículas
     textEl.textContent      = '';
     textEl.style.color      = '#FFFFFF';
     return;

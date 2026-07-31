@@ -959,7 +959,8 @@ canvas {
    PANTALLA: PENALIZACIÓN POR ABANDONO
 ════════════════════════════════════ */
 #screen-abandon-penalty {
-  background: #1A0000;
+  /* Translúcido para que se vean las partículas globales por debajo */
+  background: rgba(26, 0, 0, 0.92);
 }
 
 .abandon-penalty-title {
@@ -2406,7 +2407,10 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0A0A0A;
+  /* Estado en reposo translúcido: deja ver las partículas globales.
+     Los colores del estímulo sí son opacos (ver setColorsStage) — el
+     destello a pantalla completa es justo lo que mide este modo. */
+  background: rgba(10, 10, 10, 0.92);
   transition: background 0.12s ease;
   z-index: 1;
 }
@@ -3994,7 +3998,8 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #050505;
+  /* Translúcido para que se vean las partículas globales por debajo */
+  background: rgba(5, 5, 5, 0.92);
   z-index: 10;
 }
 .result-splash-inner {
@@ -4514,7 +4519,8 @@ canvas {
 ════════════════════════════════════ */
 
 #screen-reaction {
-  background: #050505;
+  /* Translúcido para que se vean las partículas globales por debajo */
+  background: rgba(5, 5, 5, 0.92);
   overflow: hidden;
   display: flex;
   flex-direction: column;
