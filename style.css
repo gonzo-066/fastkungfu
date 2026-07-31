@@ -2171,6 +2171,32 @@ canvas {
   font-variant-numeric: tabular-nums;
 }
 
+/* Lectura del sensor en vivo (magnitud total con gravedad) */
+.calib-sensor-live {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+  min-height: 30px;
+  transition: color 0.1s linear;
+}
+
+.calib-sensor-live.calib-sensor-hot {
+  color: #00FF66;
+  text-shadow: 0 0 14px rgba(0, 255, 102, 0.5);
+}
+
+.calib-sensor-status {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  min-height: 20px;
+}
+
+.calib-sensor-status.calib-sensor-ok  { color: #00FF66; }
+.calib-sensor-status.calib-sensor-bad { color: #FF4444; }
+
 .calib-step-status {
   font-size: 0.9rem;
   color: rgba(255,255,255,0.7);
@@ -2215,6 +2241,27 @@ canvas {
   width: 100%;
   max-width: 300px;
   height: 80px;
+}
+
+/* Fallback SOLO de calibración: registrar el golpe con un toque */
+.btn-calib-tap {
+  width: 100%;
+  max-width: 280px;
+  margin-top: 14px;
+  padding: 18px 14px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.08);
+  border: 1px dashed rgba(255,255,255,0.35);
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.btn-calib-tap:active {
+  background: rgba(255,255,255,0.18);
 }
 
 .calib-results {

@@ -254,6 +254,11 @@ const TRANSLATIONS = {
     calib_repeat_punch:   'REPETIR ESTE GOLPE',
     calib_no_punch:       'No se detectó golpe. Intenta de nuevo.',
     calib_retry_btn:      'REINTENTAR',
+    calib_sensor_live:    'Sensor: {g}G',
+    calib_sensor_ok:      '✓ Sensor activo — Golpea ahora',
+    calib_sensor_off:     '⚠️ Sensor no disponible',
+    calib_tap_fallback:   'Mi móvil no detecta — usar toque',
+    calib_tap_used:       'Golpe simulado con toque: {g}G',
     calib_result_soft:    'Golpe suave detectado',
     calib_result_medium:  'Golpe medio detectado',
     calib_result_hard:    'Golpe fuerte detectado',
@@ -431,6 +436,11 @@ const TRANSLATIONS = {
     calib_repeat_punch:   'REPEAT THIS PUNCH',
     calib_no_punch:       'No punch detected. Try again.',
     calib_retry_btn:      'RETRY',
+    calib_sensor_live:    'Sensor: {g}G',
+    calib_sensor_ok:      '✓ Sensor active — Punch now',
+    calib_sensor_off:     '⚠️ Sensor not available',
+    calib_tap_fallback:   'My phone does not detect — use tap',
+    calib_tap_used:       'Punch simulated with tap: {g}G',
     calib_result_soft:    'Soft punch detected',
     calib_result_medium:  'Medium punch detected',
     calib_result_hard:    'Hard punch detected',
@@ -608,6 +618,11 @@ const TRANSLATIONS = {
     calib_repeat_punch:   'REPETIR ESTE SOCO',
     calib_no_punch:       'Nenhum soco detectado. Tente novamente.',
     calib_retry_btn:      'TENTAR NOVAMENTE',
+    calib_sensor_live:    'Sensor: {g}G',
+    calib_sensor_ok:      '✓ Sensor ativo — Bata agora',
+    calib_sensor_off:     '⚠️ Sensor não disponível',
+    calib_tap_fallback:   'Meu celular não detecta — usar toque',
+    calib_tap_used:       'Soco simulado com toque: {g}G',
     calib_result_soft:    'Soco leve detectado',
     calib_result_medium:  'Soco médio detectado',
     calib_result_hard:    'Soco forte detectado',
@@ -785,6 +800,11 @@ const TRANSLATIONS = {
     calib_repeat_punch:   'SCHLAG WIEDERHOLEN',
     calib_no_punch:       'Kein Schlag erkannt. Versuche es erneut.',
     calib_retry_btn:      'ERNEUT VERSUCHEN',
+    calib_sensor_live:    'Sensor: {g}G',
+    calib_sensor_ok:      '✓ Sensor aktiv — Schlag jetzt',
+    calib_sensor_off:     '⚠️ Sensor nicht verfügbar',
+    calib_tap_fallback:   'Mein Handy erkennt nichts — Tippen verwenden',
+    calib_tap_used:       'Schlag per Tippen simuliert: {g}G',
     calib_result_soft:    'Leichter Schlag erkannt',
     calib_result_medium:  'Mittlerer Schlag erkannt',
     calib_result_hard:    'Harter Schlag erkannt',
@@ -926,6 +946,11 @@ const APP = {
     captureTimer: null,
     graphData: [],
     graphInterval: null,
+    liveInterval: null,   // refresco 100ms de la lectura "Sensor: X.XG"
+    sensorCheck: null,    // timeout que marca el sensor como no disponible
+    sensorSeen: false,    // true en cuanto llega el primer evento devicemotion
+    rawG: 0,              // última magnitud total leída (con gravedad)
+    maxRawG: 0,           // máxima magnitud total del paso actual
     peakG: 0,
     triggerAt: null,
     ringEnd: null,
@@ -5301,10 +5326,18 @@ function playComboFail() {
 // CALIBRACIÓN DE DISPOSITIVO
 // ═══════════════════════════════════════════════════
 const CALIB_STEPS = [
-  { key: 'suave',  label: { es: 'GOLPE SUAVE',  en: 'SOFT PUNCH',   pt: 'GOLPE LEVE',   de: 'LEICHTER SCHLAG' }, bg: '#001533', color: '#00FF66' },
-  { key: 'medio',  label: { es: 'GOLPE MEDIO',  en: 'MEDIUM PUNCH', pt: 'GOLPE MÉDIO',  de: 'MITTLERER SCHLAG' }, bg: '#1a1100', color: '#FFD300' },
-  { key: 'fuerte', label: { es: 'GOLPE FUERTE', en: 'HARD PUNCH',   pt: 'GOLPE FORTE',  de: 'HARTER SCHLAG' }, bg: '#001500', color: '#FF1A1A' },
+  { key: 'suave',  label: { es: 'GOLPE SUAVE',  en: 'SOFT PUNCH',   pt: 'GOLPE LEVE',   de: 'LEICHTER SCHLAG' }, bg: '#001533', color: '#00FF66', tapG: 1.2 },
+  { key: 'medio',  label: { es: 'GOLPE MEDIO',  en: 'MEDIUM PUNCH', pt: 'GOLPE MÉDIO',  de: 'MITTLERER SCHLAG' }, bg: '#1a1100', color: '#FFD300', tapG: 2.0 },
+  { key: 'fuerte', label: { es: 'GOLPE FUERTE', en: 'HARD PUNCH',   pt: 'GOLPE FORTE',  de: 'HARTER SCHLAG' }, bg: '#001500', color: '#FF1A1A', tapG: 3.0 },
 ];
+
+// La calibración lee SIEMPRE accelerationIncludingGravity: es el único dato
+// presente en todos los dispositivos. En reposo la magnitud es ~1G, así que
+// los umbrales llevan esa gravedad base incorporada y el pico guardado se
+// almacena ya sin ella (magnitud − 1G = impacto real).
+const CALIB_GRAVITY = 1.0;   // gravedad base contenida en cada lectura (G)
+const CALIB_TRIG_G  = 1.3;   // disparo: 1G de gravedad + 0.3G de impacto
+const CALIB_RING_G  = 1.1;   // fin del rebote: 1G + 0.1G
 
 function loadCalibration() {
   const raw = localStorage.getItem('fkf_calibration');
@@ -5350,7 +5383,11 @@ function showCalibrationScreen(fromScreen) {
   APP.calib.state = 'idle';
   APP.calib.data  = [];
   showScreen('screen-calibration');
-  document.getElementById('btn-calib-back').onclick = () => showScreen(APP.calib.fromScreen);
+  document.getElementById('btn-calib-back').onclick = () => {
+    stopCalibListener();
+    APP.calib.state = 'idle';
+    showScreen(APP.calib.fromScreen);
+  };
   renderCalibIntro();
 }
 
@@ -5367,9 +5404,13 @@ function renderCalibIntro() {
         <div class="calib-preview-step" style="background:#1a1100">${CALIB_STEPS[1].label[APP.lang]||CALIB_STEPS[1].label.es}</div>
         <div class="calib-preview-step" style="background:#001500">${CALIB_STEPS[2].label[APP.lang]||CALIB_STEPS[2].label.es}</div>
       </div>
+      <div class="calib-sensor-status" id="calib-sensor-status"></div>
       <button class="btn-primary btn-calib-ready" id="btn-calib-start">${t('calib_start')}</button>
     </div>`;
   document.getElementById('btn-calib-start').onclick = () => renderCalibStep(1);
+  // Estado del sensor visible ya en la intro: el usuario sabe si responde
+  // antes de empezar los 3 pasos.
+  startCalibSensor(1);
 }
 
 function renderCalibStep(stepNum) {
@@ -5392,14 +5433,22 @@ function renderCalibStep(stepNum) {
       <div class="calib-step-label">${label}</div>
       <div class="calib-step-instruction">${t('calib_step_instruction')}</div>
       <canvas id="calib-graph"></canvas>
+      <div class="calib-sensor-live" id="calib-sensor-live">${t('calib_sensor_live', { g: '0.0' })}</div>
+      <div class="calib-sensor-status" id="calib-sensor-status"></div>
       <div class="calib-live-peak" id="calib-live-peak"></div>
       <div class="calib-step-status" id="calib-status">${t('calib_press_ready')}</div>
       <div class="calib-step-actions" id="calib-step-actions">
         <button class="btn-primary btn-calib-ready" id="btn-calib-ready">${t('calib_ready_btn')}</button>
       </div>
+      <button class="btn-calib-tap" id="btn-calib-tap">${t('calib_tap_fallback')}</button>
     </div>`;
 
   document.getElementById('btn-calib-ready').onclick = () => activateCalibListening(stepNum);
+  document.getElementById('btn-calib-tap').onclick   = () => useCalibTapFallback(stepNum);
+
+  // El sensor se escucha desde que entra el paso: así el usuario ve valores
+  // en vivo y sabe si el acelerómetro responde antes de golpear.
+  startCalibSensor(stepNum);
 }
 
 function updateCalibLivePeak(stepNum, g) {
@@ -5408,6 +5457,75 @@ function updateCalibLivePeak(stepNum, g) {
   const step = CALIB_STEPS[stepNum - 1];
   el.style.color = step.color;
   el.textContent = t('calib_peak_detected', { g: g.toFixed(1) });
+}
+
+// Lectura en vivo cada 100ms: "Sensor: X.XG" (magnitud total, con gravedad).
+// Verde cuando la magnitud supera el umbral de disparo.
+function updateCalibSensorReadout() {
+  const el = document.getElementById('calib-sensor-live');
+  if (!el) { clearInterval(APP.calib.liveInterval); return; }
+  const mag = APP.calib.rawG || 0;
+  el.textContent = t('calib_sensor_live', { g: mag.toFixed(1) });
+  el.classList.toggle('calib-sensor-hot', mag > CALIB_TRIG_G);
+}
+
+function setCalibSensorStatus(ok) {
+  const el = document.getElementById('calib-sensor-status');
+  if (!el) return;
+  el.textContent = ok ? t('calib_sensor_ok') : t('calib_sensor_off');
+  el.classList.toggle('calib-sensor-ok',  ok);
+  el.classList.toggle('calib-sensor-bad', !ok);
+}
+
+// Un único listener por paso: alimenta la lectura en vivo siempre y captura
+// el golpe cuando el paso está en estado 'listening'.
+function startCalibSensor(stepNum) {
+  stopCalibListener();
+  APP.calib.rawG       = 0;
+  APP.calib.maxRawG    = 0;
+  APP.calib.sensorSeen = false;
+
+  APP.calib.graphInterval = trackedInterval(drawCalibGraph, 50);
+  APP.calib.liveInterval  = trackedInterval(updateCalibSensorReadout, 100);
+
+  if (typeof DeviceMotionEvent === 'undefined') { setCalibSensorStatus(false); return; }
+
+  APP.calib.listener = (e) => {
+    const acc = e.accelerationIncludingGravity;
+    if (!acc) return;
+    // Magnitud total, gravedad incluida: en reposo ≈1G, un golpe es 1G + impacto
+    const mag = Math.sqrt((acc.x||0)**2 + (acc.y||0)**2 + (acc.z||0)**2) / 9.81;
+    const now = Date.now();
+
+    APP.calib.rawG = mag;
+    if (mag > APP.calib.maxRawG) APP.calib.maxRawG = mag;
+    if (!APP.calib.sensorSeen) { APP.calib.sensorSeen = true; setCalibSensorStatus(true); }
+
+    if (APP.calib.state !== 'listening') return;
+
+    // La gráfica muestra el impacto real, ya sin la gravedad base
+    APP.calib.graphData.push(Math.max(0, mag - CALIB_GRAVITY));
+    if (APP.calib.graphData.length > 80) APP.calib.graphData.shift();
+
+    if (!APP.calib.triggerAt && mag > CALIB_TRIG_G) APP.calib.triggerAt = now;
+
+    if (APP.calib.triggerAt) {
+      const impact = mag - CALIB_GRAVITY;   // pico guardado sin gravedad
+      if (impact > APP.calib.peakG) {
+        APP.calib.peakG = impact;
+        updateCalibLivePeak(stepNum, impact);
+      }
+      if (mag > CALIB_RING_G)  APP.calib.ringEnd = now;
+      if (now - APP.calib.triggerAt > 2000) finishCalibStep(stepNum);
+    }
+  };
+
+  window.addEventListener('devicemotion', APP.calib.listener, { passive: true });
+
+  // Si en 1.5s no ha llegado ni un evento, el sensor no está disponible
+  APP.calib.sensorCheck = trackedTimeout(() => {
+    if (!APP.calib.sensorSeen) setCalibSensorStatus(false);
+  }, 1500);
 }
 
 function activateCalibListening(stepNum) {
@@ -5419,50 +5537,41 @@ function activateCalibListening(stepNum) {
   const liveEl = document.getElementById('calib-live-peak');
   if (liveEl) liveEl.textContent = '';
 
-  APP.calib.state     = 'listening';
   APP.calib.peakG     = 0;
   APP.calib.triggerAt = null;
   APP.calib.ringEnd   = null;
   APP.calib.graphData = [];
+  APP.calib.maxRawG   = 0;
+  APP.calib.state     = 'listening';
+
+  clearTimeout(APP.calib.captureTimer);
+  APP.calib.captureTimer = trackedTimeout(() => {
+    if (APP.calib.state === 'listening') finishCalibStep(stepNum);
+  }, 12000);
+}
+
+// Fallback SOLO para calibrar: si el acelerómetro del dispositivo no responde,
+// el usuario toca la pantalla para registrar el golpe de este paso.
+// No sustituye la detección durante el entrenamiento.
+function useCalibTapFallback(stepNum) {
+  const step = CALIB_STEPS[stepNum - 1];
+  // Si el sensor llegó a moverse, se usa su pico real; si no, un valor típico
+  const measured = APP.calib.maxRawG - CALIB_GRAVITY;
+  const peakG    = measured > 0.2 ? measured : step.tapG;
+
+  APP.calib.state     = 'captured';
+  APP.calib.peakG     = peakG;
+  APP.calib.triggerAt = Date.now();
+  APP.calib.ringEnd   = null;
   stopCalibListener();
 
-  clearInterval(APP.calib.graphInterval);
-  APP.calib.graphInterval = trackedInterval(drawCalibGraph, 50);
-
-  const TRIG_G = 0.3;
-  const RING_G = 0.2;
-
-  // La calibración mide los mismos G netos que usa la detección en sesión:
-  // primero baseline de gravedad en reposo, después se escucha el golpe.
-  calibrateGravity(() => {
-    if (APP.calib.state !== 'listening') return;
-
-    APP.calib.listener = (e) => {
-      const g = netGForce(e);
-      if (g == null) return;
-      const now = Date.now();
-
-      APP.calib.graphData.push(g);
-      if (APP.calib.graphData.length > 80) APP.calib.graphData.shift();
-
-      if (!APP.calib.triggerAt && g > TRIG_G) APP.calib.triggerAt = now;
-
-      if (APP.calib.triggerAt) {
-        if (g > APP.calib.peakG) {
-          APP.calib.peakG = g;
-          updateCalibLivePeak(stepNum, g);
-        }
-        if (g > RING_G)          APP.calib.ringEnd = now;
-        if (now - APP.calib.triggerAt > 2000) finishCalibStep(stepNum);
-      }
-    };
-
-    window.addEventListener('devicemotion', APP.calib.listener, { passive: true });
-
-    APP.calib.captureTimer = trackedTimeout(() => {
-      if (APP.calib.state === 'listening') finishCalibStep(stepNum);
-    }, 12000);
-  });
+  const stat = document.getElementById('calib-status');
+  if (stat) {
+    stat.classList.remove('calib-error');
+    stat.style.color = step.color;
+    stat.textContent = t('calib_tap_used', { g: peakG.toFixed(1) });
+  }
+  renderCalibStepConfirm(stepNum, peakG, 150);
 }
 
 function stopCalibListener() {
@@ -5472,7 +5581,9 @@ function stopCalibListener() {
     APP.calib.listener = null;
   }
   clearTimeout(APP.calib.captureTimer);
+  clearTimeout(APP.calib.sensorCheck);
   clearInterval(APP.calib.graphInterval);
+  clearInterval(APP.calib.liveInterval);
 }
 
 // Vuelve a mostrar solo el botón "LISTO" para reintentar el golpe actual sin avanzar de paso
@@ -5510,19 +5621,26 @@ function finishCalibStep(stepNum) {
     stat.textContent = `✓ ${t('calib_peak_detected', { g: peakG.toFixed(1) })}`;
   }
 
-  // No se confirma en APP.calib.data hasta que el usuario decida continuar —
-  // así "Repetir este golpe" puede descartar la medición sin tocar los pasos previos
+  renderCalibStepConfirm(stepNum, peakG, ringMs);
+}
+
+// Botones de confirmación del paso. No se escribe en APP.calib.data hasta que
+// el usuario decide continuar — así "Repetir este golpe" descarta la medición
+// sin tocar los pasos previos.
+function renderCalibStepConfirm(stepNum, peakG, ringMs) {
+  const tapBtn = document.getElementById('btn-calib-tap');
+  if (tapBtn) tapBtn.style.display = 'none';
+
   const actions = document.getElementById('calib-step-actions');
-  if (actions) {
-    actions.innerHTML = `
-      <button class="btn-secondary" id="btn-calib-repeat">${t('calib_repeat_punch')}</button>
-      <button class="btn-primary btn-calib-ready" id="btn-calib-continue">${stepNum < 3 ? t('calib_next_step') : t('calib_see_results')}</button>`;
-    document.getElementById('btn-calib-repeat').onclick = () => renderCalibStep(stepNum);
-    document.getElementById('btn-calib-continue').onclick = () => {
-      APP.calib.data[stepNum - 1] = { peakG, ringMs };
-      stepNum < 3 ? renderCalibStep(stepNum + 1) : showCalibResults();
-    };
-  }
+  if (!actions) return;
+  actions.innerHTML = `
+    <button class="btn-secondary" id="btn-calib-repeat">${t('calib_repeat_punch')}</button>
+    <button class="btn-primary btn-calib-ready" id="btn-calib-continue">${stepNum < 3 ? t('calib_next_step') : t('calib_see_results')}</button>`;
+  document.getElementById('btn-calib-repeat').onclick = () => renderCalibStep(stepNum);
+  document.getElementById('btn-calib-continue').onclick = () => {
+    APP.calib.data[stepNum - 1] = { peakG, ringMs };
+    stepNum < 3 ? renderCalibStep(stepNum + 1) : showCalibResults();
+  };
 }
 
 function drawCalibGraph() {
