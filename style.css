@@ -2316,6 +2316,25 @@ canvas {
   color: #FF4444;
 }
 
+/* Botón outline blanco — "RECALIBRAR" sobre el resumen guardado */
+.btn-calib-outline {
+  width: 100%;
+  max-width: 280px;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #fff;
+  background: transparent;
+  border: 2px solid rgba(255,255,255,0.85);
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.btn-calib-outline:active {
+  background: rgba(255,255,255,0.12);
+}
+
 /* ═══════════════════════════════════
    PANTALLA MODO COLORES
 ════════════════════════════════════ */

@@ -248,6 +248,10 @@ const TRANSLATIONS = {
     calib_debounce:       'Debounce',
     calib_save:           'GUARDAR CALIBRACIÓN',
     calib_again:          'REPETIR CALIBRACIÓN',
+    calib_existing_title: '✓ Ya tienes una calibración guardada',
+    calib_existing_date:  'Fecha',
+    calib_use_existing:   'USAR ESTA CALIBRACIÓN',
+    calib_recalibrate:    'RECALIBRAR',
     calib_notice:         'Calibra tu dispositivo para mayor precisión',
     calib_notice_btn:     'CALIBRAR',
     calib_peak_detected:  'Golpe detectado: {g}G',
@@ -430,6 +434,10 @@ const TRANSLATIONS = {
     calib_debounce:       'Debounce',
     calib_save:           'SAVE CALIBRATION',
     calib_again:          'REPEAT CALIBRATION',
+    calib_existing_title: '✓ You already have a saved calibration',
+    calib_existing_date:  'Date',
+    calib_use_existing:   'USE THIS CALIBRATION',
+    calib_recalibrate:    'RECALIBRATE',
     calib_notice:         'Calibrate your device for better precision',
     calib_notice_btn:     'CALIBRATE',
     calib_peak_detected:  'Punch detected: {g}G',
@@ -612,6 +620,10 @@ const TRANSLATIONS = {
     calib_debounce:       'Debounce',
     calib_save:           'SALVAR CALIBRAÇÃO',
     calib_again:          'REPETIR CALIBRAÇÃO',
+    calib_existing_title: '✓ Você já tem uma calibração salva',
+    calib_existing_date:  'Data',
+    calib_use_existing:   'USAR ESTA CALIBRAÇÃO',
+    calib_recalibrate:    'RECALIBRAR',
     calib_notice:         'Calibre seu dispositivo para maior precisão',
     calib_notice_btn:     'CALIBRAR',
     calib_peak_detected:  'Soco detectado: {g}G',
@@ -794,6 +806,10 @@ const TRANSLATIONS = {
     calib_debounce:       'Entprellzeit',
     calib_save:           'KALIBRIERUNG SPEICHERN',
     calib_again:          'KALIBRIERUNG WIEDERHOLEN',
+    calib_existing_title: '✓ Du hast bereits eine gespeicherte Kalibrierung',
+    calib_existing_date:  'Datum',
+    calib_use_existing:   'DIESE KALIBRIERUNG NUTZEN',
+    calib_recalibrate:    'NEU KALIBRIEREN',
     calib_notice:         'Kalibriere dein Gerät für bessere Präzision',
     calib_notice_btn:     'KALIBRIEREN',
     calib_peak_detected:  'Schlag erkannt: {g}G',
@@ -5388,7 +5404,48 @@ function showCalibrationScreen(fromScreen) {
     APP.calib.state = 'idle';
     showScreen(APP.calib.fromScreen);
   };
-  renderCalibIntro();
+  // Si ya hay una calibración guardada, se muestra primero su resumen en vez
+  // de arrancar los 3 pasos otra vez
+  if (APP.calibration && APP.calibration.calibrated) renderCalibExisting();
+  else                                               renderCalibIntro();
+}
+
+function renderCalibExisting() {
+  const c = APP.calibration;
+  const content = document.getElementById('calib-content');
+  content.style.background = '';
+
+  const row = (label, value, color) => `
+    <div class="calib-result-row">
+      <span class="calib-result-label">${label}</span>
+      <span class="calib-result-value"${color ? ` style="color:${color}"` : ''}>${value}</span>
+    </div>`;
+
+  content.innerHTML = `
+    <div class="calib-results">
+      <div class="calib-results-icon">✓</div>
+      <h3 class="calib-title">${t('calib_existing_title')}</h3>
+      <div class="calib-result-values">
+        ${row(CALIB_STEPS[0].label[APP.lang] || CALIB_STEPS[0].label.es, `${(c.soft   || 0).toFixed(1)}G`, CALIB_STEPS[0].color)}
+        ${row(CALIB_STEPS[1].label[APP.lang] || CALIB_STEPS[1].label.es, `${(c.medium || 0).toFixed(1)}G`, CALIB_STEPS[1].color)}
+        ${row(CALIB_STEPS[2].label[APP.lang] || CALIB_STEPS[2].label.es, `${(c.hard   || 0).toFixed(1)}G`, CALIB_STEPS[2].color)}
+        ${row(t('calib_result_threshold'), `${(c.threshold || 0).toFixed(2)}G`)}
+        ${row(t('calib_existing_date'), c.date ? fmtDate(c.date) : '—')}
+      </div>
+      <button class="btn-primary btn-calib-ready" id="btn-calib-keep">${t('calib_use_existing')}</button>
+      <button class="btn-calib-outline" id="btn-calib-redo">${t('calib_recalibrate')}</button>
+    </div>`;
+
+  document.getElementById('btn-calib-keep').onclick = () => {
+    stopCalibListener();
+    APP.calib.state = 'idle';
+    showScreen(APP.calib.fromScreen || 'screen-menu');
+    if ((APP.calib.fromScreen || 'screen-menu') === 'screen-menu') initMenuScreen();
+  };
+  document.getElementById('btn-calib-redo').onclick = () => {
+    APP.calib.data = [];
+    renderCalibIntro();
+  };
 }
 
 function renderCalibIntro() {
