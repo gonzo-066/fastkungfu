@@ -1659,6 +1659,13 @@ canvas {
   width: 100%;
 }
 
+/* 12 idiomas en 2 columnas: en una sola columna no caben sin scroll */
+.lang-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 .btn-lang {
   width: 100%;
   padding: 20px 24px;
@@ -1674,6 +1681,23 @@ canvas {
   text-transform: none;
 }
 
+/* En rejilla las celdas son más estrechas: texto centrado y algo más compacto */
+.lang-grid .btn-lang {
+  padding: 16px 10px;
+  font-size: 1rem;
+  border-radius: 14px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-lang.active {
+  border-color: var(--yellow);
+  background: var(--bg4);
+  color: var(--yellow);
+}
+
 .btn-lang:active {
   border-color: var(--yellow);
   background: var(--bg4);
@@ -1682,8 +1706,10 @@ canvas {
   box-shadow: 0 0 20px rgba(255, 224, 0, 0.2);
 }
 
+/* 12 chips: se reparten en filas en vez de apretarse en una sola */
 .lang-toggle {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
 }
 
@@ -1709,6 +1735,59 @@ canvas {
 
 .btn-lang-sm:active {
   transform: scale(0.95);
+}
+
+/* ═══════════════════════════════════
+   RTL — ÁRABE
+   Con dir="rtl" en <html> el navegador ya invierte el orden de los flex y
+   el alineado por defecto. Aquí sólo se corrige lo que está fijado a la
+   izquierda de forma explícita y no se voltea solo.
+════════════════════════════════════ */
+body.rtl {
+  direction: rtl;
+}
+
+body.rtl .help-section-header,
+body.rtl .calib-cur-card,
+body.rtl .hmc,
+body.rtl .btn-measure-opt,
+body.rtl .sd-item,
+body.rtl .lang-grid .btn-lang,
+body.rtl .form-group label,
+body.rtl .calib-manual,
+body.rtl .help-section-content {
+  text-align: right;
+}
+
+body.rtl .hit-popup-card {
+  text-align: right !important;
+}
+
+/* Nav inferior y barras de cabecera: orden invertido */
+body.rtl .bottom-nav,
+body.rtl .workout-topbar,
+body.rtl .header-actions,
+body.rtl .settings-sound-row,
+body.rtl .hist-tabs {
+  flex-direction: row-reverse;
+}
+
+/* Los números, el cronómetro y las lecturas en G se leen igual en RTL:
+   se dejan LTR para que no se reordenen los signos ni las unidades. */
+body.rtl .timer-big,
+body.rtl .metric-value,
+body.rtl .calib-cur-value,
+body.rtl .calib-manual-label,
+body.rtl .csm-val,
+body.rtl .slider-range {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* El slider de sensibilidad mantiene 0.01G a la izquierda y 3.00G a la
+   derecha: invertirlo confundiría al arrastrar */
+body.rtl .calib-manual-slider {
+  direction: ltr;
 }
 
 /* ═══════════════════════════════════
@@ -4371,12 +4450,18 @@ canvas {
 .sd-item:active { background: rgba(255,211,0,0.08); }
 .sd-logout { color: #FF4444; }
 
+/* 12 idiomas: rejilla de 4 columnas (3 filas) dentro del desplegable */
 .sd-lang-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
   padding: 10px 14px;
   border-bottom: 1px solid rgba(255,255,255,0.07);
-  flex-wrap: wrap;
+}
+
+.sd-lang-row .btn-lang-sm {
+  padding: 9px 2px;
+  font-size: 0.75rem;
 }
 
 /* ═══════════════════════════════════

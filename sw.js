@@ -1,4 +1,4 @@
-const CACHE_NAME = 'impactlab-v57';
+const CACHE_NAME = 'impactlab-v58';
 const ASSETS = [
   './',
   './index.html',

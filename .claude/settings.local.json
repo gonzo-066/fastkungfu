@@ -53,7 +53,8 @@
       "PowerShell(if \\($?\\) { \"sw.js OK\" })",
       "PowerShell(if \\($?\\) { \"app.js OK\" })",
       "PowerShell(\"`n=== loop ===\")",
-      "PowerShell(\"`n=== service worker ===\")"
+      "PowerShell(\"`n=== service worker ===\")",
+      "Bash(awk '/^const HELP_SECTIONS/,/^};/' app.js)"
     ]
   }
 }
