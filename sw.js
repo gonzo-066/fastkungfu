@@ -1,11 +1,11 @@
-const CACHE_NAME = 'impactlab-v59';
+const CACHE_NAME = 'strikeiq-v1';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './manifest.json',
-  './assets/LOGO_IMPACTLAB.png',
+  './assets/LOGO_STRIKEIQ.png',
   './assets/icon-ultimo-golpe.png',
   './assets/icon-record.png',
   './assets/icon-vs-ayer.png',

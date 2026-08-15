@@ -382,6 +382,13 @@ const TRANSLATIONS = {
     color_yellow:            'AMARILLO',
     color_red:               'ROJO',
     color_blue:              'AZUL',
+    // — resumen de configuración y XP de sesión —
+    min_per_round:           'MIN/RD',
+    min_total:               'MIN TOTAL',
+    xp_earned_session:       'XP GANADO EN ESTA SESIÓN',
+    level_up_to:             '⬆ SUBISTE A {n}',
+    // — nivel numerado —
+    level_n:                 'NIVEL {n}',
   },
   en: {
     profile_subtitle:     'Set up your profile to start',
@@ -649,6 +656,13 @@ const TRANSLATIONS = {
     color_yellow:            'YELLOW',
     color_red:               'RED',
     color_blue:              'BLUE',
+    // — resumen de configuración y XP de sesión —
+    min_per_round:           'MIN/RD',
+    min_total:               'TOTAL MIN',
+    xp_earned_session:       'XP EARNED THIS SESSION',
+    level_up_to:             '⬆ YOU REACHED {n}',
+    // — nivel numerado —
+    level_n:                 'LEVEL {n}',
   },
   pt: {
     profile_subtitle:     'Configure seu perfil para começar',
@@ -916,6 +930,13 @@ const TRANSLATIONS = {
     color_yellow:            'AMARELO',
     color_red:               'VERMELHO',
     color_blue:              'AZUL',
+    // — resumen de configuración y XP de sesión —
+    min_per_round:           'MIN/RD',
+    min_total:               'MIN TOTAL',
+    xp_earned_session:       'XP GANHO NESTA SESSÃO',
+    level_up_to:             '⬆ VOCÊ SUBIU PARA {n}',
+    // — nivel numerado —
+    level_n:                 'NÍVEL {n}',
   },
   de: {
     profile_subtitle:     'Profil einrichten um zu beginnen',
@@ -1183,6 +1204,13 @@ const TRANSLATIONS = {
     color_yellow:            'GELB',
     color_red:               'ROT',
     color_blue:              'BLAU',
+    // — resumen de configuración y XP de sesión —
+    min_per_round:           'MIN/RD',
+    min_total:               'MIN GESAMT',
+    xp_earned_session:       'XP IN DIESER SESSION',
+    level_up_to:             '⬆ AUFGESTIEGEN ZU {n}',
+    // — nivel numerado —
+    level_n:                 'STUFE {n}',
   },
   ja: {
     profile_subtitle:     'プロフィールを設定して開始',
@@ -1450,6 +1478,13 @@ const TRANSLATIONS = {
     color_yellow:            '黄',
     color_red:               '赤',
     color_blue:              '青',
+    // — resumen de configuración y XP de sesión —
+    min_per_round:           '分/RD',
+    min_total:               '合計分',
+    xp_earned_session:       'このセッションで獲得したXP',
+    level_up_to:             '⬆ {n} に昇格',
+    // — nivel numerado —
+    level_n:                 'レベル {n}',
   },
   fr: {
     profile_subtitle:     'Configure ton profil pour commencer',
@@ -1717,6 +1752,13 @@ const TRANSLATIONS = {
     color_yellow:            'JAUNE',
     color_red:               'ROUGE',
     color_blue:              'BLEU',
+    // — resumen de configuración y XP de sesión —
+    min_per_round:           'MIN/RD',
+    min_total:               'MIN TOTAL',
+    xp_earned_session:       'XP GAGNÉ DANS CETTE SÉANCE',
+    level_up_to:             '⬆ TU PASSES À {n}',
+    // — nivel numerado —
+    level_n:                 'NIVEAU {n}',
   },
   ru: {
     profile_subtitle:     'Настройте профиль, чтобы начать',
@@ -1984,6 +2026,13 @@ const TRANSLATIONS = {
     color_yellow:            'ЖЁЛТЫЙ',
     color_red:               'КРАСНЫЙ',
     color_blue:              'СИНИЙ',
+    // — resumen de configuración y XP de sesión —
+    min_per_round:           'МИН/Р',
+    min_total:               'ВСЕГО МИН',
+    xp_earned_session:       'XP ЗА ЭТУ ТРЕНИРОВКУ',
+    level_up_to:             '⬆ НОВЫЙ УРОВЕНЬ: {n}',
+    // — nivel numerado —
+    level_n:                 'УРОВЕНЬ {n}',
   },
   zh: {
     profile_subtitle:     '设置你的档案即可开始',
@@ -2251,6 +2300,13 @@ const TRANSLATIONS = {
     color_yellow:            '黄色',
     color_red:               '红色',
     color_blue:              '蓝色',
+    // — resumen de configuración y XP de sesión —
+    min_per_round:           '分钟/回合',
+    min_total:               '总分钟',
+    xp_earned_session:       '本次训练获得的 XP',
+    level_up_to:             '⬆ 已升至 {n}',
+    // — nivel numerado —
+    level_n:                 '等级 {n}',
   },
   'zh-TW': {
     profile_subtitle:     '設定你的檔案即可開始',
@@ -2518,6 +2574,13 @@ const TRANSLATIONS = {
     color_yellow:            '黃色',
     color_red:               '紅色',
     color_blue:              '藍色',
+    // — resumen de configuración y XP de sesión —
+    min_per_round:           '分鐘/回合',
+    min_total:               '總分鐘',
+    xp_earned_session:       '本次訓練獲得的 XP',
+    level_up_to:             '⬆ 已升至 {n}',
+    // — nivel numerado —
+    level_n:                 '等級 {n}',
   },
   ko: {
     profile_subtitle:     '프로필을 설정하고 시작하세요',
@@ -2785,6 +2848,13 @@ const TRANSLATIONS = {
     color_yellow:            '노랑',
     color_red:               '빨강',
     color_blue:              '파랑',
+    // — resumen de configuración y XP de sesión —
+    min_per_round:           '분/RD',
+    min_total:               '총 분',
+    xp_earned_session:       '이번 세션에서 얻은 XP',
+    level_up_to:             '⬆ {n} 달성',
+    // — nivel numerado —
+    level_n:                 '레벨 {n}',
   },
   ar: {
     profile_subtitle:     'أعدّ ملفك الشخصي للبدء',
@@ -3052,6 +3122,13 @@ const TRANSLATIONS = {
     color_yellow:            'أصفر',
     color_red:               'أحمر',
     color_blue:              'أزرق',
+    // — resumen de configuración y XP de sesión —
+    min_per_round:           'دقيقة/جولة',
+    min_total:               'إجمالي الدقائق',
+    xp_earned_session:       'نقاط الخبرة في هذه الجلسة',
+    level_up_to:             '⬆ ارتقيت إلى {n}',
+    // — nivel numerado —
+    level_n:                 'المستوى {n}',
   },
   hi: {
     profile_subtitle:     'शुरू करने के लिए अपनी प्रोफ़ाइल सेट करें',
@@ -3319,6 +3396,13 @@ const TRANSLATIONS = {
     color_yellow:            'पीला',
     color_red:               'लाल',
     color_blue:              'नीला',
+    // — resumen de configuración y XP de sesión —
+    min_per_round:           'मिनट/राउंड',
+    min_total:               'कुल मिनट',
+    xp_earned_session:       'इस सत्र में अर्जित XP',
+    level_up_to:             '⬆ आप {n} तक पहुँचे',
+    // — nivel numerado —
+    level_n:                 'स्तर {n}',
   },
 };
 
@@ -3850,14 +3934,14 @@ function renderGamificationSummary() {
   div.className = 'gam-summary-section';
   div.innerHTML = `
     <div class="gam-summary-xp">+${Math.max(0, gam.sessionXP)} XP</div>
-    <div class="gam-summary-xp-label">XP GANADO EN ESTA SESIÓN</div>
+    <div class="gam-summary-xp-label">${t('xp_earned_session')}</div>
     <div class="gam-summary-details">
       <div class="gam-summary-detail">
-        <div class="gam-summary-detail-label">MEJOR GOLPE</div>
+        <div class="gam-summary-detail-label">${t('best_punch').toUpperCase()}</div>
         <div class="gam-summary-detail-val" style="color:${ratingColor}">${gam.sessionBestRating || 'GOOD'}</div>
       </div>
       <div class="gam-summary-detail">
-        <div class="gam-summary-detail-label">MEJOR COMBO</div>
+        <div class="gam-summary-detail-label">${t('best_combo')}</div>
         <div class="gam-summary-detail-val">x${gam.bestStreak}</div>
       </div>
     </div>
@@ -3868,7 +3952,7 @@ function renderGamificationSummary() {
       </div>
       <div class="gam-summary-level-progress">${progText}</div>
     </div>
-    ${leveledUp ? `<div class="gam-summary-levelup">⬆ SUBISTE A ${leveledName.toUpperCase()}</div>` : ''}
+    ${leveledUp ? `<div class="gam-summary-levelup">${t('level_up_to', { n: leveledName.toUpperCase() })}</div>` : ''}
   `;
 
   const body  = document.querySelector('#screen-summary .summary-body');
@@ -6343,10 +6427,10 @@ function updateConfigSummary() {
   if (summaryEl) {
     summaryEl.innerHTML = `
       <div class="csm-grid">
-        <div class="csm-cell"><span class="csm-val">${r}</span><span class="csm-lbl">ROUNDS</span></div>
-        <div class="csm-cell"><span class="csm-val">${rd}</span><span class="csm-lbl">MIN/RD</span></div>
-        <div class="csm-cell"><span class="csm-val">${rst}s</span><span class="csm-lbl">DESCANSO</span></div>
-        <div class="csm-cell"><span class="csm-val">${total}</span><span class="csm-lbl">MIN TOTAL</span></div>
+        <div class="csm-cell"><span class="csm-val">${r}</span><span class="csm-lbl">${t('rounds_completed').toUpperCase()}</span></div>
+        <div class="csm-cell"><span class="csm-val">${rd}</span><span class="csm-lbl">${t('min_per_round')}</span></div>
+        <div class="csm-cell"><span class="csm-val">${rst}s</span><span class="csm-lbl">${t('rest_title')}</span></div>
+        <div class="csm-cell"><span class="csm-val">${total}</span><span class="csm-lbl">${t('min_total')}</span></div>
       </div>`;
   }
 }
@@ -6927,7 +7011,7 @@ function updateReactionFooterXP() {
   const lvlEl   = document.getElementById('reaction-footer-level');
   const fillEl  = document.getElementById('reaction-footer-xp-fill');
   const badgeEl = document.getElementById('reaction-footer-xp-badge');
-  if (lvlEl)   lvlEl.textContent   = 'NIVEL ' + (inf.idx + 1);
+  if (lvlEl)   lvlEl.textContent   = t('level_n', { n: inf.idx + 1 });
   if (badgeEl) badgeEl.textContent = xp + ' XP';
   if (fillEl && inf.next) {
     const pct = Math.min(100, Math.round(((xp - inf.current.xp) / (inf.next.xp - inf.current.xp)) * 100));
@@ -7727,8 +7811,8 @@ function init() {
 const HELP_SECTIONS = {
   es: [
     {
-      icon: '🥊', title: '¿Qué es ImpactLab?',
-      html: `<p>ImpactLab convierte tu móvil en un medidor de golpes para entrenamiento de <strong>boxeo, kickboxing, artes marciales</strong> o saco de arena.</p>
+      icon: '🥊', title: '¿Qué es Strike IQ?',
+      html: `<p>Strike IQ convierte tu móvil en un medidor de golpes para entrenamiento de <strong>boxeo, kickboxing, artes marciales</strong> o saco de arena.</p>
 <p>Mide en tiempo real la <strong>potencia</strong> (G), <strong>velocidad</strong> (m/s) y <strong>tiempo de reacción</strong> de tus golpes, y guarda el historial de sesiones para que puedas ver tu progreso.</p>`
     },
     {
@@ -7829,7 +7913,7 @@ const HELP_SECTIONS = {
 <p class="help-faq-q">¿Por qué cuenta golpes de más?</p>
 <p class="help-faq-a">El umbral de detección es muy bajo. Ve a <strong>Calibrar dispositivo</strong> para ajustarlo a tu golpe y tu saco.</p>
 <p class="help-faq-q">¿Funciona sin internet?</p>
-<p class="help-faq-a">Sí. ImpactLab es una <strong>PWA</strong> (Progressive Web App) que funciona completamente offline una vez cargada.</p>
+<p class="help-faq-a">Sí. Strike IQ es una <strong>PWA</strong> (Progressive Web App) que funciona completamente offline una vez cargada.</p>
 <p class="help-faq-q">¿Puedo usarla en iOS?</p>
 <p class="help-faq-a">Sí. La primera vez debes dar permiso al <strong>sensor de movimiento</strong> en la pantalla de configuración.</p>
 <p class="help-faq-q">¿Se guardan mis datos en la nube?</p>
@@ -7838,8 +7922,8 @@ const HELP_SECTIONS = {
   ],
   en: [
     {
-      icon: '🥊', title: 'What is ImpactLab?',
-      html: `<p>ImpactLab turns your phone into a punch tracker for <strong>boxing, kickboxing, martial arts</strong> or bag training.</p>
+      icon: '🥊', title: 'What is Strike IQ?',
+      html: `<p>Strike IQ turns your phone into a punch tracker for <strong>boxing, kickboxing, martial arts</strong> or bag training.</p>
 <p>It measures <strong>power</strong> (G), <strong>speed</strong> (m/s) and <strong>reaction time</strong> in real time, and saves session history so you can track your progress.</p>`
     },
     {
@@ -7940,7 +8024,7 @@ const HELP_SECTIONS = {
 <p class="help-faq-q">Why does it count too many punches?</p>
 <p class="help-faq-a">The detection threshold is too low. Go to <strong>Calibrate device</strong> to tune it for your punch and bag.</p>
 <p class="help-faq-q">Does it work without internet?</p>
-<p class="help-faq-a">Yes. ImpactLab is a <strong>PWA</strong> (Progressive Web App) that works fully offline once loaded.</p>
+<p class="help-faq-a">Yes. Strike IQ is a <strong>PWA</strong> (Progressive Web App) that works fully offline once loaded.</p>
 <p class="help-faq-q">Can I use it on iOS?</p>
 <p class="help-faq-a">Yes. The first time you must grant <strong>motion sensor permission</strong> in the config screen.</p>
 <p class="help-faq-q">Is my data saved to the cloud?</p>
@@ -7949,8 +8033,8 @@ const HELP_SECTIONS = {
   ],
   pt: [
     {
-      icon: '🥊', title: 'O que é ImpactLab?',
-      html: `<p>ImpactLab transforma seu celular em um medidor de golpes para treino de <strong>boxe, kickboxing, artes marciais</strong> ou saco de pancadas.</p>
+      icon: '🥊', title: 'O que é Strike IQ?',
+      html: `<p>Strike IQ transforma seu celular em um medidor de golpes para treino de <strong>boxe, kickboxing, artes marciais</strong> ou saco de pancadas.</p>
 <p>Mede em tempo real a <strong>potência</strong> (G), <strong>velocidade</strong> (m/s) e <strong>tempo de reação</strong> dos seus golpes, e salva o histórico de sessões para acompanhar seu progresso.</p>`
     },
     {
@@ -8051,7 +8135,7 @@ const HELP_SECTIONS = {
 <p class="help-faq-q">Por que conta golpes demais?</p>
 <p class="help-faq-a">O limiar de detecção está muito baixo. Vá em <strong>Calibrar dispositivo</strong> para ajustá-lo ao seu golpe e saco.</p>
 <p class="help-faq-q">Funciona sem internet?</p>
-<p class="help-faq-a">Sim. ImpactLab é um <strong>PWA</strong> que funciona completamente offline após o primeiro carregamento.</p>
+<p class="help-faq-a">Sim. Strike IQ é um <strong>PWA</strong> que funciona completamente offline após o primeiro carregamento.</p>
 <p class="help-faq-q">Posso usar no iOS?</p>
 <p class="help-faq-a">Sim. Na primeira vez, conceda <strong>permissão ao sensor de movimento</strong> na tela de configuração.</p>
 <p class="help-faq-q">Meus dados ficam na nuvem?</p>
@@ -8060,8 +8144,8 @@ const HELP_SECTIONS = {
   ],
   de: [
     {
-      icon: '🥊', title: 'Was ist ImpactLab?',
-      html: `<p>ImpactLab verwandelt dein Smartphone in einen Schlag-Tracker für <strong>Boxen, Kickboxen, Kampfsport</strong> oder Sandsack-Training.</p>
+      icon: '🥊', title: 'Was ist Strike IQ?',
+      html: `<p>Strike IQ verwandelt dein Smartphone in einen Schlag-Tracker für <strong>Boxen, Kickboxen, Kampfsport</strong> oder Sandsack-Training.</p>
 <p>Misst in Echtzeit <strong>Kraft</strong> (G), <strong>Geschwindigkeit</strong> (m/s) und <strong>Reaktionszeit</strong> deiner Schläge und speichert den Session-Verlauf.</p>`
     },
     {
@@ -8162,7 +8246,7 @@ const HELP_SECTIONS = {
 <p class="help-faq-q">Warum werden zu viele Schläge gezählt?</p>
 <p class="help-faq-a">Der Erkennungsschwellenwert ist zu niedrig. Gehe zu <strong>Gerät kalibrieren</strong>, um ihn anzupassen.</p>
 <p class="help-faq-q">Funktioniert es ohne Internet?</p>
-<p class="help-faq-a">Ja. ImpactLab ist eine <strong>PWA</strong>, die nach dem ersten Laden vollständig offline funktioniert.</p>
+<p class="help-faq-a">Ja. Strike IQ ist eine <strong>PWA</strong>, die nach dem ersten Laden vollständig offline funktioniert.</p>
 <p class="help-faq-q">Kann ich es auf iOS verwenden?</p>
 <p class="help-faq-a">Ja. Beim ersten Mal muss die <strong>Bewegungssensor-Berechtigung</strong> in der Konfiguration erteilt werden.</p>
 <p class="help-faq-q">Werden meine Daten in der Cloud gespeichert?</p>

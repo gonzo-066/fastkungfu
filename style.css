@@ -3539,7 +3539,7 @@ body.rtl .calib-manual-slider {
   display: none;
 }
 
-/* Oculta el logo IMPACTLAB cuando ya hay perfil y estamos desde nav */
+/* Oculta el logo STRIKE IQ cuando ya hay perfil y estamos desde nav */
 .profile-setup-logo.hidden-nav {
   display: none;
 }
