@@ -55,8 +55,8 @@
   <div class="screen-inner center-content">
     <img src="assets/LOGO_IMPACTLAB.png" class="auth-logo-big" alt="ImpactLab"
          onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',textContent:'🥊'}))">
-    <button class="btn-primary btn-auth-welcome" id="btn-go-register">CREAR CUENTA</button>
-    <button class="btn-auth-outline" id="btn-go-login">YA TENGO CUENTA</button>
+    <button class="btn-primary btn-auth-welcome" id="btn-go-register" data-i18n="auth_create_account">CREAR CUENTA</button>
+    <button class="btn-auth-outline" id="btn-go-login" data-i18n="auth_have_account">YA TENGO CUENTA</button>
   </div>
 </div>
 
@@ -70,39 +70,39 @@
            onerror="this.style.display='none'">
     </div>
     <div class="form-group">
-      <label>NOMBRE COMPLETO</label>
-      <input type="text" id="reg-name" placeholder="Tu nombre completo" autocomplete="off">
+      <label data-i18n="auth_full_name">NOMBRE COMPLETO</label>
+      <input type="text" id="reg-name" placeholder="Tu nombre completo" data-i18n-placeholder="auth_full_name_ph" autocomplete="off">
     </div>
     <div class="form-group">
-      <label>EMAIL</label>
+      <label data-i18n="auth_email">EMAIL</label>
       <input type="email" id="reg-email" placeholder="tu@email.com" autocomplete="off">
     </div>
     <div class="form-group">
-      <label>CONTRASEÑA (mín. 6 caracteres)</label>
+      <label data-i18n="auth_password_min">CONTRASEÑA (mín. 6 caracteres)</label>
       <input type="password" id="reg-password" placeholder="••••••">
     </div>
     <div class="form-group">
-      <label>PESO (kg)</label>
+      <label data-i18n="weight">PESO (kg)</label>
       <input type="number" id="reg-weight" placeholder="70" min="30" max="200">
     </div>
     <div class="form-group">
-      <label>EDAD</label>
+      <label data-i18n="age">EDAD</label>
       <input type="number" id="reg-age" placeholder="25" min="10" max="100">
     </div>
     <div class="form-group">
-      <label>SEXO</label>
+      <label data-i18n="sex">SEXO</label>
       <div class="sex-toggle">
-        <button class="sex-btn active" id="reg-sex-hombre">♂ Hombre</button>
-        <button class="sex-btn" id="reg-sex-mujer">♀ Mujer</button>
+        <button class="sex-btn active" id="reg-sex-hombre" data-i18n="male">♂ Hombre</button>
+        <button class="sex-btn" id="reg-sex-mujer" data-i18n="female">♀ Mujer</button>
       </div>
     </div>
     <div class="form-group">
-      <label>DEPORTE / DISCIPLINA (opcional)</label>
-      <input type="text" id="reg-sport" placeholder="Boxeo, Kickboxing..." autocomplete="off">
+      <label data-i18n="auth_sport">DEPORTE / DISCIPLINA (opcional)</label>
+      <input type="text" id="reg-sport" placeholder="Boxeo, Kickboxing..." data-i18n-placeholder="auth_sport_ph" autocomplete="off">
     </div>
     <div class="auth-error" id="reg-error"></div>
-    <button class="btn-primary" id="btn-register">CREAR CUENTA</button>
-    <p class="auth-link">¿Ya tienes cuenta? <a id="btn-reg-to-login">Inicia sesión</a></p>
+    <button class="btn-primary" id="btn-register" data-i18n="auth_create_account">CREAR CUENTA</button>
+    <p class="auth-link"><span data-i18n="auth_already">¿Ya tienes cuenta?</span> <a id="btn-reg-to-login" data-i18n="auth_login_link">Inicia sesión</a></p>
   </div>
 </div>
 
@@ -116,17 +116,17 @@
            onerror="this.style.display='none'">
     </div>
     <div class="form-group">
-      <label>EMAIL</label>
+      <label data-i18n="auth_email">EMAIL</label>
       <input type="email" id="login-email" placeholder="tu@email.com" autocomplete="off">
     </div>
     <div class="form-group">
-      <label>CONTRASEÑA</label>
+      <label data-i18n="auth_password">CONTRASEÑA</label>
       <input type="password" id="login-password" placeholder="••••••">
     </div>
     <div class="auth-error" id="login-error"></div>
-    <button class="btn-primary" id="btn-login">ENTRAR</button>
-    <p class="auth-link">¿No tienes cuenta? <a id="btn-login-to-reg">Regístrate</a></p>
-    <p class="auth-link"><a id="btn-forgot-pass">Olvidé mi contraseña</a></p>
+    <button class="btn-primary" id="btn-login" data-i18n="auth_login_btn">ENTRAR</button>
+    <p class="auth-link"><span data-i18n="auth_no_account">¿No tienes cuenta?</span> <a id="btn-login-to-reg" data-i18n="auth_register_link">Regístrate</a></p>
+    <p class="auth-link"><a id="btn-forgot-pass" data-i18n="auth_forgot">Olvidé mi contraseña</a></p>
   </div>
 </div>
 
@@ -147,7 +147,7 @@
       <div class="profile-avatar-circle" id="profile-avatar-circle">
         <!-- JS inyecta <img> o iniciales -->
       </div>
-      <label class="btn-avatar-upload" for="profile-photo-input">📷 Cambiar foto</label>
+      <label class="btn-avatar-upload" for="profile-photo-input">📷 <span data-i18n="change_photo">Cambiar foto</span></label>
       <input type="file" id="profile-photo-input" accept="image/*" style="display:none">
       <div class="profile-level-badge" id="profile-level-badge"></div>
       <div class="profile-level-progress-wrap">
@@ -222,7 +222,7 @@
       </span>
     </button>
     <div id="settings-dropdown" class="settings-dropdown hidden">
-      <button class="sd-item" id="sd-help">📖 <span>AYUDA</span></button>
+      <button class="sd-item" id="sd-help">📖 <span data-i18n="help_title">AYUDA</span></button>
       <div class="sd-lang-row">
         <button class="btn-lang-sm sd-lang-btn" data-lang="es">🇪🇸 ES</button>
         <button class="btn-lang-sm sd-lang-btn" data-lang="en">🇺🇸 EN</button>
@@ -237,9 +237,9 @@
         <button class="btn-lang-sm sd-lang-btn" data-lang="ar">🇸🇦 AR</button>
         <button class="btn-lang-sm sd-lang-btn" data-lang="hi">🇮🇳 HI</button>
       </div>
-      <button class="sd-item" id="sd-calib">🎯 <span>CALIBRAR</span></button>
-      <button class="sd-item" id="sd-profile">⚙️ <span>AJUSTES</span></button>
-      <button class="sd-item sd-logout" id="sd-logout">🚪 <span>CERRAR SESIÓN</span></button>
+      <button class="sd-item" id="sd-calib">🎯 <span data-i18n="btn_calibrate">CALIBRAR</span></button>
+      <button class="sd-item" id="sd-profile">⚙️ <span data-i18n="settings_title">AJUSTES</span></button>
+      <button class="sd-item sd-logout" id="sd-logout">🚪 <span data-i18n="logout">CERRAR SESIÓN</span></button>
     </div>
     </div><!-- /settings-wrap -->
 
@@ -271,27 +271,27 @@
                       stroke="#050505" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
           </svg>
         </span>
-        <span class="home-measure-text">⚡ CALIBRAR</span>
+        <span class="home-measure-text">⚡ <span data-i18n="btn_calibrate">CALIBRAR</span></span>
         <span class="home-measure-arrow">›</span>
       </button>
     </div>
-    <p class="home-calib-hint" id="home-calib-hint">¿Primer uso? <span class="home-calib-hint-link">Calibra tu dispositivo →</span></p>
+    <p class="home-calib-hint" id="home-calib-hint" data-i18n="home_calib_status_no">⚠️ Sin calibrar — toca para calibrar</p>
 
     <!-- 3 MÉTRICAS -->
     <div class="home-metrics">
       <div class="home-metric-card">
         <img src="assets/icon-ultimo-golpe.png" width="28" height="28" alt="" style="object-fit:contain">
-        <div class="home-metric-lbl">ÚLTIMO GOLPE</div>
+        <div class="home-metric-lbl" data-i18n="last_punch">ÚLTIMO GOLPE</div>
         <div class="home-metric-val" id="home-last-punch">—</div>
       </div>
       <div class="home-metric-card">
         <img src="assets/icon-record.png" width="28" height="28" alt="" style="object-fit:contain">
-        <div class="home-metric-lbl">RÉCORD PERSONAL</div>
+        <div class="home-metric-lbl" data-i18n="personal_record">RÉCORD PERSONAL</div>
         <div class="home-metric-val" id="home-record">—</div>
       </div>
       <div class="home-metric-card">
         <img src="assets/icon-vs-ayer.png" width="28" height="28" alt="" style="object-fit:contain">
-        <div class="home-metric-lbl">VS AYER</div>
+        <div class="home-metric-lbl" data-i18n="vs_yesterday">VS AYER</div>
         <div class="home-metric-val" id="home-vs-ayer">—</div>
       </div>
     </div>
@@ -376,7 +376,7 @@
           <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
       </span>
-      <span class="nav-label">INICIO</span>
+      <span class="nav-label" data-i18n="nav_home">INICIO</span>
     </button>
     <button class="nav-btn" id="nav-history-btn">
       <span class="nav-icon-wrap">
@@ -385,7 +385,7 @@
           <polyline points="12 7 12 12 15 14"/>
         </svg>
       </span>
-      <span class="nav-label">HISTORIAL</span>
+      <span class="nav-label" data-i18n="nav_history">HISTORIAL</span>
     </button>
     <button class="nav-btn" id="nav-ranking">
       <span class="nav-icon-wrap">
@@ -397,7 +397,7 @@
           <line x1="9" y1="19" x2="15" y2="19"/>
         </svg>
       </span>
-      <span class="nav-label">RANKING</span>
+      <span class="nav-label" data-i18n="nav_ranking">RANKING</span>
     </button>
     <button class="nav-btn" id="nav-profile">
       <span class="nav-icon-wrap">
@@ -406,7 +406,7 @@
           <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
         </svg>
       </span>
-      <span class="nav-label">PERFIL</span>
+      <span class="nav-label" data-i18n="nav_profile">PERFIL</span>
     </button>
   </nav>
 
@@ -433,17 +433,17 @@
       <!-- TIPO DE ENTRENAMIENTO (solo en Modo Reacción) -->
       <div id="reaction-submode-block" class="hidden">
         <div class="config-item">
-          <span class="config-section-label">TIPO DE ENTRENAMIENTO</span>
+          <span class="config-section-label" data-i18n="training_type">TIPO DE ENTRENAMIENTO</span>
           <div class="submode-cards">
             <button class="submode-card" id="btn-submode-simple">
               <span class="submode-card-icon">⚡</span>
-              <span class="submode-card-title">GOLPE SIMPLE</span>
-              <span class="submode-card-desc">Señal → 1 golpe → mide reacción</span>
+              <span class="submode-card-title" data-i18n="submode_simple">GOLPE SIMPLE</span>
+              <span class="submode-card-desc" data-i18n="submode_simple_desc">Señal → 1 golpe → mide reacción</span>
             </button>
             <button class="submode-card" id="btn-submode-combo">
               <span class="submode-card-icon">🥊</span>
-              <span class="submode-card-title">MODO COMBO</span>
-              <span class="submode-card-desc">Señal → serie de golpes</span>
+              <span class="submode-card-title" data-i18n="submode_combo">MODO COMBO</span>
+              <span class="submode-card-desc" data-i18n="submode_combo_desc">Señal → serie de golpes</span>
             </button>
             <button class="submode-card" id="btn-submode-colors">
               <span class="submode-card-icon">🎨</span>
@@ -654,7 +654,7 @@
     </div>
     <div class="rsc-hdr-center">
       <div class="rsc-timer" id="reaction-session-timer">2:00</div>
-      <div class="rsc-timer-sub">TIEMPO RESTANTE</div>
+      <div class="rsc-timer-sub" data-i18n="time_left">TIEMPO RESTANTE</div>
     </div>
     <div class="rsc-hdr-right">
       <button class="rsc-icon-btn" id="btn-mute-reaction">🔊</button>
@@ -669,27 +669,27 @@
     <div class="rsc-left-col">
       <div class="rsc-card">
         <div class="rsc-card-icon">⚡</div>
-        <div class="rsc-card-lbl">ÚLTIMA REACCIÓN</div>
+        <div class="rsc-card-lbl" data-i18n="last_reaction">ÚLTIMA REACCIÓN</div>
         <div class="rsc-card-val" id="reaction-last">—</div>
       </div>
       <div class="rsc-card">
         <div class="rsc-card-icon">👑</div>
-        <div class="rsc-card-lbl">MEJOR REACCIÓN</div>
+        <div class="rsc-card-lbl" data-i18n="best_reaction">MEJOR REACCIÓN</div>
         <div class="rsc-card-val" id="reaction-best">—</div>
       </div>
       <div class="rsc-card">
-        <div class="rsc-card-lbl">COMBO</div>
+        <div class="rsc-card-lbl" data-i18n="card_combo">COMBO</div>
         <div class="rsc-card-val rsc-combo-num" id="reaction-combo">x0</div>
         <div class="rsc-combo-bars" id="reaction-combo-bars"></div>
       </div>
       <div class="rsc-card rsc-card--split">
         <div class="rsc-split-half">
-          <div class="rsc-card-lbl" style="color:#00D4FF">ACIERTOS</div>
+          <div class="rsc-card-lbl" style="color:#00D4FF" data-i18n="hits">ACIERTOS</div>
           <div class="rsc-card-val" style="color:#00D4FF" id="reaction-hits">0</div>
         </div>
         <div class="rsc-split-sep"></div>
         <div class="rsc-split-half">
-          <div class="rsc-card-lbl" style="color:#FF4444">FALLOS</div>
+          <div class="rsc-card-lbl" style="color:#FF4444" data-i18n="misses">FALLOS</div>
           <div class="rsc-card-val" style="color:#FF4444" id="reaction-misses">0</div>
         </div>
       </div>
@@ -754,10 +754,10 @@
       <img src="assets/LOGO_IMPACTLAB.png" alt="" class="combo-logo-tenue" onerror="this.style.display='none'">
     </div>
     <div class="combo-wait-content">
-      <div class="combo-wait-label">Prepárate</div>
+      <div class="combo-wait-label" data-i18n="stimulus_wait">Prepárate</div>
       <div class="combo-hits-big" id="wait-hits-text">3 GOLPES</div>
       <div class="combo-max-time" id="wait-max-time">2.0s MÁXIMO</div>
-      <div class="combo-wait-footer" id="wait-countdown-text">Siguiente señal en breve...</div>
+      <div class="combo-wait-footer" id="wait-countdown-text" data-i18n="next_signal_soon">Siguiente señal en breve...</div>
     </div>
   </div>
 
@@ -767,7 +767,7 @@
     <div class="signal-lightning">⚡</div>
     <div class="signal-hit-text">HIT</div>
     <div class="signal-counter" id="signal-counter">0/3</div>
-    <div class="signal-sub">¡Empieza ahora!</div>
+    <div class="signal-sub" data-i18n="start_now">¡Empieza ahora!</div>
   </div>
 
   <!-- PANEL 3: COMBO ACTIVO -->
@@ -776,19 +776,19 @@
     <div class="combo-hits-progress-wrap">
       <div class="combo-hits-progress-bar" id="active-progress-bar" style="width:0%"></div>
     </div>
-    <div class="combo-time-remaining-label">TIEMPO RESTANTE</div>
+    <div class="combo-time-remaining-label" data-i18n="time_left">TIEMPO RESTANTE</div>
     <div class="combo-time-remaining" id="active-time-remaining">2.0s</div>
     <div class="combo-active-metrics">
       <div class="combo-metric-sm">
-        <div class="combo-metric-label">REACCIÓN</div>
+        <div class="combo-metric-label" data-i18n="card_reaction">REACCIÓN</div>
         <div class="combo-metric-value" id="active-reaction">—</div>
       </div>
       <div class="combo-metric-sm">
-        <div class="combo-metric-label">POTENCIA</div>
+        <div class="combo-metric-label" data-i18n="card_power">POTENCIA</div>
         <div class="combo-metric-value" id="active-power">—</div>
       </div>
       <div class="combo-metric-sm">
-        <div class="combo-metric-label">VELOCIDAD</div>
+        <div class="combo-metric-label" data-i18n="speed_title">VELOCIDAD</div>
         <div class="combo-metric-value" id="active-speed">—</div>
       </div>
     </div>
@@ -800,11 +800,11 @@
     <div class="result-count" id="result-count">3/3 COMPLETADO</div>
     <div class="result-cards">
       <div class="result-card">
-        <div class="result-card-label">REACCIÓN</div>
+        <div class="result-card-label" data-i18n="card_reaction">REACCIÓN</div>
         <div class="result-card-value" id="result-reaction">—</div>
       </div>
       <div class="result-card">
-        <div class="result-card-label">DURACIÓN COMBO</div>
+        <div class="result-card-label" data-i18n="combo_duration">DURACIÓN COMBO</div>
         <div class="result-card-value" id="result-duration">—</div>
       </div>
     </div>
@@ -927,8 +927,8 @@
     <div class="topbar">
       <button class="icon-btn" id="btn-history-back">←</button>
       <div class="hist-tabs">
-        <button class="hist-tab hist-tab-active" id="tab-historial">📊 HISTORIAL</button>
-        <button class="hist-tab" id="tab-ranking">🏆 RANKING</button>
+        <button class="hist-tab hist-tab-active" id="tab-historial">📊 <span data-i18n="nav_history">HISTORIAL</span></button>
+        <button class="hist-tab" id="tab-ranking">🏆 <span data-i18n="nav_ranking">RANKING</span></button>
       </div>
       <div></div>
     </div>
@@ -1044,7 +1044,7 @@
     </div>
     <button class="btn-secondary btn-calibrate-settings" id="btn-calibrate-settings">🎯 <span data-i18n="calib_menu_btn">CALIBRAR DISPOSITIVO</span></button>
     <button class="btn-primary" id="btn-save-settings" data-i18n="save_settings">GUARDAR</button>
-    <button class="btn-logout" id="btn-logout">CERRAR SESIÓN</button>
+    <button class="btn-logout" id="btn-logout" data-i18n="logout">CERRAR SESIÓN</button>
   </div>
 </div>
 
@@ -1226,15 +1226,15 @@
     <div class="result-stats-row" id="result-stats-row">
       <div class="result-stat">
         <div class="result-stat-val" id="result-stat-best">—</div>
-        <div class="result-stat-lbl">MEJOR GOLPE</div>
+        <div class="result-stat-lbl" data-i18n="best_punch">MEJOR GOLPE</div>
       </div>
       <div class="result-stat">
         <div class="result-stat-val" id="result-stat-combo">x0</div>
-        <div class="result-stat-lbl">MEJOR COMBO</div>
+        <div class="result-stat-lbl" data-i18n="best_combo">MEJOR COMBO</div>
       </div>
       <div class="result-stat">
         <div class="result-stat-val" id="result-stat-time">—</div>
-        <div class="result-stat-lbl">TIEMPO TOTAL</div>
+        <div class="result-stat-lbl" data-i18n="total_time">TIEMPO TOTAL</div>
       </div>
     </div>
   </div>
@@ -1246,22 +1246,22 @@
 <div id="modal-measure-choice" class="modal hidden">
   <div class="modal-overlay" id="modal-measure-overlay"></div>
   <div class="modal-content modal-measure-content">
-    <h3 class="modal-measure-title">MEDIR MI GOLPE</h3>
+    <h3 class="modal-measure-title" data-i18n="measure_my_punch">MEDIR MI GOLPE</h3>
     <button class="btn-measure-opt btn-measure-calib" id="btn-choice-calibrate">
       <span class="btn-measure-opt-icon">🎯</span>
       <div class="btn-measure-opt-text">
-        <span class="btn-measure-opt-label">CALIBRAR DISPOSITIVO</span>
-        <span class="btn-measure-opt-desc">Primer uso o nuevo dispositivo</span>
+        <span class="btn-measure-opt-label" data-i18n="calib_menu_btn">CALIBRAR DISPOSITIVO</span>
+        <span class="btn-measure-opt-desc" data-i18n="measure_calib_desc">Primer uso o nuevo dispositivo</span>
       </div>
     </button>
     <button class="btn-measure-opt btn-measure-train" id="btn-choice-train">
       <span class="btn-measure-opt-icon">🥊</span>
       <div class="btn-measure-opt-text">
-        <span class="btn-measure-opt-label">MODO POTENCIA</span>
-        <span class="btn-measure-opt-desc">Mide la fuerza de tu golpe</span>
+        <span class="btn-measure-opt-label" data-i18n="mode_power_title">MODO POTENCIA</span>
+        <span class="btn-measure-opt-desc" data-i18n="measure_power_desc">Mide la fuerza de tu golpe</span>
       </div>
     </button>
-    <button class="btn-measure-cancel" id="btn-choice-cancel">Cancelar</button>
+    <button class="btn-measure-cancel" id="btn-choice-cancel" data-i18n="cancel">Cancelar</button>
   </div>
 </div>
 

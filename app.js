@@ -309,6 +309,79 @@ const TRANSLATIONS = {
     home_tagline_1:       'MIDE.',
     home_tagline_2:       'MEJORA.',
     home_tagline_3:       'DOMINA.',
+    // — textos que antes estaban fijos en español —
+    last_punch:              'ÚLTIMO GOLPE',
+    personal_record:         'RÉCORD PERSONAL',
+    vs_yesterday:            'VS AYER',
+    btn_calibrate:           'CALIBRAR',
+    nav_home:                'INICIO',
+    nav_ranking:             'Ranking',
+    speed_title:             'VELOCIDAD',
+    global_ranking_soon:     'RANKING GLOBAL — PRÓXIMAMENTE',
+    you:                     'Tú',
+    auth_create_account:     'CREAR CUENTA',
+    auth_have_account:       'YA TENGO CUENTA',
+    auth_full_name:          'NOMBRE COMPLETO',
+    auth_full_name_ph:       'Tu nombre completo',
+    auth_email:              'EMAIL',
+    auth_password:           'CONTRASEÑA',
+    auth_password_min:       'CONTRASEÑA (mín. 6 caracteres)',
+    auth_sport:              'DEPORTE / DISCIPLINA (opcional)',
+    auth_sport_ph:           'Boxeo, Kickboxing...',
+    auth_already:            '¿Ya tienes cuenta?',
+    auth_login_link:         'Inicia sesión',
+    auth_login_btn:          'ENTRAR',
+    auth_no_account:         '¿No tienes cuenta?',
+    auth_register_link:      'Regístrate',
+    auth_forgot:             'Olvidé mi contraseña',
+    auth_creating:           'CREANDO...',
+    auth_entering:           'ENTRANDO...',
+    auth_err_name:           'Ingresa tu nombre completo',
+    auth_err_email:          'Email inválido',
+    auth_err_password:       'La contraseña debe tener al menos 6 caracteres',
+    auth_err_weight:         'Peso inválido (30-200 kg)',
+    auth_err_age:            'Edad inválida (10-100)',
+    auth_err_create:         'Error al crear la cuenta',
+    auth_err_send:           'Error al enviar el email',
+    auth_err_enter_email:    'Ingresa tu email',
+    auth_err_enter_pass:     'Ingresa tu contraseña',
+    auth_err_credentials:    'Email o contraseña incorrectos',
+    auth_check_email:        'Revisa tu email para confirmar tu cuenta',
+    auth_email_sent:         'Email enviado. Revisa tu bandeja de entrada.',
+    change_photo:            'Cambiar foto',
+    logout:                  'CERRAR SESIÓN',
+    training_type:           'TIPO DE ENTRENAMIENTO',
+    submode_simple_desc:     'Señal → 1 golpe → mide reacción',
+    submode_combo_desc:      'Señal → serie de golpes',
+    time_left:               'TIEMPO RESTANTE',
+    combo_duration:          'DURACIÓN COMBO',
+    verdict_fail:            'FALLO',
+    result_completed:        'COMPLETADO',
+    result_incomplete:       'INCOMPLETO',
+    result_no_reaction:      'SIN REACCIÓN',
+    next_signal_in:          'Siguiente señal en {s}s',
+    next_signal_soon:        'Siguiente señal en breve...',
+    start_now:               '¡Empieza ahora!',
+    best_combo:              'MEJOR COMBO',
+    total_time:              'TIEMPO TOTAL',
+    measure_my_punch:        'MEDIR MI GOLPE',
+    measure_calib_desc:      'Primer uso o nuevo dispositivo',
+    mode_power_title:        'MODO POTENCIA',
+    measure_power_desc:      'Mide la fuerza de tu golpe',
+    cancel:                  'Cancelar',
+    penalty_rest:            '¡DESCANSA!',
+    penalty_wait_signal:     '¡ESPERA LA SEÑAL!',
+    penalty_too_soon:        '¡DEMASIADO PRONTO!',
+    new_record_overlay:      '🏆 ¡NUEVO RÉCORD!',
+    max_level:               'NIVEL MÁXIMO',
+    // — notas de sesión y colores por defecto —
+    grade_s:                 'LEGENDARIO',
+    grade_a:                 'MAESTRO',
+    grade_b:                 'GUERRERO',
+    grade_c:                 'PRACTICANTE',
+    color_yellow:            'AMARILLO',
+    color_red:               'ROJO',
+    color_blue:              'AZUL',
   },
   en: {
     profile_subtitle:     'Set up your profile to start',
@@ -503,6 +576,79 @@ const TRANSLATIONS = {
     home_tagline_1:       'MEASURE.',
     home_tagline_2:       'IMPROVE.',
     home_tagline_3:       'DOMINATE.',
+    // — textos que antes estaban fijos en español —
+    last_punch:              'LAST PUNCH',
+    personal_record:         'PERSONAL RECORD',
+    vs_yesterday:            'VS YESTERDAY',
+    btn_calibrate:           'CALIBRATE',
+    nav_home:                'Home',
+    nav_ranking:             'Ranking',
+    speed_title:             'SPEED',
+    global_ranking_soon:     'GLOBAL RANKING — COMING SOON',
+    you:                     'You',
+    auth_create_account:     'CREATE ACCOUNT',
+    auth_have_account:       'I ALREADY HAVE AN ACCOUNT',
+    auth_full_name:          'FULL NAME',
+    auth_full_name_ph:       'Your full name',
+    auth_email:              'EMAIL',
+    auth_password:           'PASSWORD',
+    auth_password_min:       'PASSWORD (min. 6 characters)',
+    auth_sport:              'SPORT / DISCIPLINE (optional)',
+    auth_sport_ph:           'Boxing, Kickboxing...',
+    auth_already:            'Already have an account?',
+    auth_login_link:         'Log in',
+    auth_login_btn:          'LOG IN',
+    auth_no_account:         'No account yet?',
+    auth_register_link:      'Sign up',
+    auth_forgot:             'I forgot my password',
+    auth_creating:           'CREATING...',
+    auth_entering:           'LOGGING IN...',
+    auth_err_name:           'Enter your full name',
+    auth_err_email:          'Invalid email',
+    auth_err_password:       'The password must be at least 6 characters',
+    auth_err_weight:         'Invalid weight (30-200 kg)',
+    auth_err_age:            'Invalid age (10-100)',
+    auth_err_create:         'Could not create the account',
+    auth_err_send:           'Could not send the email',
+    auth_err_enter_email:    'Enter your email',
+    auth_err_enter_pass:     'Enter your password',
+    auth_err_credentials:    'Wrong email or password',
+    auth_check_email:        'Check your email to confirm your account',
+    auth_email_sent:         'Email sent. Check your inbox.',
+    change_photo:            'Change photo',
+    logout:                  'LOG OUT',
+    training_type:           'TRAINING TYPE',
+    submode_simple_desc:     'Signal → 1 punch → measures reaction',
+    submode_combo_desc:      'Signal → series of punches',
+    time_left:               'TIME LEFT',
+    combo_duration:          'COMBO DURATION',
+    verdict_fail:            'FAIL',
+    result_completed:        'COMPLETED',
+    result_incomplete:       'INCOMPLETE',
+    result_no_reaction:      'NO REACTION',
+    next_signal_in:          'Next signal in {s}s',
+    next_signal_soon:        'Next signal shortly...',
+    start_now:               'Start now!',
+    best_combo:              'BEST COMBO',
+    total_time:              'TOTAL TIME',
+    measure_my_punch:        'MEASURE MY PUNCH',
+    measure_calib_desc:      'First use or new device',
+    mode_power_title:        'POWER MODE',
+    measure_power_desc:      'Measure the force of your punch',
+    cancel:                  'Cancel',
+    penalty_rest:            'REST!',
+    penalty_wait_signal:     'WAIT FOR THE SIGNAL!',
+    penalty_too_soon:        'TOO SOON!',
+    new_record_overlay:      '🏆 NEW RECORD!',
+    max_level:               'MAX LEVEL',
+    // — notas de sesión y colores por defecto —
+    grade_s:                 'LEGENDARY',
+    grade_a:                 'MASTER',
+    grade_b:                 'WARRIOR',
+    grade_c:                 'PRACTITIONER',
+    color_yellow:            'YELLOW',
+    color_red:               'RED',
+    color_blue:              'BLUE',
   },
   pt: {
     profile_subtitle:     'Configure seu perfil para começar',
@@ -697,6 +843,79 @@ const TRANSLATIONS = {
     home_tagline_1:       'MEÇA.',
     home_tagline_2:       'MELHORE.',
     home_tagline_3:       'DOMINE.',
+    // — textos que antes estaban fijos en español —
+    last_punch:              'ÚLTIMO GOLPE',
+    personal_record:         'RECORDE PESSOAL',
+    vs_yesterday:            'VS ONTEM',
+    btn_calibrate:           'CALIBRAR',
+    nav_home:                'Início',
+    nav_ranking:             'Ranking',
+    speed_title:             'VELOCIDADE',
+    global_ranking_soon:     'RANKING GLOBAL — EM BREVE',
+    you:                     'Você',
+    auth_create_account:     'CRIAR CONTA',
+    auth_have_account:       'JÁ TENHO CONTA',
+    auth_full_name:          'NOME COMPLETO',
+    auth_full_name_ph:       'Seu nome completo',
+    auth_email:              'EMAIL',
+    auth_password:           'SENHA',
+    auth_password_min:       'SENHA (mín. 6 caracteres)',
+    auth_sport:              'ESPORTE / DISCIPLINA (opcional)',
+    auth_sport_ph:           'Boxe, Kickboxing...',
+    auth_already:            'Já tem conta?',
+    auth_login_link:         'Entrar',
+    auth_login_btn:          'ENTRAR',
+    auth_no_account:         'Não tem conta?',
+    auth_register_link:      'Cadastre-se',
+    auth_forgot:             'Esqueci minha senha',
+    auth_creating:           'CRIANDO...',
+    auth_entering:           'ENTRANDO...',
+    auth_err_name:           'Digite seu nome completo',
+    auth_err_email:          'Email inválido',
+    auth_err_password:       'A senha deve ter pelo menos 6 caracteres',
+    auth_err_weight:         'Peso inválido (30-200 kg)',
+    auth_err_age:            'Idade inválida (10-100)',
+    auth_err_create:         'Erro ao criar a conta',
+    auth_err_send:           'Erro ao enviar o email',
+    auth_err_enter_email:    'Digite seu email',
+    auth_err_enter_pass:     'Digite sua senha',
+    auth_err_credentials:    'Email ou senha incorretos',
+    auth_check_email:        'Verifique seu email para confirmar a conta',
+    auth_email_sent:         'Email enviado. Verifique sua caixa de entrada.',
+    change_photo:            'Trocar foto',
+    logout:                  'SAIR',
+    training_type:           'TIPO DE TREINO',
+    submode_simple_desc:     'Sinal → 1 golpe → mede a reação',
+    submode_combo_desc:      'Sinal → série de golpes',
+    time_left:               'TEMPO RESTANTE',
+    combo_duration:          'DURAÇÃO DO COMBO',
+    verdict_fail:            'FALHA',
+    result_completed:        'COMPLETO',
+    result_incomplete:       'INCOMPLETO',
+    result_no_reaction:      'SEM REAÇÃO',
+    next_signal_in:          'Próximo sinal em {s}s',
+    next_signal_soon:        'Próximo sinal em breve...',
+    start_now:               'Comece agora!',
+    best_combo:              'MELHOR COMBO',
+    total_time:              'TEMPO TOTAL',
+    measure_my_punch:        'MEDIR MEU GOLPE',
+    measure_calib_desc:      'Primeiro uso ou novo dispositivo',
+    mode_power_title:        'MODO POTÊNCIA',
+    measure_power_desc:      'Meça a força do seu golpe',
+    cancel:                  'Cancelar',
+    penalty_rest:            'DESCANSE!',
+    penalty_wait_signal:     'ESPERE O SINAL!',
+    penalty_too_soon:        'CEDO DEMAIS!',
+    new_record_overlay:      '🏆 NOVO RECORDE!',
+    max_level:               'NÍVEL MÁXIMO',
+    // — notas de sesión y colores por defecto —
+    grade_s:                 'LENDÁRIO',
+    grade_a:                 'MESTRE',
+    grade_b:                 'GUERREIRO',
+    grade_c:                 'PRATICANTE',
+    color_yellow:            'AMARELO',
+    color_red:               'VERMELHO',
+    color_blue:              'AZUL',
   },
   de: {
     profile_subtitle:     'Profil einrichten um zu beginnen',
@@ -891,6 +1110,79 @@ const TRANSLATIONS = {
     home_tagline_1:       'MESSEN.',
     home_tagline_2:       'VERBESSERN.',
     home_tagline_3:       'DOMINIEREN.',
+    // — textos que antes estaban fijos en español —
+    last_punch:              'LETZTER SCHLAG',
+    personal_record:         'PERSÖNLICHER REKORD',
+    vs_yesterday:            'VS GESTERN',
+    btn_calibrate:           'KALIBRIEREN',
+    nav_home:                'Start',
+    nav_ranking:             'Ranking',
+    speed_title:             'GESCHWINDIGKEIT',
+    global_ranking_soon:     'GLOBALES RANKING — DEMNÄCHST',
+    you:                     'Du',
+    auth_create_account:     'KONTO ERSTELLEN',
+    auth_have_account:       'ICH HABE BEREITS EIN KONTO',
+    auth_full_name:          'VOLLSTÄNDIGER NAME',
+    auth_full_name_ph:       'Dein vollständiger Name',
+    auth_email:              'E-MAIL',
+    auth_password:           'PASSWORT',
+    auth_password_min:       'PASSWORT (mind. 6 Zeichen)',
+    auth_sport:              'SPORTART / DISZIPLIN (optional)',
+    auth_sport_ph:           'Boxen, Kickboxen...',
+    auth_already:            'Schon ein Konto?',
+    auth_login_link:         'Anmelden',
+    auth_login_btn:          'ANMELDEN',
+    auth_no_account:         'Noch kein Konto?',
+    auth_register_link:      'Registrieren',
+    auth_forgot:             'Passwort vergessen',
+    auth_creating:           'WIRD ERSTELLT...',
+    auth_entering:           'ANMELDUNG...',
+    auth_err_name:           'Gib deinen vollständigen Namen ein',
+    auth_err_email:          'Ungültige E-Mail',
+    auth_err_password:       'Das Passwort muss mindestens 6 Zeichen haben',
+    auth_err_weight:         'Ungültiges Gewicht (30-200 kg)',
+    auth_err_age:            'Ungültiges Alter (10-100)',
+    auth_err_create:         'Konto konnte nicht erstellt werden',
+    auth_err_send:           'E-Mail konnte nicht gesendet werden',
+    auth_err_enter_email:    'Gib deine E-Mail ein',
+    auth_err_enter_pass:     'Gib dein Passwort ein',
+    auth_err_credentials:    'E-Mail oder Passwort falsch',
+    auth_check_email:        'Prüfe deine E-Mails, um dein Konto zu bestätigen',
+    auth_email_sent:         'E-Mail gesendet. Prüfe deinen Posteingang.',
+    change_photo:            'Foto ändern',
+    logout:                  'ABMELDEN',
+    training_type:           'TRAININGSART',
+    submode_simple_desc:     'Signal → 1 Schlag → misst die Reaktion',
+    submode_combo_desc:      'Signal → Schlagserie',
+    time_left:               'VERBLEIBENDE ZEIT',
+    combo_duration:          'COMBO-DAUER',
+    verdict_fail:            'FEHLER',
+    result_completed:        'ABGESCHLOSSEN',
+    result_incomplete:       'UNVOLLSTÄNDIG',
+    result_no_reaction:      'KEINE REAKTION',
+    next_signal_in:          'Nächstes Signal in {s}s',
+    next_signal_soon:        'Nächstes Signal gleich...',
+    start_now:               'Jetzt loslegen!',
+    best_combo:              'BESTES COMBO',
+    total_time:              'GESAMTZEIT',
+    measure_my_punch:        'MEINEN SCHLAG MESSEN',
+    measure_calib_desc:      'Erste Nutzung oder neues Gerät',
+    mode_power_title:        'KRAFT-MODUS',
+    measure_power_desc:      'Miss die Kraft deines Schlags',
+    cancel:                  'Abbrechen',
+    penalty_rest:            'PAUSE!',
+    penalty_wait_signal:     'WARTE AUF DAS SIGNAL!',
+    penalty_too_soon:        'ZU FRÜH!',
+    new_record_overlay:      '🏆 NEUER REKORD!',
+    max_level:               'MAX. STUFE',
+    // — notas de sesión y colores por defecto —
+    grade_s:                 'LEGENDÄR',
+    grade_a:                 'MEISTER',
+    grade_b:                 'KRIEGER',
+    grade_c:                 'ÜBENDER',
+    color_yellow:            'GELB',
+    color_red:               'ROT',
+    color_blue:              'BLAU',
   },
   ja: {
     profile_subtitle:     'プロフィールを設定して開始',
@@ -1085,6 +1377,79 @@ const TRANSLATIONS = {
     home_tagline_1:       '測定。',
     home_tagline_2:       '改善。',
     home_tagline_3:       '支配。',
+    // — textos que antes estaban fijos en español —
+    last_punch:              '最後のパンチ',
+    personal_record:         '個人記録',
+    vs_yesterday:            '昨日比',
+    btn_calibrate:           'キャリブレート',
+    nav_home:                'ホーム',
+    nav_ranking:             'ランキング',
+    speed_title:             'スピード',
+    global_ranking_soon:     'グローバルランキング — 近日公開',
+    you:                     'あなた',
+    auth_create_account:     'アカウント作成',
+    auth_have_account:       'アカウントを持っています',
+    auth_full_name:          '氏名',
+    auth_full_name_ph:       'あなたの氏名',
+    auth_email:              'メール',
+    auth_password:           'パスワード',
+    auth_password_min:       'パスワード (6文字以上)',
+    auth_sport:              '競技 / 種目 (任意)',
+    auth_sport_ph:           'ボクシング、キックボクシング...',
+    auth_already:            'すでにアカウントをお持ちですか?',
+    auth_login_link:         'ログイン',
+    auth_login_btn:          'ログイン',
+    auth_no_account:         'アカウントがありませんか?',
+    auth_register_link:      '新規登録',
+    auth_forgot:             'パスワードを忘れました',
+    auth_creating:           '作成中...',
+    auth_entering:           'ログイン中...',
+    auth_err_name:           '氏名を入力してください',
+    auth_err_email:          'メールアドレスが不正です',
+    auth_err_password:       'パスワードは6文字以上必要です',
+    auth_err_weight:         '体重が不正です (30〜200 kg)',
+    auth_err_age:            '年齢が不正です (10〜100)',
+    auth_err_create:         'アカウントを作成できませんでした',
+    auth_err_send:           'メールを送信できませんでした',
+    auth_err_enter_email:    'メールアドレスを入力してください',
+    auth_err_enter_pass:     'パスワードを入力してください',
+    auth_err_credentials:    'メールアドレスかパスワードが違います',
+    auth_check_email:        'メールを確認してアカウントを有効化してください',
+    auth_email_sent:         'メールを送信しました。受信トレイをご確認ください。',
+    change_photo:            '写真を変更',
+    logout:                  'ログアウト',
+    training_type:           'トレーニングの種類',
+    submode_simple_desc:     '合図 → 1発 → リアクションを測定',
+    submode_combo_desc:      '合図 → 連続パンチ',
+    time_left:               '残り時間',
+    combo_duration:          'コンボ時間',
+    verdict_fail:            '失敗',
+    result_completed:        '完了',
+    result_incomplete:       '未完了',
+    result_no_reaction:      'リアクションなし',
+    next_signal_in:          '次の合図まで {s}秒',
+    next_signal_soon:        'まもなく次の合図...',
+    start_now:               '今すぐ開始!',
+    best_combo:              'ベストコンボ',
+    total_time:              '合計時間',
+    measure_my_punch:        'パンチを測定する',
+    measure_calib_desc:      '初回利用または新しい端末',
+    mode_power_title:        'パワーモード',
+    measure_power_desc:      'パンチの強さを測定',
+    cancel:                  'キャンセル',
+    penalty_rest:            '休め!',
+    penalty_wait_signal:     '合図を待て!',
+    penalty_too_soon:        '早すぎる!',
+    new_record_overlay:      '🏆 新記録!',
+    max_level:               '最大レベル',
+    // — notas de sesión y colores por defecto —
+    grade_s:                 '伝説級',
+    grade_a:                 '達人',
+    grade_b:                 '戦士',
+    grade_c:                 '修行者',
+    color_yellow:            '黄',
+    color_red:               '赤',
+    color_blue:              '青',
   },
   fr: {
     profile_subtitle:     'Configure ton profil pour commencer',
@@ -1279,6 +1644,79 @@ const TRANSLATIONS = {
     home_tagline_1:       'MESURE.',
     home_tagline_2:       'AMÉLIORE.',
     home_tagline_3:       'DOMINE.',
+    // — textos que antes estaban fijos en español —
+    last_punch:              'DERNIER COUP',
+    personal_record:         'RECORD PERSONNEL',
+    vs_yesterday:            'VS HIER',
+    btn_calibrate:           'CALIBRER',
+    nav_home:                'Accueil',
+    nav_ranking:             'Classement',
+    speed_title:             'VITESSE',
+    global_ranking_soon:     'CLASSEMENT MONDIAL — BIENTÔT',
+    you:                     'Toi',
+    auth_create_account:     'CRÉER UN COMPTE',
+    auth_have_account:       'J\'AI DÉJÀ UN COMPTE',
+    auth_full_name:          'NOM COMPLET',
+    auth_full_name_ph:       'Ton nom complet',
+    auth_email:              'E-MAIL',
+    auth_password:           'MOT DE PASSE',
+    auth_password_min:       'MOT DE PASSE (min. 6 caractères)',
+    auth_sport:              'SPORT / DISCIPLINE (facultatif)',
+    auth_sport_ph:           'Boxe, Kickboxing...',
+    auth_already:            'Tu as déjà un compte ?',
+    auth_login_link:         'Se connecter',
+    auth_login_btn:          'SE CONNECTER',
+    auth_no_account:         'Pas encore de compte ?',
+    auth_register_link:      'S\'inscrire',
+    auth_forgot:             'J\'ai oublié mon mot de passe',
+    auth_creating:           'CRÉATION...',
+    auth_entering:           'CONNEXION...',
+    auth_err_name:           'Saisis ton nom complet',
+    auth_err_email:          'E-mail invalide',
+    auth_err_password:       'Le mot de passe doit faire au moins 6 caractères',
+    auth_err_weight:         'Poids invalide (30-200 kg)',
+    auth_err_age:            'Âge invalide (10-100)',
+    auth_err_create:         'Impossible de créer le compte',
+    auth_err_send:           'Impossible d\'envoyer l\'e-mail',
+    auth_err_enter_email:    'Saisis ton e-mail',
+    auth_err_enter_pass:     'Saisis ton mot de passe',
+    auth_err_credentials:    'E-mail ou mot de passe incorrect',
+    auth_check_email:        'Vérifie tes e-mails pour confirmer ton compte',
+    auth_email_sent:         'E-mail envoyé. Vérifie ta boîte de réception.',
+    change_photo:            'Changer la photo',
+    logout:                  'DÉCONNEXION',
+    training_type:           'TYPE D\'ENTRAÎNEMENT',
+    submode_simple_desc:     'Signal → 1 coup → mesure la réaction',
+    submode_combo_desc:      'Signal → série de coups',
+    time_left:               'TEMPS RESTANT',
+    combo_duration:          'DURÉE DU COMBO',
+    verdict_fail:            'RATÉ',
+    result_completed:        'TERMINÉ',
+    result_incomplete:       'INCOMPLET',
+    result_no_reaction:      'AUCUNE RÉACTION',
+    next_signal_in:          'Prochain signal dans {s}s',
+    next_signal_soon:        'Prochain signal bientôt...',
+    start_now:               'Commence maintenant !',
+    best_combo:              'MEILLEUR COMBO',
+    total_time:              'TEMPS TOTAL',
+    measure_my_punch:        'MESURER MON COUP',
+    measure_calib_desc:      'Première utilisation ou nouvel appareil',
+    mode_power_title:        'MODE PUISSANCE',
+    measure_power_desc:      'Mesure la force de ton coup',
+    cancel:                  'Annuler',
+    penalty_rest:            'REPOSE-TOI !',
+    penalty_wait_signal:     'ATTENDS LE SIGNAL !',
+    penalty_too_soon:        'TROP TÔT !',
+    new_record_overlay:      '🏆 NOUVEAU RECORD !',
+    max_level:               'NIVEAU MAX',
+    // — notas de sesión y colores por defecto —
+    grade_s:                 'LÉGENDAIRE',
+    grade_a:                 'MAÎTRE',
+    grade_b:                 'GUERRIER',
+    grade_c:                 'PRATIQUANT',
+    color_yellow:            'JAUNE',
+    color_red:               'ROUGE',
+    color_blue:              'BLEU',
   },
   ru: {
     profile_subtitle:     'Настройте профиль, чтобы начать',
@@ -1473,6 +1911,79 @@ const TRANSLATIONS = {
     home_tagline_1:       'ИЗМЕРЬ.',
     home_tagline_2:       'УЛУЧШИ.',
     home_tagline_3:       'ДОМИНИРУЙ.',
+    // — textos que antes estaban fijos en español —
+    last_punch:              'ПОСЛЕДНИЙ УДАР',
+    personal_record:         'ЛИЧНЫЙ РЕКОРД',
+    vs_yesterday:            'VS ВЧЕРА',
+    btn_calibrate:           'КАЛИБРОВКА',
+    nav_home:                'Главная',
+    nav_ranking:             'Рейтинг',
+    speed_title:             'СКОРОСТЬ',
+    global_ranking_soon:     'ГЛОБАЛЬНЫЙ РЕЙТИНГ — СКОРО',
+    you:                     'Ты',
+    auth_create_account:     'СОЗДАТЬ АККАУНТ',
+    auth_have_account:       'У МЕНЯ УЖЕ ЕСТЬ АККАУНТ',
+    auth_full_name:          'ПОЛНОЕ ИМЯ',
+    auth_full_name_ph:       'Твоё полное имя',
+    auth_email:              'EMAIL',
+    auth_password:           'ПАРОЛЬ',
+    auth_password_min:       'ПАРОЛЬ (мин. 6 символов)',
+    auth_sport:              'ВИД СПОРТА / ДИСЦИПЛИНА (необязательно)',
+    auth_sport_ph:           'Бокс, кикбоксинг...',
+    auth_already:            'Уже есть аккаунт?',
+    auth_login_link:         'Войти',
+    auth_login_btn:          'ВОЙТИ',
+    auth_no_account:         'Нет аккаунта?',
+    auth_register_link:      'Зарегистрироваться',
+    auth_forgot:             'Я забыл пароль',
+    auth_creating:           'СОЗДАЁМ...',
+    auth_entering:           'ВХОД...',
+    auth_err_name:           'Введите полное имя',
+    auth_err_email:          'Некорректный email',
+    auth_err_password:       'Пароль должен быть не короче 6 символов',
+    auth_err_weight:         'Некорректный вес (30-200 кг)',
+    auth_err_age:            'Некорректный возраст (10-100)',
+    auth_err_create:         'Не удалось создать аккаунт',
+    auth_err_send:           'Не удалось отправить письмо',
+    auth_err_enter_email:    'Введите email',
+    auth_err_enter_pass:     'Введите пароль',
+    auth_err_credentials:    'Неверный email или пароль',
+    auth_check_email:        'Проверьте почту, чтобы подтвердить аккаунт',
+    auth_email_sent:         'Письмо отправлено. Проверьте входящие.',
+    change_photo:            'Сменить фото',
+    logout:                  'ВЫЙТИ',
+    training_type:           'ТИП ТРЕНИРОВКИ',
+    submode_simple_desc:     'Сигнал → 1 удар → замер реакции',
+    submode_combo_desc:      'Сигнал → серия ударов',
+    time_left:               'ОСТАЛОСЬ ВРЕМЕНИ',
+    combo_duration:          'ДЛИТЕЛЬНОСТЬ КОМБО',
+    verdict_fail:            'ПРОМАХ',
+    result_completed:        'ВЫПОЛНЕНО',
+    result_incomplete:       'НЕ ЗАВЕРШЕНО',
+    result_no_reaction:      'БЕЗ РЕАКЦИИ',
+    next_signal_in:          'Следующий сигнал через {s}с',
+    next_signal_soon:        'Следующий сигнал скоро...',
+    start_now:               'Начинай!',
+    best_combo:              'ЛУЧШЕЕ КОМБО',
+    total_time:              'ОБЩЕЕ ВРЕМЯ',
+    measure_my_punch:        'ИЗМЕРИТЬ МОЙ УДАР',
+    measure_calib_desc:      'Первый запуск или новое устройство',
+    mode_power_title:        'РЕЖИМ МОЩНОСТИ',
+    measure_power_desc:      'Измерь силу своего удара',
+    cancel:                  'Отмена',
+    penalty_rest:            'ОТДЫХАЙ!',
+    penalty_wait_signal:     'ЖДИ СИГНАЛА!',
+    penalty_too_soon:        'СЛИШКОМ РАНО!',
+    new_record_overlay:      '🏆 НОВЫЙ РЕКОРД!',
+    max_level:               'МАКС. УРОВЕНЬ',
+    // — notas de sesión y colores por defecto —
+    grade_s:                 'ЛЕГЕНДАРНО',
+    grade_a:                 'МАСТЕР',
+    grade_b:                 'ВОИН',
+    grade_c:                 'УЧЕНИК',
+    color_yellow:            'ЖЁЛТЫЙ',
+    color_red:               'КРАСНЫЙ',
+    color_blue:              'СИНИЙ',
   },
   zh: {
     profile_subtitle:     '设置你的档案即可开始',
@@ -1667,6 +2178,79 @@ const TRANSLATIONS = {
     home_tagline_1:       '测量。',
     home_tagline_2:       '提升。',
     home_tagline_3:       '主宰。',
+    // — textos que antes estaban fijos en español —
+    last_punch:              '最后一拳',
+    personal_record:         '个人记录',
+    vs_yesterday:            '对比昨天',
+    btn_calibrate:           '校准',
+    nav_home:                '主页',
+    nav_ranking:             '排名',
+    speed_title:             '速度',
+    global_ranking_soon:     '全球排名 — 即将推出',
+    you:                     '你',
+    auth_create_account:     '创建账号',
+    auth_have_account:       '我已有账号',
+    auth_full_name:          '全名',
+    auth_full_name_ph:       '你的全名',
+    auth_email:              '邮箱',
+    auth_password:           '密码',
+    auth_password_min:       '密码（至少 6 位）',
+    auth_sport:              '运动 / 项目（选填）',
+    auth_sport_ph:           '拳击、自由搏击……',
+    auth_already:            '已经有账号了？',
+    auth_login_link:         '登录',
+    auth_login_btn:          '登录',
+    auth_no_account:         '还没有账号？',
+    auth_register_link:      '注册',
+    auth_forgot:             '忘记密码',
+    auth_creating:           '创建中...',
+    auth_entering:           '登录中...',
+    auth_err_name:           '请输入你的全名',
+    auth_err_email:          '邮箱无效',
+    auth_err_password:       '密码至少需要 6 位',
+    auth_err_weight:         '体重无效 (30-200 kg)',
+    auth_err_age:            '年龄无效 (10-100)',
+    auth_err_create:         '创建账号失败',
+    auth_err_send:           '发送邮件失败',
+    auth_err_enter_email:    '请输入邮箱',
+    auth_err_enter_pass:     '请输入密码',
+    auth_err_credentials:    '邮箱或密码错误',
+    auth_check_email:        '请查收邮件以确认账号',
+    auth_email_sent:         '邮件已发送，请查看收件箱。',
+    change_photo:            '更换照片',
+    logout:                  '退出',
+    training_type:           '训练类型',
+    submode_simple_desc:     '信号 → 1 拳 → 测量反应',
+    submode_combo_desc:      '信号 → 连续出拳',
+    time_left:               '剩余时间',
+    combo_duration:          '连击时长',
+    verdict_fail:            '失败',
+    result_completed:        '已完成',
+    result_incomplete:       '未完成',
+    result_no_reaction:      '无反应',
+    next_signal_in:          '下个信号 {s} 秒后',
+    next_signal_soon:        '下个信号即将出现...',
+    start_now:               '现在开始！',
+    best_combo:              '最佳连击',
+    total_time:              '总时长',
+    measure_my_punch:        '测量我的拳',
+    measure_calib_desc:      '首次使用或更换设备',
+    mode_power_title:        '力量模式',
+    measure_power_desc:      '测量你出拳的力量',
+    cancel:                  '取消',
+    penalty_rest:            '休息！',
+    penalty_wait_signal:     '等信号！',
+    penalty_too_soon:        '太早了！',
+    new_record_overlay:      '🏆 新纪录！',
+    max_level:               '最高等级',
+    // — notas de sesión y colores por defecto —
+    grade_s:                 '传奇',
+    grade_a:                 '大师',
+    grade_b:                 '战士',
+    grade_c:                 '习练者',
+    color_yellow:            '黄色',
+    color_red:               '红色',
+    color_blue:              '蓝色',
   },
   'zh-TW': {
     profile_subtitle:     '設定你的檔案即可開始',
@@ -1861,6 +2445,79 @@ const TRANSLATIONS = {
     home_tagline_1:       '測量。',
     home_tagline_2:       '提升。',
     home_tagline_3:       '主宰。',
+    // — textos que antes estaban fijos en español —
+    last_punch:              '最後一拳',
+    personal_record:         '個人紀錄',
+    vs_yesterday:            '對比昨天',
+    btn_calibrate:           '校準',
+    nav_home:                '主頁',
+    nav_ranking:             '排名',
+    speed_title:             '速度',
+    global_ranking_soon:     '全球排名 — 即將推出',
+    you:                     '你',
+    auth_create_account:     '建立帳號',
+    auth_have_account:       '我已有帳號',
+    auth_full_name:          '全名',
+    auth_full_name_ph:       '你的全名',
+    auth_email:              '電子郵件',
+    auth_password:           '密碼',
+    auth_password_min:       '密碼（至少 6 位）',
+    auth_sport:              '運動 / 項目（選填）',
+    auth_sport_ph:           '拳擊、自由搏擊……',
+    auth_already:            '已經有帳號了？',
+    auth_login_link:         '登入',
+    auth_login_btn:          '登入',
+    auth_no_account:         '還沒有帳號？',
+    auth_register_link:      '註冊',
+    auth_forgot:             '忘記密碼',
+    auth_creating:           '建立中...',
+    auth_entering:           '登入中...',
+    auth_err_name:           '請輸入你的全名',
+    auth_err_email:          '電子郵件無效',
+    auth_err_password:       '密碼至少需要 6 位',
+    auth_err_weight:         '體重無效 (30-200 kg)',
+    auth_err_age:            '年齡無效 (10-100)',
+    auth_err_create:         '建立帳號失敗',
+    auth_err_send:           '寄送郵件失敗',
+    auth_err_enter_email:    '請輸入電子郵件',
+    auth_err_enter_pass:     '請輸入密碼',
+    auth_err_credentials:    '電子郵件或密碼錯誤',
+    auth_check_email:        '請查收郵件以確認帳號',
+    auth_email_sent:         '郵件已寄出，請查看收件匣。',
+    change_photo:            '更換照片',
+    logout:                  '登出',
+    training_type:           '訓練類型',
+    submode_simple_desc:     '訊號 → 1 拳 → 測量反應',
+    submode_combo_desc:      '訊號 → 連續出拳',
+    time_left:               '剩餘時間',
+    combo_duration:          '連擊時長',
+    verdict_fail:            '失敗',
+    result_completed:        '已完成',
+    result_incomplete:       '未完成',
+    result_no_reaction:      '無反應',
+    next_signal_in:          '下個訊號 {s} 秒後',
+    next_signal_soon:        '下個訊號即將出現...',
+    start_now:               '現在開始！',
+    best_combo:              '最佳連擊',
+    total_time:              '總時長',
+    measure_my_punch:        '測量我的拳',
+    measure_calib_desc:      '首次使用或更換裝置',
+    mode_power_title:        '力量模式',
+    measure_power_desc:      '測量你出拳的力量',
+    cancel:                  '取消',
+    penalty_rest:            '休息！',
+    penalty_wait_signal:     '等訊號！',
+    penalty_too_soon:        '太早了！',
+    new_record_overlay:      '🏆 新紀錄！',
+    max_level:               '最高等級',
+    // — notas de sesión y colores por defecto —
+    grade_s:                 '傳奇',
+    grade_a:                 '大師',
+    grade_b:                 '戰士',
+    grade_c:                 '習練者',
+    color_yellow:            '黃色',
+    color_red:               '紅色',
+    color_blue:              '藍色',
   },
   ko: {
     profile_subtitle:     '프로필을 설정하고 시작하세요',
@@ -2055,6 +2712,79 @@ const TRANSLATIONS = {
     home_tagline_1:       '측정.',
     home_tagline_2:       '개선.',
     home_tagline_3:       '지배.',
+    // — textos que antes estaban fijos en español —
+    last_punch:              '마지막 타격',
+    personal_record:         '개인 기록',
+    vs_yesterday:            '어제 대비',
+    btn_calibrate:           '캘리브레이션',
+    nav_home:                '홈',
+    nav_ranking:             '랭킹',
+    speed_title:             '속도',
+    global_ranking_soon:     '글로벌 랭킹 — 곧 출시',
+    you:                     '나',
+    auth_create_account:     '계정 만들기',
+    auth_have_account:       '이미 계정이 있습니다',
+    auth_full_name:          '이름',
+    auth_full_name_ph:       '이름을 입력하세요',
+    auth_email:              '이메일',
+    auth_password:           '비밀번호',
+    auth_password_min:       '비밀번호 (6자 이상)',
+    auth_sport:              '종목 / 분야 (선택)',
+    auth_sport_ph:           '복싱, 킥복싱...',
+    auth_already:            '이미 계정이 있나요?',
+    auth_login_link:         '로그인',
+    auth_login_btn:          '로그인',
+    auth_no_account:         '계정이 없나요?',
+    auth_register_link:      '가입하기',
+    auth_forgot:             '비밀번호를 잊었어요',
+    auth_creating:           '생성 중...',
+    auth_entering:           '로그인 중...',
+    auth_err_name:           '이름을 입력하세요',
+    auth_err_email:          '이메일이 올바르지 않습니다',
+    auth_err_password:       '비밀번호는 6자 이상이어야 합니다',
+    auth_err_weight:         '체중이 올바르지 않습니다 (30-200 kg)',
+    auth_err_age:            '나이가 올바르지 않습니다 (10-100)',
+    auth_err_create:         '계정을 만들지 못했습니다',
+    auth_err_send:           '이메일을 보내지 못했습니다',
+    auth_err_enter_email:    '이메일을 입력하세요',
+    auth_err_enter_pass:     '비밀번호를 입력하세요',
+    auth_err_credentials:    '이메일 또는 비밀번호가 틀렸습니다',
+    auth_check_email:        '이메일을 확인해 계정을 인증하세요',
+    auth_email_sent:         '이메일을 보냈습니다. 받은편지함을 확인하세요.',
+    change_photo:            '사진 변경',
+    logout:                  '로그아웃',
+    training_type:           '훈련 유형',
+    submode_simple_desc:     '신호 → 1회 타격 → 반응 측정',
+    submode_combo_desc:      '신호 → 연속 타격',
+    time_left:               '남은 시간',
+    combo_duration:          '콤보 시간',
+    verdict_fail:            '실패',
+    result_completed:        '완료',
+    result_incomplete:       '미완료',
+    result_no_reaction:      '반응 없음',
+    next_signal_in:          '다음 신호까지 {s}초',
+    next_signal_soon:        '곧 다음 신호...',
+    start_now:               '지금 시작!',
+    best_combo:              '최고 콤보',
+    total_time:              '총 시간',
+    measure_my_punch:        '내 타격 측정하기',
+    measure_calib_desc:      '첫 사용 또는 새 기기',
+    mode_power_title:        '파워 모드',
+    measure_power_desc:      '타격의 힘을 측정하세요',
+    cancel:                  '취소',
+    penalty_rest:            '쉬어!',
+    penalty_wait_signal:     '신호를 기다려!',
+    penalty_too_soon:        '너무 빨라!',
+    new_record_overlay:      '🏆 신기록!',
+    max_level:               '최고 레벨',
+    // — notas de sesión y colores por defecto —
+    grade_s:                 '전설',
+    grade_a:                 '마스터',
+    grade_b:                 '전사',
+    grade_c:                 '수련생',
+    color_yellow:            '노랑',
+    color_red:               '빨강',
+    color_blue:              '파랑',
   },
   ar: {
     profile_subtitle:     'أعدّ ملفك الشخصي للبدء',
@@ -2249,6 +2979,79 @@ const TRANSLATIONS = {
     home_tagline_1:       'قِس.',
     home_tagline_2:       'حسِّن.',
     home_tagline_3:       'سيطر.',
+    // — textos que antes estaban fijos en español —
+    last_punch:              'آخر ضربة',
+    personal_record:         'الرقم الشخصي',
+    vs_yesterday:            'مقارنة بالأمس',
+    btn_calibrate:           'معايرة',
+    nav_home:                'الرئيسية',
+    nav_ranking:             'الترتيب',
+    speed_title:             'السرعة',
+    global_ranking_soon:     'الترتيب العالمي — قريباً',
+    you:                     'أنت',
+    auth_create_account:     'إنشاء حساب',
+    auth_have_account:       'لديّ حساب بالفعل',
+    auth_full_name:          'الاسم الكامل',
+    auth_full_name_ph:       'اسمك الكامل',
+    auth_email:              'البريد الإلكتروني',
+    auth_password:           'كلمة المرور',
+    auth_password_min:       'كلمة المرور (6 أحرف على الأقل)',
+    auth_sport:              'الرياضة / التخصص (اختياري)',
+    auth_sport_ph:           'ملاكمة، كيك بوكسينغ...',
+    auth_already:            'لديك حساب بالفعل؟',
+    auth_login_link:         'تسجيل الدخول',
+    auth_login_btn:          'دخول',
+    auth_no_account:         'ليس لديك حساب؟',
+    auth_register_link:      'إنشاء حساب',
+    auth_forgot:             'نسيت كلمة المرور',
+    auth_creating:           'جارٍ الإنشاء...',
+    auth_entering:           'جارٍ الدخول...',
+    auth_err_name:           'أدخل اسمك الكامل',
+    auth_err_email:          'بريد إلكتروني غير صالح',
+    auth_err_password:       'يجب ألا تقل كلمة المرور عن 6 أحرف',
+    auth_err_weight:         'وزن غير صالح (30-200 كجم)',
+    auth_err_age:            'عمر غير صالح (10-100)',
+    auth_err_create:         'تعذّر إنشاء الحساب',
+    auth_err_send:           'تعذّر إرسال البريد',
+    auth_err_enter_email:    'أدخل بريدك الإلكتروني',
+    auth_err_enter_pass:     'أدخل كلمة المرور',
+    auth_err_credentials:    'البريد أو كلمة المرور غير صحيحة',
+    auth_check_email:        'راجع بريدك لتأكيد حسابك',
+    auth_email_sent:         'تم إرسال البريد. راجع صندوق الوارد.',
+    change_photo:            'تغيير الصورة',
+    logout:                  'تسجيل الخروج',
+    training_type:           'نوع التدريب',
+    submode_simple_desc:     'إشارة ← ضربة واحدة ← قياس رد الفعل',
+    submode_combo_desc:      'إشارة ← سلسلة ضربات',
+    time_left:               'الوقت المتبقي',
+    combo_duration:          'مدة الكومبو',
+    verdict_fail:            'إخفاق',
+    result_completed:        'مكتمل',
+    result_incomplete:       'غير مكتمل',
+    result_no_reaction:      'بلا رد فعل',
+    next_signal_in:          'الإشارة التالية بعد {s} ثانية',
+    next_signal_soon:        'الإشارة التالية قريباً...',
+    start_now:               'ابدأ الآن!',
+    best_combo:              'أفضل كومبو',
+    total_time:              'الوقت الإجمالي',
+    measure_my_punch:        'قياس ضربتي',
+    measure_calib_desc:      'أول استخدام أو جهاز جديد',
+    mode_power_title:        'وضع القوة',
+    measure_power_desc:      'قِس قوة ضربتك',
+    cancel:                  'إلغاء',
+    penalty_rest:            'استرح!',
+    penalty_wait_signal:     'انتظر الإشارة!',
+    penalty_too_soon:        'مبكر جداً!',
+    new_record_overlay:      '🏆 رقم قياسي جديد!',
+    max_level:               'أعلى مستوى',
+    // — notas de sesión y colores por defecto —
+    grade_s:                 'أسطوري',
+    grade_a:                 'أستاذ',
+    grade_b:                 'محارب',
+    grade_c:                 'متدرب',
+    color_yellow:            'أصفر',
+    color_red:               'أحمر',
+    color_blue:              'أزرق',
   },
   hi: {
     profile_subtitle:     'शुरू करने के लिए अपनी प्रोफ़ाइल सेट करें',
@@ -2443,6 +3246,79 @@ const TRANSLATIONS = {
     home_tagline_1:       'मापें।',
     home_tagline_2:       'सुधारें।',
     home_tagline_3:       'हावी हों।',
+    // — textos que antes estaban fijos en español —
+    last_punch:              'अंतिम प्रहार',
+    personal_record:         'व्यक्तिगत रिकॉर्ड',
+    vs_yesterday:            'कल की तुलना',
+    btn_calibrate:           'कैलिब्रेट',
+    nav_home:                'होम',
+    nav_ranking:             'रैंकिंग',
+    speed_title:             'गति',
+    global_ranking_soon:     'वैश्विक रैंकिंग — जल्द आ रहा है',
+    you:                     'आप',
+    auth_create_account:     'खाता बनाएँ',
+    auth_have_account:       'मेरा खाता पहले से है',
+    auth_full_name:          'पूरा नाम',
+    auth_full_name_ph:       'आपका पूरा नाम',
+    auth_email:              'ईमेल',
+    auth_password:           'पासवर्ड',
+    auth_password_min:       'पासवर्ड (कम से कम 6 अक्षर)',
+    auth_sport:              'खेल / विधा (वैकल्पिक)',
+    auth_sport_ph:           'बॉक्सिंग, किकबॉक्सिंग...',
+    auth_already:            'पहले से खाता है?',
+    auth_login_link:         'लॉग इन करें',
+    auth_login_btn:          'लॉग इन',
+    auth_no_account:         'खाता नहीं है?',
+    auth_register_link:      'साइन अप करें',
+    auth_forgot:             'पासवर्ड भूल गए',
+    auth_creating:           'बन रहा है...',
+    auth_entering:           'लॉग इन हो रहा है...',
+    auth_err_name:           'अपना पूरा नाम दर्ज करें',
+    auth_err_email:          'अमान्य ईमेल',
+    auth_err_password:       'पासवर्ड कम से कम 6 अक्षरों का होना चाहिए',
+    auth_err_weight:         'अमान्य वज़न (30-200 kg)',
+    auth_err_age:            'अमान्य उम्र (10-100)',
+    auth_err_create:         'खाता नहीं बन सका',
+    auth_err_send:           'ईमेल नहीं भेजा जा सका',
+    auth_err_enter_email:    'अपना ईमेल दर्ज करें',
+    auth_err_enter_pass:     'अपना पासवर्ड दर्ज करें',
+    auth_err_credentials:    'ईमेल या पासवर्ड ग़लत है',
+    auth_check_email:        'खाता पुष्टि करने के लिए अपना ईमेल देखें',
+    auth_email_sent:         'ईमेल भेज दिया गया। इनबॉक्स देखें।',
+    change_photo:            'फ़ोटो बदलें',
+    logout:                  'लॉग आउट',
+    training_type:           'प्रशिक्षण का प्रकार',
+    submode_simple_desc:     'संकेत → 1 प्रहार → प्रतिक्रिया मापें',
+    submode_combo_desc:      'संकेत → प्रहारों की शृंखला',
+    time_left:               'शेष समय',
+    combo_duration:          'कॉम्बो अवधि',
+    verdict_fail:            'चूक',
+    result_completed:        'पूर्ण',
+    result_incomplete:       'अपूर्ण',
+    result_no_reaction:      'कोई प्रतिक्रिया नहीं',
+    next_signal_in:          'अगला संकेत {s} सेकंड में',
+    next_signal_soon:        'अगला संकेत जल्द...',
+    start_now:               'अभी शुरू करें!',
+    best_combo:              'सर्वश्रेष्ठ कॉम्बो',
+    total_time:              'कुल समय',
+    measure_my_punch:        'मेरा प्रहार मापें',
+    measure_calib_desc:      'पहला उपयोग या नया डिवाइस',
+    mode_power_title:        'शक्ति मोड',
+    measure_power_desc:      'अपने प्रहार की ताक़त मापें',
+    cancel:                  'रद्द करें',
+    penalty_rest:            'आराम करो!',
+    penalty_wait_signal:     'संकेत का इंतज़ार करो!',
+    penalty_too_soon:        'बहुत जल्दी!',
+    new_record_overlay:      '🏆 नया रिकॉर्ड!',
+    max_level:               'अधिकतम स्तर',
+    // — notas de sesión y colores por defecto —
+    grade_s:                 'महान',
+    grade_a:                 'गुरु',
+    grade_b:                 'योद्धा',
+    grade_c:                 'अभ्यासी',
+    color_yellow:            'पीला',
+    color_red:               'लाल',
+    color_blue:              'नीला',
   },
 };
 
@@ -3242,7 +4118,7 @@ function playRecordSound() {
 function showRecordOverlay() {
   const ov = document.createElement('div');
   ov.className = 'record-overlay';
-  ov.innerHTML = '<div class="record-overlay-text">🏆 ¡NUEVO RÉCORD!</div>';
+  ov.innerHTML = '<div class="record-overlay-text">' + t('new_record_overlay') + '</div>';
   document.body.appendChild(ov);
   spawnHitParticles('#FFD300', window.innerWidth / 2, window.innerHeight / 2, 26);
   trackedTimeout(() => ov.remove(), 2000);
@@ -3257,16 +4133,110 @@ function celebrateRecord() {
 // ═══════════════════════════════════════════════════
 // AAA — EPIC MESSAGE POOL
 // ═══════════════════════════════════════════════════
+// Frases de hito, una lista por idioma (como HELP_SECTIONS). Van fuera de
+// TRANSLATIONS porque se eligen al azar dentro de cada grupo.
 const EPIC_MSGS = {
-  record:   ['🎯 NUEVO RÉCORD PERSONAL', '⚡ RÉCORD ROTO', '🏆 HISTORIA ESCRITA', '💎 NIVEL DIOS'],
-  best:     ['💥 MEJOR GOLPE HOY', '🔥 TÚ EN LLAMAS', '💪 ASÍ SE HACE'],
-  streak10: ['🔥 10 GOLPES SEGUIDOS', '⚡ IMPARABLE', '🔥 EN RACHA'],
-  streak20: ['💀 20 SIN PARAR', '🌪️ TORBELLINO', '⚡ MODO BESTIA'],
-  streak25: ['🏆 25 HIT STREAK', '🔥 LEYENDA EN CURSO', '💥 ¡INCREÍBLE!'],
-  streak50: ['🔥 50 HIT STREAK!', '💀 MODO SIFU', '🏆 COMBO ÉPICO'],
+  es: {
+    record:   ['🎯 NUEVO RÉCORD PERSONAL', '⚡ RÉCORD ROTO', '🏆 HISTORIA ESCRITA', '💎 NIVEL DIOS'],
+    best:     ['💥 MEJOR GOLPE HOY', '🔥 TÚ EN LLAMAS', '💪 ASÍ SE HACE'],
+    streak10: ['🔥 10 GOLPES SEGUIDOS', '⚡ IMPARABLE', '🔥 EN RACHA'],
+    streak20: ['💀 20 SIN PARAR', '🌪️ TORBELLINO', '⚡ MODO BESTIA'],
+    streak25: ['🏆 25 HIT STREAK', '🔥 LEYENDA EN CURSO', '💥 ¡INCREÍBLE!'],
+    streak50: ['🔥 50 HIT STREAK!', '💀 MODO SIFU', '🏆 COMBO ÉPICO'],
+  },
+  en: {
+    record:   ['🎯 NEW PERSONAL RECORD', '⚡ RECORD BROKEN', '🏆 HISTORY MADE', '💎 GOD TIER'],
+    best:     ['💥 BEST PUNCH TODAY', '🔥 YOU\'RE ON FIRE', '💪 THAT\'S HOW IT\'S DONE'],
+    streak10: ['🔥 10 IN A ROW', '⚡ UNSTOPPABLE', '🔥 ON A ROLL'],
+    streak20: ['💀 20 NON-STOP', '🌪️ WHIRLWIND', '⚡ BEAST MODE'],
+    streak25: ['🏆 25 HIT STREAK', '🔥 LEGEND IN THE MAKING', '💥 INCREDIBLE!'],
+    streak50: ['🔥 50 HIT STREAK!', '💀 SIFU MODE', '🏆 EPIC COMBO'],
+  },
+  pt: {
+    record:   ['🎯 NOVO RECORDE PESSOAL', '⚡ RECORDE QUEBRADO', '🏆 HISTÓRIA ESCRITA', '💎 NÍVEL DEUS'],
+    best:     ['💥 MELHOR GOLPE DE HOJE', '🔥 VOCÊ ESTÁ PEGANDO FOGO', '💪 É ASSIM QUE SE FAZ'],
+    streak10: ['🔥 10 SEGUIDOS', '⚡ IMPARÁVEL', '🔥 EMBALADO'],
+    streak20: ['💀 20 SEM PARAR', '🌪️ FURACÃO', '⚡ MODO FERA'],
+    streak25: ['🏆 25 HIT STREAK', '🔥 LENDA EM FORMAÇÃO', '💥 INCRÍVEL!'],
+    streak50: ['🔥 50 HIT STREAK!', '💀 MODO SIFU', '🏆 COMBO ÉPICO'],
+  },
+  de: {
+    record:   ['🎯 NEUER PERSÖNLICHER REKORD', '⚡ REKORD GEBROCHEN', '🏆 GESCHICHTE GESCHRIEBEN', '💎 GOTT-LEVEL'],
+    best:     ['💥 BESTER SCHLAG HEUTE', '🔥 DU BRENNST', '💪 SO GEHT DAS'],
+    streak10: ['🔥 10 AM STÜCK', '⚡ UNAUFHALTSAM', '🔥 IM LAUF'],
+    streak20: ['💀 20 OHNE PAUSE', '🌪️ WIRBELSTURM', '⚡ BESTIENMODUS'],
+    streak25: ['🏆 25 HIT STREAK', '🔥 LEGENDE IM WERDEN', '💥 UNGLAUBLICH!'],
+    streak50: ['🔥 50 HIT STREAK!', '💀 SIFU-MODUS', '🏆 EPISCHES COMBO'],
+  },
+  ja: {
+    record:   ['🎯 自己新記録', '⚡ 記録更新', '🏆 歴史を刻んだ', '💎 神レベル'],
+    best:     ['💥 本日のベストパンチ', '🔥 絶好調', '💪 その調子'],
+    streak10: ['🔥 10連続', '⚡ 止まらない', '🔥 ノリに乗ってる'],
+    streak20: ['💀 20連続', '🌪️ 竜巻', '⚡ ビーストモード'],
+    streak25: ['🏆 25連続ヒット', '🔥 伝説進行中', '💥 信じられない!'],
+    streak50: ['🔥 50連続ヒット!', '💀 師父モード', '🏆 エピックコンボ'],
+  },
+  fr: {
+    record:   ['🎯 NOUVEAU RECORD PERSONNEL', '⚡ RECORD BATTU', '🏆 HISTOIRE ÉCRITE', '💎 NIVEAU DIVIN'],
+    best:     ['💥 MEILLEUR COUP DU JOUR', '🔥 TU ES EN FEU', '💪 C\'EST COMME ÇA'],
+    streak10: ['🔥 10 D\'AFFILÉE', '⚡ INARRÊTABLE', '🔥 EN SÉRIE'],
+    streak20: ['💀 20 SANS S\'ARRÊTER', '🌪️ TOURBILLON', '⚡ MODE BÊTE'],
+    streak25: ['🏆 25 COUPS D\'AFFILÉE', '🔥 LÉGENDE EN COURS', '💥 INCROYABLE !'],
+    streak50: ['🔥 50 COUPS D\'AFFILÉE !', '💀 MODE SIFU', '🏆 COMBO ÉPIQUE'],
+  },
+  ru: {
+    record:   ['🎯 НОВЫЙ ЛИЧНЫЙ РЕКОРД', '⚡ РЕКОРД ПОБИТ', '🏆 ИСТОРИЯ НАПИСАНА', '💎 БОЖЕСТВЕННЫЙ УРОВЕНЬ'],
+    best:     ['💥 ЛУЧШИЙ УДАР ДНЯ', '🔥 ТЫ В ОГНЕ', '💪 ВОТ ТАК НАДО'],
+    streak10: ['🔥 10 ПОДРЯД', '⚡ НЕОСТАНОВИМ', '🔥 В УДАРЕ'],
+    streak20: ['💀 20 БЕЗ ОСТАНОВКИ', '🌪️ ВИХРЬ', '⚡ РЕЖИМ ЗВЕРЯ'],
+    streak25: ['🏆 25 УДАРОВ ПОДРЯД', '🔥 РОЖДАЕТСЯ ЛЕГЕНДА', '💥 НЕВЕРОЯТНО!'],
+    streak50: ['🔥 50 УДАРОВ ПОДРЯД!', '💀 РЕЖИМ СИФУ', '🏆 ЭПИЧЕСКОЕ КОМБО'],
+  },
+  zh: {
+    record:   ['🎯 个人新纪录', '⚡ 纪录被打破', '🏆 创造历史', '💎 神级'],
+    best:     ['💥 今日最佳一拳', '🔥 你正火热', '💪 就该这样'],
+    streak10: ['🔥 连续 10 次', '⚡ 势不可挡', '🔥 手感火热'],
+    streak20: ['💀 连续 20 次', '🌪️ 旋风', '⚡ 野兽模式'],
+    streak25: ['🏆 25 连击', '🔥 传奇正在诞生', '💥 太不可思议了！'],
+    streak50: ['🔥 50 连击！', '💀 师父模式', '🏆 史诗连击'],
+  },
+  'zh-TW': {
+    record:   ['🎯 個人新紀錄', '⚡ 紀錄被打破', '🏆 創造歷史', '💎 神級'],
+    best:     ['💥 今日最佳一拳', '🔥 你正火熱', '💪 就該這樣'],
+    streak10: ['🔥 連續 10 次', '⚡ 勢不可擋', '🔥 手感火熱'],
+    streak20: ['💀 連續 20 次', '🌪️ 旋風', '⚡ 野獸模式'],
+    streak25: ['🏆 25 連擊', '🔥 傳奇正在誕生', '💥 太不可思議了！'],
+    streak50: ['🔥 50 連擊！', '💀 師父模式', '🏆 史詩連擊'],
+  },
+  ko: {
+    record:   ['🎯 개인 신기록', '⚡ 기록 경신', '🏆 역사를 썼다', '💎 신의 경지'],
+    best:     ['💥 오늘의 최고 타격', '🔥 불붙었다', '💪 바로 그거야'],
+    streak10: ['🔥 10연속', '⚡ 멈출 수 없다', '🔥 상승세'],
+    streak20: ['💀 20연속', '🌪️ 회오리', '⚡ 비스트 모드'],
+    streak25: ['🏆 25연속 히트', '🔥 전설이 되는 중', '💥 믿을 수 없어!'],
+    streak50: ['🔥 50연속 히트!', '💀 사부 모드', '🏆 에픽 콤보'],
+  },
+  ar: {
+    record:   ['🎯 رقم شخصي جديد', '⚡ تحطم الرقم القياسي', '🏆 صنعت التاريخ', '💎 مستوى أسطوري'],
+    best:     ['💥 أفضل ضربة اليوم', '🔥 أنت مشتعل', '💪 هكذا يكون الأمر'],
+    streak10: ['🔥 10 متتالية', '⚡ لا يمكن إيقافك', '🔥 في أوج تألقك'],
+    streak20: ['💀 20 بلا توقف', '🌪️ إعصار', '⚡ وضع الوحش'],
+    streak25: ['🏆 25 ضربة متتالية', '🔥 أسطورة قيد الصنع', '💥 لا يُصدَّق!'],
+    streak50: ['🔥 50 ضربة متتالية!', '💀 وضع السيفو', '🏆 كومبو أسطوري'],
+  },
+  hi: {
+    record:   ['🎯 नया व्यक्तिगत रिकॉर्ड', '⚡ रिकॉर्ड टूटा', '🏆 इतिहास रच दिया', '💎 ईश्वरीय स्तर'],
+    best:     ['💥 आज का सर्वश्रेष्ठ प्रहार', '🔥 आप आग पर हैं', '💪 ऐसे होता है'],
+    streak10: ['🔥 लगातार 10', '⚡ अजेय', '🔥 लय में'],
+    streak20: ['💀 लगातार 20', '🌪️ बवंडर', '⚡ बीस्ट मोड'],
+    streak25: ['🏆 25 लगातार प्रहार', '🔥 किंवदंती बन रही है', '💥 अविश्वसनीय!'],
+    streak50: ['🔥 50 लगातार प्रहार!', '💀 सिफू मोड', '🏆 महाकाव्य कॉम्बो'],
+  },
 };
+
 function pickEpicMsg(type) {
-  const pool = EPIC_MSGS[type] || ['🔥'];
+  const set  = EPIC_MSGS[APP.lang] || EPIC_MSGS.en;
+  const pool = set[type] || EPIC_MSGS.en[type] || ['🔥'];
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -3661,15 +4631,15 @@ function stopReactionBgParticles() {
 // AAA — RESULT SPLASH SCREEN
 // ═══════════════════════════════════════════════════
 function getSessionGrade(punches) {
-  if (!punches.length) return { grade: 'C', label: 'PRACTICANTE' };
+  if (!punches.length) return { grade: 'C', label: t('grade_c') };
   const tiers = punches.map(p => getGlobalTier(p.g).label);
   const top   = tiers.filter(l => ['EXCELLENT','MASTER','SIFU LEVEL'].includes(l)).length;
   const good  = tiers.filter(l => ['GREAT','EXCELLENT','MASTER','SIFU LEVEL'].includes(l)).length;
   const pct   = ratio => ratio / punches.length;
-  if (pct(top)  >= 0.3) return { grade: 'S', label: 'LEGENDARIO' };
-  if (pct(good) >= 0.3) return { grade: 'A', label: 'MAESTRO' };
-  if (pct(tiers.filter(l => ['GOOD','GREAT','EXCELLENT','MASTER','SIFU LEVEL'].includes(l)).length) >= 0.4) return { grade: 'B', label: 'GUERRERO' };
-  return { grade: 'C', label: 'PRACTICANTE' };
+  if (pct(top)  >= 0.3) return { grade: 'S', label: t('grade_s') };
+  if (pct(good) >= 0.3) return { grade: 'A', label: t('grade_a') };
+  if (pct(tiers.filter(l => ['GOOD','GREAT','EXCELLENT','MASTER','SIFU LEVEL'].includes(l)).length) >= 0.4) return { grade: 'B', label: t('grade_b') };
+  return { grade: 'C', label: t('grade_c') };
 }
 
 function showResultSplash(punches, sessionXP, onDone) {
@@ -4506,19 +5476,19 @@ function showPenaltyPopup(message, color, xpText) {
 
 function handleEarlyPunch() {
   if (APP.mode === 'training') {
-    showPenaltyPopup('¡DESCANSA!', '#00D4FF', null);
+    showPenaltyPopup(t('penalty_rest'), '#00D4FF', null);
     return;
   }
   if (APP.comboConfig.submode === 'combo') {
     applyXPPenalty(5);
-    showPenaltyPopup('¡ESPERA LA SEÑAL!', '#FF8C00', '-5 XP');
+    showPenaltyPopup(t('penalty_wait_signal'), '#FF8C00', '-5 XP');
     playPenaltySound();
     vibrate([100, 50, 100]);
     return;
   }
   // Reacción y Colores comparten el mismo sistema de penalización
   applyXPPenalty(5);
-  showPenaltyPopup('¡DEMASIADO PRONTO!', '#FF1A1A', '-5 XP');
+  showPenaltyPopup(t('penalty_too_soon'), '#FF1A1A', '-5 XP');
   playPenaltySound();
   vibrate([100, 50, 100]);
   APP.round.misses++;
@@ -4809,7 +5779,7 @@ function renderProfileAvatar() {
   if (pointsEl) {
     pointsEl.textContent = nextLevel
       ? score + ' / ' + nextLevel.xp + ' XP'
-      : score + ' XP · NIVEL MÁXIMO';
+      : score + ' XP · ' + t('max_level');
   }
 }
 
@@ -4919,14 +5889,14 @@ function initRegisterScreen() {
     const btn      = document.getElementById('btn-register');
 
     errEl.textContent = '';
-    if (!nombre)                           { errEl.textContent = 'Ingresa tu nombre completo'; return; }
-    if (!email || !email.includes('@'))    { errEl.textContent = 'Email inválido'; return; }
-    if (password.length < 6)              { errEl.textContent = 'La contraseña debe tener al menos 6 caracteres'; return; }
-    if (!peso || peso < 30 || peso > 200) { errEl.textContent = 'Peso inválido (30-200 kg)'; return; }
-    if (!edad || edad < 10 || edad > 100) { errEl.textContent = 'Edad inválida (10-100)'; return; }
+    if (!nombre)                           { errEl.textContent = t('auth_err_name'); return; }
+    if (!email || !email.includes('@'))    { errEl.textContent = t('auth_err_email'); return; }
+    if (password.length < 6)              { errEl.textContent = t('auth_err_password'); return; }
+    if (!peso || peso < 30 || peso > 200) { errEl.textContent = t('auth_err_weight'); return; }
+    if (!edad || edad < 10 || edad > 100) { errEl.textContent = t('auth_err_age'); return; }
 
     btn.disabled = true;
-    btn.textContent = 'CREANDO...';
+    btn.textContent = t('auth_creating');
 
     try {
       const redirectUrl = window.location.hostname === 'localhost'
@@ -4958,15 +5928,15 @@ function initRegisterScreen() {
         initMenuScreen();
       } else {
         errEl.style.color = '#00FF66';
-        errEl.textContent = 'Revisa tu email para confirmar tu cuenta';
+        errEl.textContent = t('auth_check_email');
         btn.disabled = false;
-        btn.textContent = 'CREAR CUENTA';
+        btn.textContent = t('auth_create_account');
       }
     } catch (e) {
       errEl.style.color = '#FF4444';
-      errEl.textContent = e.message || 'Error al crear la cuenta';
+      errEl.textContent = e.message || t('auth_err_create');
       btn.disabled = false;
-      btn.textContent = 'CREAR CUENTA';
+      btn.textContent = t('auth_create_account');
     }
   };
 }
@@ -4985,10 +5955,10 @@ function initLoginScreen() {
     try {
       await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: 'https://fastkungfu.vercel.app' });
       errEl.style.color = '#00FF66';
-      errEl.textContent = 'Email enviado. Revisa tu bandeja de entrada.';
+      errEl.textContent = t('auth_email_sent');
     } catch (e) {
       errEl.style.color = '#FF4444';
-      errEl.textContent = e.message || 'Error al enviar el email';
+      errEl.textContent = e.message || t('auth_err_send');
     }
   };
 
@@ -4999,11 +5969,11 @@ function initLoginScreen() {
 
     errEl.style.color = '#FF4444';
     errEl.textContent = '';
-    if (!email)    { errEl.textContent = 'Ingresa tu email'; return; }
-    if (!password) { errEl.textContent = 'Ingresa tu contraseña'; return; }
+    if (!email)    { errEl.textContent = t('auth_err_enter_email'); return; }
+    if (!password) { errEl.textContent = t('auth_err_enter_pass'); return; }
 
     btn.disabled = true;
-    btn.textContent = 'ENTRANDO...';
+    btn.textContent = t('auth_entering');
 
     try {
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -5012,9 +5982,9 @@ function initLoginScreen() {
       showScreen('screen-menu');
       initMenuScreen();
     } catch (e) {
-      errEl.textContent = e.message || 'Email o contraseña incorrectos';
+      errEl.textContent = e.message || t('auth_err_credentials');
       btn.disabled = false;
-      btn.textContent = 'ENTRAR';
+      btn.textContent = t('auth_login_btn');
     }
   };
 }
@@ -5166,10 +6136,10 @@ function initConfigScreen() {
 
   // Mode-specific color, active background and title
   let modeColor, modeBg, modeTitle;
-  if (isTraining)      { modeColor = '#FFD300'; modeBg = '#151100'; modeTitle = t('card_power')    || 'POTENCIA'; }
-  else if (isSimple)   { modeColor = '#00D4FF'; modeBg = '#001520'; modeTitle = t('card_reaction') || 'REACCIÓN'; }
-  else if (isComboSubmode)  { modeColor = '#FF0000'; modeBg = '#150000'; modeTitle = t('card_combo')    || 'COMBO';    }
-  else if (isColorsSubmode) { modeColor = '#9B59B6'; modeBg = '#0D0010'; modeTitle = t('card_colors')   || 'COLORES';  }
+  if (isTraining)      { modeColor = '#FFD300'; modeBg = '#151100'; modeTitle = t('card_power');    }
+  else if (isSimple)   { modeColor = '#00D4FF'; modeBg = '#001520'; modeTitle = t('card_reaction'); }
+  else if (isComboSubmode)  { modeColor = '#FF0000'; modeBg = '#150000'; modeTitle = t('card_combo');    }
+  else if (isColorsSubmode) { modeColor = '#9B59B6'; modeBg = '#0D0010'; modeTitle = t('card_colors');   }
 
   document.getElementById('config-mode-title').textContent = modeTitle;
   document.getElementById('btn-start-session').textContent = t('config_start');
@@ -5695,12 +6665,12 @@ function startComboWait() {
   APP.combo.waitTickInterval = trackedInterval(() => {
     remaining -= 0.1;
     document.getElementById('wait-countdown-text').textContent =
-      'Siguiente señal en ' + Math.max(0, remaining).toFixed(1) + 's';
+      t('next_signal_in', { s: Math.max(0, remaining).toFixed(1) });
     if (remaining <= 0) clearInterval(APP.combo.waitTickInterval);
   }, 100);
 
   document.getElementById('wait-countdown-text').textContent =
-    'Siguiente señal en ' + remaining.toFixed(1) + 's';
+    t('next_signal_in', { s: remaining.toFixed(1) });
 
   APP.combo.waitTimeout = trackedTimeout(() => {
     clearInterval(APP.combo.waitTickInterval);
@@ -5823,10 +6793,10 @@ function endCombo(ok, noHits) {
   else    APP.round.misses++;
 
   const verdictEl = document.getElementById('result-verdict');
-  verdictEl.textContent = ok ? 'OK' : 'FALLO';
+  verdictEl.textContent = ok ? 'OK' : t('verdict_fail');
   verdictEl.className   = 'result-verdict ' + (ok ? 'ok' : 'fail');
 
-  const why = noHits ? ' SIN REACCIÓN' : (ok ? ' COMPLETADO' : ' INCOMPLETO');
+  const why = ' ' + (noHits ? t('result_no_reaction') : (ok ? t('result_completed') : t('result_incomplete')));
   document.getElementById('result-count').textContent =
     APP.combo.currentHits + '/' + APP.combo.targetHits + why;
 
@@ -5848,7 +6818,7 @@ function endCombo(ok, noHits) {
   if (APP.round.secondsLeft > 0) {
     const pauseMs = APP.comboConfig.pauseBetween * 1000;
     document.getElementById('result-next-label').textContent =
-      'Siguiente señal en ' + APP.comboConfig.pauseBetween.toFixed(1) + 's';
+      t('next_signal_in', { s: APP.comboConfig.pauseBetween.toFixed(1) });
 
     const progressEl = document.getElementById('result-progress-bar');
     progressEl.style.width = '0%';
@@ -5987,7 +6957,7 @@ function startReactionWait() {
   if (APP.round.secondsLeft <= 0) return;
   APP.reaction.state = 'wait';
   APP.hitWindowActive = false;
-  setReactionStimulus('state-wait', '', 'PREPÁRATE', '', '', '');
+  setReactionStimulus('state-wait', '', t('stimulus_wait').toUpperCase(), '', '', '');
   const delay = 1000 + Math.random() * 2000;
   if (delay > 500) {
     trackedTimeout(() => {
@@ -6025,7 +6995,7 @@ function missReaction() {
   APP.reaction.state = 'miss';
   APP.hitWindowActive = false;
   APP.round.misses++;
-  setReactionStimulus('state-miss', '✗', 'FALLO', '', '', '');
+  setReactionStimulus('state-miss', '✗', t('verdict_fail'), '', '', '');
   vibrate([80]);
   playPenaltySound();
   updateReactionMetricsUI();
@@ -6256,9 +7226,9 @@ function showSummaryScreen() {
   if (isColorsSubmode && APP.colorMode.results.length) {
     const colorResults = APP.colorMode.results;
     const colorDefs = [
-      { id: 'yellow', hex: '#FFE000', label: APP.colorConfig.yellow || 'AMARILLO' },
-      { id: 'red',    hex: '#CC0000', label: APP.colorConfig.red    || 'ROJO' },
-      { id: 'blue',   hex: '#0066CC', label: APP.colorConfig.blue   || 'AZUL' },
+      { id: 'yellow', hex: '#FFE000', label: APP.colorConfig.yellow || t('color_yellow') },
+      { id: 'red',    hex: '#CC0000', label: APP.colorConfig.red    || t('color_red') },
+      { id: 'blue',   hex: '#0066CC', label: APP.colorConfig.blue   || t('color_blue') },
     ];
     const rows = colorDefs.map(c => {
       const items = colorResults.filter(r => r.color === c.id);
@@ -6449,7 +7419,7 @@ function renderRankingContent() {
   if (!bodyR) return;
   const sessions = getSessions();
   const profile  = APP.profile;
-  const name     = profile ? profile.name : (localStorage.getItem('fkf_guestName') || 'Tú');
+  const name     = profile ? profile.name : (localStorage.getItem('fkf_guestName') || t('you'));
   const xp       = loadGamificationXP();
 
   const bestPower = sessions.reduce((m, s) => Math.max(m, s.maxPower || 0), 0);
@@ -6488,12 +7458,12 @@ function renderRankingContent() {
 
   bodyR.innerHTML = `
     <div class="rank-subtabs">
-      <button class="rank-subtab" data-sub="potencia">🏆 POTENCIA</button>
-      <button class="rank-subtab" data-sub="velocidad">⚡ VELOCIDAD</button>
+      <button class="rank-subtab" data-sub="potencia">🏆 ${t('card_power')}</button>
+      <button class="rank-subtab" data-sub="velocidad">⚡ ${t('speed_title')}</button>
       <button class="rank-subtab" data-sub="xp">⭐ XP</button>
     </div>
     <div class="rank-list"></div>
-    <p class="rank-coming-soon">🌐 Ranking global próximamente</p>`;
+    <p class="rank-coming-soon">🌐 ${t('global_ranking_soon')}</p>`;
 
   bodyR.querySelectorAll('.rank-subtab').forEach(b =>
     b.onclick = () => renderSub(b.dataset.sub));
