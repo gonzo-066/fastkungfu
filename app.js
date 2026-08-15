@@ -2208,9 +2208,55 @@ function syncMenuMusic(screenId) {
   }, 0);
 }
 
+// ═══════════════════════════════════════════════════
+// PANTALLA COMPLETA
+// En landscape la barra del navegador se comía parte del round. La PWA
+// instalada lo resuelve con display:fullscreen en el manifest; desde el
+// navegador hace falta la Fullscreen API, que exige un gesto del usuario:
+// por eso se pide en el click de INICIAR ENTRENAMIENTO y no al pintar la
+// pantalla del round.
+// Nota: Safari en iPhone no implementa la Fullscreen API (sólo en <video>),
+// así que ahí la única vía es instalar la app.
+// ═══════════════════════════════════════════════════
+function isFullscreen() {
+  return !!(document.fullscreenElement    || document.webkitFullscreenElement ||
+            document.mozFullScreenElement || document.msFullscreenElement);
+}
+
+function requestFullscreen() {
+  if (isFullscreen()) return;
+  const el = document.documentElement;
+  try {
+    if (el.requestFullscreen) {
+      const p = el.requestFullscreen({ navigationUI: 'hide' });
+      if (p && p.catch) p.catch(() => {});   // denegado o sin gesto: se ignora
+    }
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.mozRequestFullScreen)    el.mozRequestFullScreen();
+    else if (el.msRequestFullscreen)     el.msRequestFullscreen();
+  } catch (e) {}
+}
+
+function exitFullscreen() {
+  if (!isFullscreen()) return;
+  try {
+    if (document.exitFullscreen) {
+      const p = document.exitFullscreen();
+      if (p && p.catch) p.catch(() => {});
+    }
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    else if (document.mozCancelFullScreen)  document.mozCancelFullScreen();
+    else if (document.msExitFullscreen)     document.msExitFullscreen();
+  } catch (e) {}
+}
+
 function showScreen(id, instant) {
   const current = document.querySelector('.screen:not(.hidden)');
   syncMenuMusic(id);
+  // Al salir de la sesión (home, historial, resumen cerrado…) se devuelve la
+  // barra del navegador. Las pantallas de round/descanso/resumen la mantienen
+  // oculta para no dar un salto de layout en mitad del entreno.
+  if (SESSION_SCREENS.indexOf(id) === -1) exitFullscreen();
   const doSwitch = () => {
     document.querySelectorAll('.screen').forEach(s => {
       s.classList.toggle('hidden', s.id !== id);
@@ -3717,6 +3763,10 @@ function updateConfigSummary() {
 // SESIÓN
 // ═══════════════════════════════════════════════════
 function startSession() {
+  // Lo primero, dentro del gesto del click: sin él el navegador deniega la
+  // pantalla completa. Vale para los 4 modos (todos entran por aquí).
+  requestFullscreen();
+
   // Limpieza total antes de arrancar: ningún sonido/timer/animación de un
   // modo anterior debe seguir vivo cuando empieza uno nuevo.
   stopEverything();

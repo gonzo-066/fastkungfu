@@ -4530,6 +4530,36 @@ canvas {
 /* ═══════════════════════════════════
    LANDSCAPE RESPONSIVE
 ════════════════════════════════════ */
+/* En horizontal la barra del navegador se comía parte del round: la pantalla
+   se ata al viewport dinámico (dvh), que sí descuenta esa barra. */
+@media (orientation: landscape) {
+  .screen {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  /* Sin scroll sólo en las pantallas de sesión — su contenido está pensado
+     para caber entero. Los menús (home, historial, ajustes…) siguen
+     scrolleando: en landscape no caben y bloquearlos los dejaría cortados. */
+  #screen-training,
+  #screen-reaction,
+  #screen-combo,
+  #screen-colors,
+  #screen-rest {
+    overflow: hidden;
+  }
+
+  .workout-topbar {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* El notch queda a un lado al girar el móvil */
+  .screen-inner {
+    padding-left:  max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+}
+
 @media (orientation: landscape) and (max-height: 520px) {
   .screen-inner { overflow-y: auto; }
 
