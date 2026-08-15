@@ -390,7 +390,6 @@ const TRANSLATIONS = {
     // — nivel numerado —
     level_n:                 'NIVEL {n}',
     // — botones del quiz —
-    quiz_skip:               'Saltar',
     quiz_back:               '← Atrás',
   },
   en: {
@@ -667,7 +666,6 @@ const TRANSLATIONS = {
     // — nivel numerado —
     level_n:                 'LEVEL {n}',
     // — botones del quiz —
-    quiz_skip:               'Skip',
     quiz_back:               '← Back',
   },
   pt: {
@@ -944,7 +942,6 @@ const TRANSLATIONS = {
     // — nivel numerado —
     level_n:                 'NÍVEL {n}',
     // — botones del quiz —
-    quiz_skip:               'Pular',
     quiz_back:               '← Voltar',
   },
   de: {
@@ -1221,7 +1218,6 @@ const TRANSLATIONS = {
     // — nivel numerado —
     level_n:                 'STUFE {n}',
     // — botones del quiz —
-    quiz_skip:               'Überspringen',
     quiz_back:               '← Zurück',
   },
   ja: {
@@ -1498,7 +1494,6 @@ const TRANSLATIONS = {
     // — nivel numerado —
     level_n:                 'レベル {n}',
     // — botones del quiz —
-    quiz_skip:               'スキップ',
     quiz_back:               '← 戻る',
   },
   fr: {
@@ -1775,7 +1770,6 @@ const TRANSLATIONS = {
     // — nivel numerado —
     level_n:                 'NIVEAU {n}',
     // — botones del quiz —
-    quiz_skip:               'Passer',
     quiz_back:               '← Retour',
   },
   ru: {
@@ -2052,7 +2046,6 @@ const TRANSLATIONS = {
     // — nivel numerado —
     level_n:                 'УРОВЕНЬ {n}',
     // — botones del quiz —
-    quiz_skip:               'Пропустить',
     quiz_back:               '← Назад',
   },
   zh: {
@@ -2329,7 +2322,6 @@ const TRANSLATIONS = {
     // — nivel numerado —
     level_n:                 '等级 {n}',
     // — botones del quiz —
-    quiz_skip:               '跳过',
     quiz_back:               '← 返回',
   },
   'zh-TW': {
@@ -2606,7 +2598,6 @@ const TRANSLATIONS = {
     // — nivel numerado —
     level_n:                 '等級 {n}',
     // — botones del quiz —
-    quiz_skip:               '跳過',
     quiz_back:               '← 返回',
   },
   ko: {
@@ -2883,7 +2874,6 @@ const TRANSLATIONS = {
     // — nivel numerado —
     level_n:                 '레벨 {n}',
     // — botones del quiz —
-    quiz_skip:               '건너뛰기',
     quiz_back:               '← 뒤로',
   },
   ar: {
@@ -3160,7 +3150,6 @@ const TRANSLATIONS = {
     // — nivel numerado —
     level_n:                 'المستوى {n}',
     // — botones del quiz —
-    quiz_skip:               'تخطّي',
     quiz_back:               '← رجوع',
   },
   hi: {
@@ -3437,7 +3426,6 @@ const TRANSLATIONS = {
     // — nivel numerado —
     level_n:                 'स्तर {n}',
     // — botones del quiz —
-    quiz_skip:               'छोड़ें',
     quiz_back:               '← वापस',
   },
 };
@@ -7615,7 +7603,7 @@ const QUIZ_I18N = {
     ui: {
       intro_title: 'Cuéntanos sobre ti',
       intro_sub: 'Para personalizar tu experiencia en Strike IQ. Solo tarda 2 minutos.',
-      intro_cta: 'EMPEZAR', next: 'SIGUIENTE', back: '← Atrás', skip: 'Saltar por ahora',
+      intro_cta: 'EMPEZAR', next: 'SIGUIENTE', back: '← Atrás',
       step: '{n}/{total}',
       smiq_placeholder: 'Escribe aquí tu respuesta...',
       smiq_counter: '{n}/{min} caracteres mínimos',
@@ -7696,7 +7684,7 @@ const QUIZ_I18N = {
     ui: {
       intro_title: 'Tell us about you',
       intro_sub: 'So we can tailor your Strike IQ experience. It only takes 2 minutes.',
-      intro_cta: 'START', next: 'NEXT', back: '← Back', skip: 'Skip for now',
+      intro_cta: 'START', next: 'NEXT', back: '← Back',
       step: '{n}/{total}',
       smiq_placeholder: 'Type your answer here...',
       smiq_counter: '{n}/{min} characters minimum',
@@ -7777,7 +7765,7 @@ const QUIZ_I18N = {
     ui: {
       intro_title: 'Conte-nos sobre você',
       intro_sub: 'Para personalizar sua experiência no Strike IQ. Leva só 2 minutos.',
-      intro_cta: 'COMEÇAR', next: 'SEGUINTE', back: '← Voltar', skip: 'Pular por agora',
+      intro_cta: 'COMEÇAR', next: 'SEGUINTE', back: '← Voltar',
       step: '{n}/{total}',
       smiq_placeholder: 'Escreva aqui sua resposta...',
       smiq_counter: '{n}/{min} caracteres mínimos',
@@ -7858,7 +7846,7 @@ const QUIZ_I18N = {
     ui: {
       intro_title: 'Erzähl uns von dir',
       intro_sub: 'Damit wir dein Strike-IQ-Erlebnis anpassen können. Dauert nur 2 Minuten.',
-      intro_cta: 'STARTEN', next: 'WEITER', back: '← Zurück', skip: 'Später ausfüllen',
+      intro_cta: 'STARTEN', next: 'WEITER', back: '← Zurück',
       step: '{n}/{total}',
       smiq_placeholder: 'Schreib deine Antwort hier...',
       smiq_counter: '{n}/{min} Zeichen mindestens',
@@ -7939,7 +7927,7 @@ const QUIZ_I18N = {
     ui: {
       intro_title: 'あなたのことを教えてください',
       intro_sub: 'Strike IQ をあなた仕様にするためです。2分で終わります。',
-      intro_cta: 'はじめる', next: '次へ', back: '← 戻る', skip: '今はスキップ',
+      intro_cta: 'はじめる', next: '次へ', back: '← 戻る',
       step: '{n}/{total}',
       smiq_placeholder: 'ここに回答を入力...',
       smiq_counter: '{n}/{min} 文字以上',
@@ -8020,7 +8008,7 @@ const QUIZ_I18N = {
     ui: {
       intro_title: 'Parle-nous de toi',
       intro_sub: 'Pour personnaliser ton expérience Strike IQ. Ça ne prend que 2 minutes.',
-      intro_cta: 'COMMENCER', next: 'SUIVANT', back: '← Retour', skip: 'Passer pour l\'instant',
+      intro_cta: 'COMMENCER', next: 'SUIVANT', back: '← Retour',
       step: '{n}/{total}',
       smiq_placeholder: 'Écris ta réponse ici...',
       smiq_counter: '{n}/{min} caractères minimum',
@@ -8101,7 +8089,7 @@ const QUIZ_I18N = {
     ui: {
       intro_title: 'Расскажи о себе',
       intro_sub: 'Чтобы настроить Strike IQ под тебя. Займёт всего 2 минуты.',
-      intro_cta: 'НАЧАТЬ', next: 'ДАЛЕЕ', back: '← Назад', skip: 'Пропустить пока',
+      intro_cta: 'НАЧАТЬ', next: 'ДАЛЕЕ', back: '← Назад',
       step: '{n}/{total}',
       smiq_placeholder: 'Напиши свой ответ здесь...',
       smiq_counter: '{n}/{min} символов минимум',
@@ -8182,7 +8170,7 @@ const QUIZ_I18N = {
     ui: {
       intro_title: '说说你自己',
       intro_sub: '让我们为你定制 Strike IQ 体验。只需 2 分钟。',
-      intro_cta: '开始', next: '下一步', back: '← 返回', skip: '暂时跳过',
+      intro_cta: '开始', next: '下一步', back: '← 返回',
       step: '{n}/{total}',
       smiq_placeholder: '在这里写下你的答案...',
       smiq_counter: '{n}/{min} 个字符起',
@@ -8263,7 +8251,7 @@ const QUIZ_I18N = {
     ui: {
       intro_title: '說說你自己',
       intro_sub: '讓我們為你打造 Strike IQ 體驗。只需 2 分鐘。',
-      intro_cta: '開始', next: '下一步', back: '← 返回', skip: '暫時跳過',
+      intro_cta: '開始', next: '下一步', back: '← 返回',
       step: '{n}/{total}',
       smiq_placeholder: '在這裡寫下你的答案...',
       smiq_counter: '{n}/{min} 個字元起',
@@ -8344,7 +8332,7 @@ const QUIZ_I18N = {
     ui: {
       intro_title: '당신에 대해 알려주세요',
       intro_sub: 'Strike IQ를 당신에게 맞추기 위해서입니다. 2분이면 끝납니다.',
-      intro_cta: '시작하기', next: '다음', back: '← 뒤로', skip: '나중에 하기',
+      intro_cta: '시작하기', next: '다음', back: '← 뒤로',
       step: '{n}/{total}',
       smiq_placeholder: '여기에 답을 적어주세요...',
       smiq_counter: '최소 {min}자 중 {n}자',
@@ -8425,7 +8413,7 @@ const QUIZ_I18N = {
     ui: {
       intro_title: 'حدّثنا عن نفسك',
       intro_sub: 'لنخصّص تجربتك في Strike IQ. لن يستغرق سوى دقيقتين.',
-      intro_cta: 'ابدأ', next: 'التالي', back: '← رجوع', skip: 'تخطّي الآن',
+      intro_cta: 'ابدأ', next: 'التالي', back: '← رجوع',
       step: '{n}/{total}',
       smiq_placeholder: 'اكتب إجابتك هنا...',
       smiq_counter: '{n}/{min} حرفاً كحد أدنى',
@@ -8506,7 +8494,7 @@ const QUIZ_I18N = {
     ui: {
       intro_title: 'हमें अपने बारे में बताएँ',
       intro_sub: 'ताकि हम आपका Strike IQ अनुभव आपके अनुसार बना सकें। सिर्फ़ 2 मिनट लगेंगे।',
-      intro_cta: 'शुरू करें', next: 'आगे', back: '← वापस', skip: 'अभी छोड़ें',
+      intro_cta: 'शुरू करें', next: 'आगे', back: '← वापस',
       step: '{n}/{total}',
       smiq_placeholder: 'अपना उत्तर यहाँ लिखें...',
       smiq_counter: '{n}/{min} अक्षर न्यूनतम',
@@ -8698,12 +8686,6 @@ function finishQuizFlow() {
   done && done();
 }
 
-// Saltar cierra el funnel igual: es un paso de alta, no se reofrece
-function skipQuiz() {
-  markQuizDone();
-  finishQuizFlow();
-}
-
 function isValidEmail(v) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v || '').trim());
 }
@@ -8751,11 +8733,6 @@ function renderQuizStep() {
   if (back) {
     back.textContent = quizT('ui.back');
     back.classList.toggle('hidden', _quizState.step <= 1);
-  }
-  const skip = document.getElementById('btn-quiz-skip');
-  if (skip) {
-    skip.textContent = quizT('ui.skip');
-    skip.classList.toggle('hidden', _quizState.step === 0);
   }
 
   body.innerHTML = _quizState.step === 0 ? quizIntroHTML() : quizQuestionHTML();
@@ -8965,8 +8942,6 @@ function renderQuizResult(bucketId) {
 }
 
 function initQuizScreen() {
-  const skip = document.getElementById('btn-quiz-skip');
-  if (skip) skip.onclick = skipQuiz;
   const back = document.getElementById('btn-quiz-back');
   if (back) back.onclick = quizBack;
 }

@@ -5586,7 +5586,6 @@ body.rtl .calib-manual-slider {
 .quiz-progress-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 
 .quiz-step {
@@ -5596,20 +5595,6 @@ body.rtl .calib-manual-slider {
   color: #FFD300;
   font-variant-numeric: tabular-nums;
 }
-
-.quiz-skip {
-  background: transparent;
-  border: none;
-  color: #777777;
-  font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: 0.3px;
-  padding: 4px 2px;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.quiz-skip:active { color: #AAAAAA; }
 
 /* ── Cuerpo + animación slide entre preguntas ── */
 .quiz-body {
