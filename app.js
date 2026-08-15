@@ -5828,20 +5828,21 @@ function initLangScreen() {
     btn.onclick = () => {
       APP.lang = btn.dataset.lang;
       localStorage.setItem('fkf_lang', APP.lang);
+      // applyLanguage() ANTES del quiz: se pinta ya en el idioma elegido
       applyLanguage();
-      afterLangSelected();
+      showQuiz();
     };
   });
 }
 
-// Tras elegir idioma: el quiz de alta va por delante del registro y del home,
-// una sola vez por dispositivo. Si ya está hecho, se sigue de largo.
-async function afterLangSelected() {
+// Paso 2 del alta. Si el quiz ya está hecho pasa de largo al registro/home,
+// así que sirve igual como "siguiente paso tras el idioma".
+function showQuiz() {
   if (shouldShowQuiz()) {
     maybeShowQuiz(() => { continueAfterLang(); });
     return;
   }
-  return continueAfterLang();
+  continueAfterLang();
 }
 
 async function continueAfterLang() {
@@ -7449,15 +7450,21 @@ function showSummaryScreen() {
 }
 
 // ═══════════════════════════════════════════════════
-// QUIZ FUNNEL — 10 PREGUNTAS (ONBOARDING)
+// QUIZ FUNNEL — 10 PREGUNTAS (metodología Ryan Levesque)
 //
 // Va justo después de elegir idioma y ANTES del registro y del home, una
 // sola vez por dispositivo (flag 'strikeiq_quiz_done').
 //
-// Con las respuestas se calcula un "bucket" (perfil de luchador) por puntos:
-// cada opción suma a uno o dos perfiles y gana el que más acumula; los
-// empates se rompen con el orden fijo de QUIZ_BUCKETS, así que el resultado
-// es siempre determinista.
+// Estructura del funnel:
+//   P1  SMIQ  — pregunta abierta (la respuesta en bruto es el oro del funnel)
+//   P2        — segmentación: define el bucket de forma directa
+//   P3-P8     — cualificación (experiencia, frecuencia, objetivo, dolor,
+//               inversión, edad)
+//   P9        — país, con lista adaptada al idioma
+//   P10       — captura de nombre + email + consentimiento
+//
+// El bucket NO se calcula por puntos: sale directo de la P2. Lo que sí se
+// calcula es el lead score (0-100) con el resto de respuestas.
 //
 // Como el quiz corre antes del registro, todavía no hay usuario en Supabase:
 // la respuesta se guarda en local y se sube en cuanto hay sesión
@@ -7466,688 +7473,1106 @@ function showSummaryScreen() {
 const QUIZ_DONE_KEY    = 'strikeiq_quiz_done';
 const QUIZ_STORAGE_KEY = 'strikeiq_quiz';
 const QUIZ_BUCKET_KEY  = 'strikeiq_bucket';
+const QUIZ_SCORE_KEY   = 'strikeiq_lead_score';
 const QUIZ_PENDING_KEY = 'strikeiq_quiz_pending';
-const QUIZ_VERSION     = 2;
+const QUIZ_VERSION     = 3;
+const SMIQ_MIN_CHARS   = 20;
 
-// El orden es también el desempate: de más específico a más genérico.
-const QUIZ_BUCKETS = [
-  { id: 'competidor',  emoji: '🏆', color: '#FFD300' },
-  { id: 'demoledor',   emoji: '💥', color: '#FF1A1A' },
-  { id: 'relampago',   emoji: '⚡', color: '#00D4FF' },
-  { id: 'tecnico',     emoji: '🥋', color: '#00FF66' },
-  { id: 'explorador',  emoji: '🌱', color: '#9B59B6' },
-];
+const QUIZ_BUCKETS = ['competidor', 'fitness', 'coach', 'gimnasio', 'principiante'];
 
-// scores: puntos que suma cada opción a cada perfil
+const QUIZ_BUCKET_META = {
+  competidor:   { emoji: '⚔️', color: '#FFD300' },
+  fitness:      { emoji: '💪', color: '#00FF66' },
+  coach:        { emoji: '🎓', color: '#00D4FF' },
+  gimnasio:     { emoji: '🏫', color: '#FF8C00' },
+  principiante: { emoji: '🔰', color: '#9B59B6' },
+};
+
+// type: 'text' (abierta) | 'choice' (una opción) | 'country' | 'lead'
 const QUIZ_QUESTIONS = [
-  { id: 'objetivo', options: [
-    { id: 'potencia',  emoji: '💥', scores: { demoledor: 3 } },
-    { id: 'velocidad', emoji: '⚡', scores: { relampago: 3 } },
-    { id: 'tecnica',   emoji: '🥋', scores: { tecnico: 3 } },
-    { id: 'forma',     emoji: '🔥', scores: { explorador: 2, demoledor: 1 } },
+  { id: 'smiq',        type: 'text' },
+  { id: 'situacion',   type: 'choice', options: [
+    { id: 'competidor',   emoji: '🥊' },
+    { id: 'fitness',      emoji: '💪' },
+    { id: 'coach',        emoji: '🎓' },
+    { id: 'gimnasio',     emoji: '🏫' },
+    { id: 'principiante', emoji: '🔰' },
   ]},
-  { id: 'disciplina', options: [
-    { id: 'boxeo',      emoji: '🥊', scores: { demoledor: 2, competidor: 1 } },
-    { id: 'kickboxing', emoji: '🦵', scores: { competidor: 2, relampago: 1 } },
-    { id: 'marciales',  emoji: '🥋', scores: { tecnico: 3 } },
-    { id: 'solo',       emoji: '🏠', scores: { explorador: 2 } },
+  { id: 'experiencia', type: 'choice', options: [
+    { id: 'menos6m', emoji: '🌱' }, { id: 'e6m2a', emoji: '📈' },
+    { id: 'e2a5a',   emoji: '💪' }, { id: 'mas5a', emoji: '🏆' },
   ]},
-  { id: 'experiencia', options: [
-    { id: 'novato',     emoji: '🌱', scores: { explorador: 3 } },
-    { id: 'medio',      emoji: '📈', scores: { tecnico: 2, relampago: 1 } },
-    { id: 'veterano',   emoji: '💪', scores: { demoledor: 2, tecnico: 1 } },
-    { id: 'competidor', emoji: '🏆', scores: { competidor: 4 } },
+  { id: 'frecuencia',  type: 'choice', options: [
+    { id: 'f12', emoji: '📅' }, { id: 'f34', emoji: '📆' }, { id: 'f5', emoji: '🔥' },
   ]},
-  { id: 'frecuencia', options: [
-    { id: 'f12',        emoji: '📅', scores: { explorador: 2 } },
-    { id: 'f34',        emoji: '📆', scores: { tecnico: 1, relampago: 1 } },
-    { id: 'f5',         emoji: '🔥', scores: { competidor: 3 } },
-    { id: 'irregular',  emoji: '🌀', scores: { explorador: 3 } },
+  { id: 'objetivo',    type: 'choice', options: [
+    { id: 'competicion', emoji: '🏆' }, { id: 'peso',    emoji: '🔥' },
+    { id: 'potencia',    emoji: '💥' }, { id: 'negocio', emoji: '📈' },
+    { id: 'disfrutar',   emoji: '😊' },
   ]},
-  { id: 'equipo', options: [
-    { id: 'saco',       emoji: '🥊', scores: { demoledor: 3 } },
-    { id: 'muneco',     emoji: '🗿', scores: { demoledor: 2, tecnico: 1 } },
-    { id: 'manoplas',   emoji: '🤝', scores: { tecnico: 2, competidor: 1 } },
-    { id: 'sombra',     emoji: '💨', scores: { relampago: 3, explorador: 1 } },
+  { id: 'pain',        type: 'choice', options: [
+    { id: 'sinplan',     emoji: '🧭' }, { id: 'sintiempo',  emoji: '⏰' },
+    { id: 'sinentrenador', emoji: '🎯' }, { id: 'motivacion', emoji: '🔋' },
+    { id: 'sinprogreso', emoji: '📊' },
   ]},
-  { id: 'lugar', options: [
-    { id: 'gimnasio',   emoji: '🏟️', scores: { competidor: 2, tecnico: 1 } },
-    { id: 'casa',       emoji: '🏠', scores: { explorador: 2, demoledor: 1 } },
-    { id: 'exterior',   emoji: '🌳', scores: { relampago: 2 } },
-    { id: 'varia',      emoji: '🔄', scores: { explorador: 1, relampago: 1 } },
+  { id: 'inversion',   type: 'choice', options: [
+    { id: 'i50',    emoji: '💵' }, { id: 'i50150', emoji: '💶' },
+    { id: 'i150300', emoji: '💳' }, { id: 'i300',  emoji: '💎' },
   ]},
-  { id: 'duracion', options: [
-    { id: 'corta',      emoji: '⏱️', scores: { relampago: 2, explorador: 1 } },
-    { id: 'media',      emoji: '⏲️', scores: { tecnico: 2 } },
-    { id: 'larga',      emoji: '🕐', scores: { competidor: 2 } },
-    { id: 'muylarga',   emoji: '🔥', scores: { competidor: 3, demoledor: 1 } },
+  { id: 'edad',        type: 'choice', options: [
+    { id: 'a20',   emoji: '🌱' }, { id: 'a2029', emoji: '⚡' },
+    { id: 'a3039', emoji: '💪' }, { id: 'a4049', emoji: '🔥' },
+    { id: 'a50',   emoji: '🏅' },
   ]},
-  { id: 'debilidad', options: [
-    { id: 'potencia',    emoji: '💥', scores: { demoledor: 3 } },
-    { id: 'reaccion',    emoji: '⚡', scores: { relampago: 4 } },
-    { id: 'resistencia', emoji: '🫁', scores: { competidor: 2 } },
-    { id: 'constancia',  emoji: '🧭', scores: { explorador: 3 } },
-  ]},
-  { id: 'medir', options: [
-    { id: 'fuerza',      emoji: '💪', scores: { demoledor: 3 } },
-    { id: 'reaccion',    emoji: '⚡', scores: { relampago: 3 } },
-    { id: 'resistencia', emoji: '🫁', scores: { competidor: 2 } },
-    { id: 'progreso',    emoji: '📈', scores: { tecnico: 3 } },
-  ]},
-  { id: 'motivacion', options: [
-    { id: 'numeros',   emoji: '📊', scores: { relampago: 2, tecnico: 1 } },
-    { id: 'competir',  emoji: '🏆', scores: { competidor: 3 } },
-    { id: 'superarme', emoji: '🧠', scores: { tecnico: 1, demoledor: 1 } },
-    { id: 'desahogo',  emoji: '🧘', scores: { explorador: 2 } },
-  ]},
+  { id: 'pais',        type: 'country' },
+  { id: 'lead',        type: 'lead' },
 ];
+
+// ── Lead score 0-100 ──
+// Inversión 40 · Frecuencia 20 · Experiencia 15 · Situación 15 · Sesiones 10
+const LEAD_POINTS = {
+  inversion:  { i50: 5,  i50150: 15, i150300: 28, i300: 40 },
+  frecuencia: { f12: 5,  f34: 13,    f5: 20 },
+  experiencia:{ menos6m: 3, e6m2a: 7, e2a5a: 11, mas5a: 15 },
+  situacion:  { gimnasio: 15, coach: 12, competidor: 10, fitness: 6, principiante: 3 },
+};
+
+function calcLeadScore(answers) {
+  const pick = (group, key) => (LEAD_POINTS[group] && LEAD_POINTS[group][key]) || 0;
+  let score = 0;
+  score += pick('inversion',   answers.inversion);
+  score += pick('frecuencia',  answers.frecuencia);
+  score += pick('experiencia', answers.experiencia);
+  score += pick('situacion',   answers.situacion);
+  // Sesiones ya hechas en la app: en el alta son 0, sube si el quiz se
+  // responde más tarde. Tope de 10 puntos.
+  let sessions = 0;
+  try { sessions = getSessions().length; } catch (e) {}
+  score += Math.min(10, sessions * 2);
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+// El bucket sale directo de la P2; si se saltó, cae a principiante
+function calcQuizBucket(answers) {
+  const b = answers.situacion;
+  return QUIZ_BUCKETS.indexOf(b) !== -1 ? b : 'principiante';
+}
+
+// Lista de países por idioma. quizCountries() le añade "Otro país" al final.
+const QUIZ_COUNTRIES = {
+  es: [
+    { id: 'ES', label: 'España' }, { id: 'MX', label: 'México' },
+    { id: 'AR', label: 'Argentina' }, { id: 'CO', label: 'Colombia' },
+    { id: 'CL', label: 'Chile' },
+  ],
+  en: [
+    { id: 'US', label: 'United States' }, { id: 'GB', label: 'United Kingdom' },
+    { id: 'AU', label: 'Australia' }, { id: 'CA', label: 'Canada' },
+  ],
+  pt: [
+    { id: 'BR', label: 'Brasil' }, { id: 'PT', label: 'Portugal' },
+  ],
+  de: [
+    { id: 'DE', label: 'Deutschland' }, { id: 'AT', label: 'Österreich' },
+    { id: 'CH', label: 'Schweiz' },
+  ],
+  ja: [
+    { id: 'JP', label: '日本' },
+  ],
+  fr: [
+    { id: 'FR', label: 'France' }, { id: 'BE', label: 'Belgique' },
+    { id: 'CH', label: 'Suisse' }, { id: 'CA', label: 'Canada' },
+  ],
+  ru: [
+    { id: 'RU', label: 'Россия' }, { id: 'KZ', label: 'Казахстан' },
+    { id: 'UA', label: 'Украина' },
+  ],
+  zh: [
+    { id: 'CN', label: '中国大陆' }, { id: 'TW', label: '台湾' },
+    { id: 'HK', label: '香港' },
+  ],
+  'zh-TW': [
+    { id: 'CN', label: '中國大陸' }, { id: 'TW', label: '台灣' },
+    { id: 'HK', label: '香港' },
+  ],
+  ko: [
+    { id: 'KR', label: '대한민국' },
+  ],
+  ar: [
+    { id: 'SA', label: 'السعودية' }, { id: 'AE', label: 'الإمارات' },
+    { id: 'EG', label: 'مصر' }, { id: 'MA', label: 'المغرب' },
+  ],
+  hi: [
+    { id: 'IN', label: 'भारत' },
+  ],
+};
 
 // ── Texto del quiz, un bloque por idioma (como HELP_SECTIONS): son cadenas
 // largas y sólo las usa este módulo, así que no van en TRANSLATIONS.
 const QUIZ_I18N = {
   es: {
-    intro_title: 'Antes de empezar...', intro_sub: '10 preguntas rápidas para crear tu perfil de luchador',
-    step: '{n} / {total}', profile_title: 'TU PERFIL DE LUCHADOR', profile_cta: 'CONTINUAR',
+    ui: {
+      intro_title: 'Cuéntanos sobre ti',
+      intro_sub: 'Para personalizar tu experiencia en Strike IQ. Solo tarda 2 minutos.',
+      intro_cta: 'EMPEZAR', next: 'SIGUIENTE', back: '← Atrás', skip: 'Saltar por ahora',
+      step: '{n}/{total}',
+      smiq_placeholder: 'Escribe aquí tu respuesta...',
+      smiq_counter: '{n}/{min} caracteres mínimos',
+      lead_name: 'Nombre completo', lead_name_ph: 'Tu nombre',
+      lead_email: 'Email', lead_email_ph: 'tu@email.com',
+      lead_gdpr: 'Acepto recibir comunicaciones de Strike IQ',
+      lead_cta: 'VER MI PERFIL',
+      other_country: 'Otro país',
+      profile_title: 'TU PERFIL DE LUCHADOR', profile_cta: 'CONTINUAR',
+      recommendations: 'TUS 3 SIGUIENTES PASOS',
+    },
     q: {
-      objetivo: '¿Cuál es tu objetivo principal?', disciplina: '¿Qué practicas?',
-      experiencia: '¿Cuánto llevas entrenando?', frecuencia: '¿Cuántos días entrenas por semana?',
-      equipo: '¿Contra qué golpeas?', lugar: '¿Dónde entrenas normalmente?',
-      duracion: '¿Cuánto dura tu entrenamiento?', debilidad: '¿Qué crees que te frena más?',
-      medir: '¿Qué quieres medir primero?', motivacion: '¿Qué te hace volver a entrenar?',
+      smiq: '¿Cuál es el mayor obstáculo que te impide mejorar tu rendimiento en el entrenamiento ahora mismo?',
+      situacion: '¿Cómo te describes mejor?',
+      experiencia: '¿Cuánto tiempo llevas entrenando?',
+      frecuencia: '¿Cuántas veces entrenas por semana?',
+      objetivo: '¿Qué quieres conseguir en los próximos 90 días?',
+      pain: '¿Qué te frena más ahora mismo?',
+      inversion: '¿Cuánto inviertes en tu entrenamiento al mes?',
+      edad: '¿Cuántos años tienes?',
+      pais: '¿Desde dónde entrenas?',
+      lead: '¿A dónde enviamos tu análisis personalizado?',
     },
     a: {
-      objetivo_potencia: 'Pegar más fuerte', objetivo_velocidad: 'Ser más rápido',
-      objetivo_tecnica: 'Pulir mi técnica', objetivo_forma: 'Ponerme en forma',
-      disciplina_boxeo: 'Boxeo', disciplina_kickboxing: 'Kickboxing / Muay Thai',
-      disciplina_marciales: 'Karate, taekwondo, kung fu', disciplina_solo: 'Entreno por mi cuenta',
-      experiencia_novato: 'Menos de 6 meses', experiencia_medio: 'Entre 6 meses y 2 años',
-      experiencia_veterano: 'Más de 2 años', experiencia_competidor: 'Compito o he competido',
-      frecuencia_f12: '1 o 2 días', frecuencia_f34: '3 o 4 días',
-      frecuencia_f5: '5 días o más', frecuencia_irregular: 'Cuando puedo',
-      equipo_saco: 'Saco pesado', equipo_muneco: 'Muñeco o maniquí',
-      equipo_manoplas: 'Manoplas con compañero', equipo_sombra: 'Sombra, sin saco',
-      lugar_gimnasio: 'En un gimnasio o club', lugar_casa: 'En casa',
-      lugar_exterior: 'Al aire libre', lugar_varia: 'Depende del día',
-      duracion_corta: 'Menos de 20 minutos', duracion_media: 'Entre 20 y 40 minutos',
-      duracion_larga: 'Entre 40 y 60 minutos', duracion_muylarga: 'Más de una hora',
-      debilidad_potencia: 'Me falta potencia', debilidad_reaccion: 'Reacciono tarde',
-      debilidad_resistencia: 'Me canso pronto', debilidad_constancia: 'No soy constante',
-      medir_fuerza: 'La fuerza de mi golpe', medir_reaccion: 'Mi tiempo de reacción',
-      medir_resistencia: 'Cuánto aguanto por rounds', medir_progreso: 'Mi progreso con el tiempo',
-      motivacion_numeros: 'Ver mis números subir', motivacion_competir: 'Ganar a otros',
-      motivacion_superarme: 'Superarme a mí mismo', motivacion_desahogo: 'Descargar y despejarme',
+      situacion_competidor: 'Entreno para competir o pelear',
+      situacion_fitness: 'Entreno para estar en forma / perder peso',
+      situacion_coach: 'Soy entrenador o coach',
+      situacion_gimnasio: 'Tengo o gestiono un gimnasio',
+      situacion_principiante: 'Soy principiante, acabo de empezar',
+      experiencia_menos6m: 'Menos de 6 meses', experiencia_e6m2a: '6 meses a 2 años',
+      experiencia_e2a5a: '2 a 5 años', experiencia_mas5a: 'Más de 5 años',
+      frecuencia_f12: '1-2 veces', frecuencia_f34: '3-4 veces', frecuencia_f5: '5 o más veces',
+      objetivo_competicion: 'Ganar mi primera competición',
+      objetivo_peso: 'Perder peso y mejorar mi físico',
+      objetivo_potencia: 'Aumentar potencia y velocidad',
+      objetivo_negocio: 'Hacer crecer mi negocio o gimnasio',
+      objetivo_disfrutar: 'Disfrutar entrenando y mantenerme activo',
+      pain_sinplan: 'No tengo un plan estructurado',
+      pain_sintiempo: 'Me falta tiempo para entrenar',
+      pain_sinentrenador: 'No tengo un buen entrenador',
+      pain_motivacion: 'Me cuesta mantener la motivación',
+      pain_sinprogreso: 'No sé si estoy progresando',
+      inversion_i50: 'Menos de 50€', inversion_i50150: '50 a 150€',
+      inversion_i150300: '150 a 300€', inversion_i300: 'Más de 300€',
+      edad_a20: 'Menos de 20', edad_a2029: '20 a 29', edad_a3039: '30 a 39',
+      edad_a4049: '40 a 49', edad_a50: '50 o más',
     },
     b: {
       competidor_name: 'EL COMPETIDOR',
-      competidor_desc: 'Entrenas con un objetivo claro y aguantas el ritmo. Tu margen ya no está en pegar más fuerte, sino en sostener la potencia cuando llega el cansancio.',
-      competidor_tip: 'Haz rounds largos en MODO POTENCIA y vigila la caída de tus G del primer al último round.',
-      demoledor_name: 'EL DEMOLEDOR',
-      demoledor_desc: 'Buscas el impacto. Tu fuerte es el golpe único y contundente, y el saco es tu terreno.',
-      demoledor_tip: 'Calibra fino y persigue tu récord de G en MODO POTENCIA. Descansa entre golpes: la potencia máxima necesita músculo fresco.',
-      relampago_name: 'EL RELÁMPAGO',
-      relampago_desc: 'Lo tuyo es llegar antes. La velocidad y el tiempo de reacción son tu ventaja competitiva.',
-      relampago_tip: 'MODO REACCIÓN y MODO COLORES son los tuyos. Persigue bajar de 300 ms de forma constante.',
-      tecnico_name: 'EL TÉCNICO',
-      tecnico_desc: 'Te importa cómo se hace, no sólo cuánto pega. Mides para corregir, y ahí es donde más creces.',
-      tecnico_tip: 'Usa MODO COMBO para encadenar sin perder limpieza y compara tu potencia media, no la máxima.',
-      explorador_name: 'EL EXPLORADOR',
-      explorador_desc: 'Estás empezando o entrenas cuando puedes. Tu mayor ganancia ahora mismo es la constancia, no la intensidad.',
-      explorador_tip: 'Sesiones cortas de 2 rounds, varias veces por semana. Mira tu racha de días en el historial: ése es tu marcador.',
+      competidor_desc: 'Entrenas para ganar. Cada golpe cuenta, cada segundo importa. Estás aquí para dominar.',
+      competidor_tip1: 'Calibra el sensor antes de cada sesión: en competición la diferencia está en décimas.',
+      competidor_tip2: 'Usa MODO POTENCIA con rounds largos y vigila cuánto caen tus G del primero al último.',
+      competidor_tip3: 'Entrena el MODO REACCIÓN dos veces por semana: por debajo de 300 ms se gana el intercambio.',
+      fitness_name: 'EL FITNESS FIGHTER',
+      fitness_desc: 'Usas el combate para transformar tu cuerpo y tu mente. El ring es tu gimnasio.',
+      fitness_tip1: 'Sesiones de 3 rounds seguidos: el contador de calorías te dará el gasto real de cada una.',
+      fitness_tip2: 'Persigue el volumen de golpes antes que la potencia máxima: quema más y castiga menos.',
+      fitness_tip3: 'Mira tu racha de días en el historial. La constancia mueve la aguja más que la intensidad.',
+      coach_name: 'EL COACH',
+      coach_desc: 'Tu misión es hacer mejores a los demás. Los datos son tu herramienta más poderosa.',
+      coach_tip1: 'Calibra el dispositivo con cada alumno: el umbral correcto cambia según el saco y el golpe.',
+      coach_tip2: 'Compara la potencia media, no la máxima: es la que revela la técnica real de tu alumno.',
+      coach_tip3: 'Usa MODO COLORES con etiquetas propias para convertir cada color en una orden técnica.',
+      gimnasio_name: 'EL GIMNASIO',
+      gimnasio_desc: 'Lideras una comunidad de guerreros. La tecnología es tu ventaja competitiva.',
+      gimnasio_tip1: 'Monta un ranking interno con el historial: la competición sana llena las clases.',
+      gimnasio_tip2: 'Usa el MODO REACCIÓN en grupo, es el que mejor funciona para enganchar a alumnos nuevos.',
+      gimnasio_tip3: 'Mide a cada alumno el primer día y a los 30: ese antes y después es tu mejor argumento.',
+      principiante_name: 'EL PRINCIPIANTE',
+      principiante_desc: 'Todo maestro fue un día principiante. Has dado el primer paso. El más importante.',
+      principiante_tip1: 'Empieza por calibrar: sin eso la app no sabe cómo golpeas y los números no valen.',
+      principiante_tip2: 'Sesiones cortas de 2 rounds. Es mejor entrenar poco y a menudo que mucho y una vez.',
+      principiante_tip3: 'No mires la potencia máxima todavía: fíjate solo en repetir el gesto y en la racha de días.',
     },
   },
   en: {
-    intro_title: 'Before we start...', intro_sub: '10 quick questions to build your fighter profile',
-    step: '{n} / {total}', profile_title: 'YOUR FIGHTER PROFILE', profile_cta: 'CONTINUE',
+    ui: {
+      intro_title: 'Tell us about you',
+      intro_sub: 'So we can tailor your Strike IQ experience. It only takes 2 minutes.',
+      intro_cta: 'START', next: 'NEXT', back: '← Back', skip: 'Skip for now',
+      step: '{n}/{total}',
+      smiq_placeholder: 'Type your answer here...',
+      smiq_counter: '{n}/{min} characters minimum',
+      lead_name: 'Full name', lead_name_ph: 'Your name',
+      lead_email: 'Email', lead_email_ph: 'you@email.com',
+      lead_gdpr: 'I agree to receive communications from Strike IQ',
+      lead_cta: 'SEE MY PROFILE',
+      other_country: 'Another country',
+      profile_title: 'YOUR FIGHTER PROFILE', profile_cta: 'CONTINUE',
+      recommendations: 'YOUR NEXT 3 STEPS',
+    },
     q: {
-      objetivo: 'What is your main goal?', disciplina: 'What do you practise?',
-      experiencia: 'How long have you been training?', frecuencia: 'How many days a week do you train?',
-      equipo: 'What do you hit?', lugar: 'Where do you usually train?',
-      duracion: 'How long is your session?', debilidad: 'What holds you back the most?',
-      medir: 'What do you want to measure first?', motivacion: 'What keeps you coming back?',
+      smiq: 'What is the biggest obstacle stopping you from improving your training performance right now?',
+      situacion: 'Which best describes you?',
+      experiencia: 'How long have you been training?',
+      frecuencia: 'How many times a week do you train?',
+      objetivo: 'What do you want to achieve in the next 90 days?',
+      pain: 'What holds you back the most right now?',
+      inversion: 'How much do you invest in your training per month?',
+      edad: 'How old are you?',
+      pais: 'Where are you training from?',
+      lead: 'Where should we send your personalised analysis?',
     },
     a: {
-      objetivo_potencia: 'Punch harder', objetivo_velocidad: 'Get faster',
-      objetivo_tecnica: 'Sharpen my technique', objetivo_forma: 'Get in shape',
-      disciplina_boxeo: 'Boxing', disciplina_kickboxing: 'Kickboxing / Muay Thai',
-      disciplina_marciales: 'Karate, taekwondo, kung fu', disciplina_solo: 'I train on my own',
-      experiencia_novato: 'Less than 6 months', experiencia_medio: '6 months to 2 years',
-      experiencia_veterano: 'More than 2 years', experiencia_competidor: 'I compete or have competed',
-      frecuencia_f12: '1 or 2 days', frecuencia_f34: '3 or 4 days',
-      frecuencia_f5: '5 days or more', frecuencia_irregular: 'Whenever I can',
-      equipo_saco: 'Heavy bag', equipo_muneco: 'Dummy or mannequin',
-      equipo_manoplas: 'Pads with a partner', equipo_sombra: 'Shadow, no bag',
-      lugar_gimnasio: 'At a gym or club', lugar_casa: 'At home',
-      lugar_exterior: 'Outdoors', lugar_varia: 'It depends on the day',
-      duracion_corta: 'Under 20 minutes', duracion_media: '20 to 40 minutes',
-      duracion_larga: '40 to 60 minutes', duracion_muylarga: 'More than an hour',
-      debilidad_potencia: 'I lack power', debilidad_reaccion: 'I react too late',
-      debilidad_resistencia: 'I gas out early', debilidad_constancia: 'I am not consistent',
-      medir_fuerza: 'How hard I punch', medir_reaccion: 'My reaction time',
-      medir_resistencia: 'How long I last over rounds', medir_progreso: 'My progress over time',
-      motivacion_numeros: 'Watching my numbers climb', motivacion_competir: 'Beating others',
-      motivacion_superarme: 'Beating my own limits', motivacion_desahogo: 'Blowing off steam',
+      situacion_competidor: 'I train to compete or fight',
+      situacion_fitness: 'I train to get fit / lose weight',
+      situacion_coach: 'I am a trainer or coach',
+      situacion_gimnasio: 'I own or run a gym',
+      situacion_principiante: 'I am a beginner, just getting started',
+      experiencia_menos6m: 'Less than 6 months', experiencia_e6m2a: '6 months to 2 years',
+      experiencia_e2a5a: '2 to 5 years', experiencia_mas5a: 'More than 5 years',
+      frecuencia_f12: '1-2 times', frecuencia_f34: '3-4 times', frecuencia_f5: '5 or more times',
+      objetivo_competicion: 'Win my first competition',
+      objetivo_peso: 'Lose weight and improve my physique',
+      objetivo_potencia: 'Increase power and speed',
+      objetivo_negocio: 'Grow my business or gym',
+      objetivo_disfrutar: 'Enjoy training and stay active',
+      pain_sinplan: 'I have no structured plan',
+      pain_sintiempo: 'I do not have time to train',
+      pain_sinentrenador: 'I do not have a good coach',
+      pain_motivacion: 'I struggle to stay motivated',
+      pain_sinprogreso: 'I cannot tell if I am progressing',
+      inversion_i50: 'Less than €50', inversion_i50150: '€50 to €150',
+      inversion_i150300: '€150 to €300', inversion_i300: 'More than €300',
+      edad_a20: 'Under 20', edad_a2029: '20 to 29', edad_a3039: '30 to 39',
+      edad_a4049: '40 to 49', edad_a50: '50 or over',
     },
     b: {
       competidor_name: 'THE COMPETITOR',
-      competidor_desc: 'You train with a clear goal and you hold the pace. Your edge is no longer punching harder, but keeping the power up once fatigue kicks in.',
-      competidor_tip: 'Run long rounds in POWER MODE and watch how your G drops from the first round to the last.',
-      demoledor_name: 'THE DEMOLISHER',
-      demoledor_desc: 'You are after impact. The single, crushing punch is your strength, and the bag is your home ground.',
-      demoledor_tip: 'Calibrate finely and chase your G record in POWER MODE. Rest between punches: peak power needs fresh muscle.',
-      relampago_name: 'THE LIGHTNING',
-      relampago_desc: 'Your thing is getting there first. Speed and reaction time are your competitive edge.',
-      relampago_tip: 'REACTION MODE and COLOR MODE are made for you. Aim to stay consistently under 300 ms.',
-      tecnico_name: 'THE TECHNICIAN',
-      tecnico_desc: 'You care about how it is done, not just how hard it lands. You measure to correct, and that is where you grow most.',
-      tecnico_tip: 'Use COMBO MODE to chain punches without losing form, and compare your average power, not your peak.',
-      explorador_name: 'THE EXPLORER',
-      explorador_desc: 'You are starting out or training whenever you can. Your biggest gain right now is consistency, not intensity.',
-      explorador_tip: 'Short 2-round sessions, several times a week. Watch your day streak in the history: that is your scoreboard.',
+      competidor_desc: 'You train to win. Every punch counts, every second matters. You are here to dominate.',
+      competidor_tip1: 'Calibrate the sensor before every session: in competition the margin is in tenths.',
+      competidor_tip2: 'Use POWER MODE with long rounds and watch how much your G drops from first to last.',
+      competidor_tip3: 'Train REACTION MODE twice a week: under 300 ms is where exchanges are won.',
+      fitness_name: 'THE FITNESS FIGHTER',
+      fitness_desc: 'You use combat to transform your body and your mind. The ring is your gym.',
+      fitness_tip1: 'Run 3 rounds back to back: the calorie counter gives you the real burn of each one.',
+      fitness_tip2: 'Chase punch volume before peak power: it burns more and beats up your joints less.',
+      fitness_tip3: 'Watch your day streak in the history. Consistency moves the needle more than intensity.',
+      coach_name: 'THE COACH',
+      coach_desc: 'Your mission is to make others better. Data is your most powerful tool.',
+      coach_tip1: 'Calibrate the device for each student: the right threshold changes with the bag and the punch.',
+      coach_tip2: 'Compare average power, not peak: that is what reveals your student\'s real technique.',
+      coach_tip3: 'Use COLOR MODE with custom labels to turn every colour into a technical cue.',
+      gimnasio_name: 'THE GYM',
+      gimnasio_desc: 'You lead a community of fighters. Technology is your competitive edge.',
+      gimnasio_tip1: 'Build an internal ranking from the history: healthy competition fills classes.',
+      gimnasio_tip2: 'Run REACTION MODE in groups, it is the one that hooks new members fastest.',
+      gimnasio_tip3: 'Measure each member on day 1 and day 30: that before and after is your best pitch.',
+      principiante_name: 'THE BEGINNER',
+      principiante_desc: 'Every master was once a beginner. You have taken the first step. The most important one.',
+      principiante_tip1: 'Start by calibrating: without it the app does not know how you punch and the numbers mean nothing.',
+      principiante_tip2: 'Short 2-round sessions. Training a little and often beats a lot, once.',
+      principiante_tip3: 'Do not chase peak power yet: focus on repeating the movement and on your day streak.',
     },
   },
   pt: {
-    intro_title: 'Antes de começar...', intro_sub: '10 perguntas rápidas para criar seu perfil de lutador',
-    step: '{n} / {total}', profile_title: 'SEU PERFIL DE LUTADOR', profile_cta: 'CONTINUAR',
+    ui: {
+      intro_title: 'Conte-nos sobre você',
+      intro_sub: 'Para personalizar sua experiência no Strike IQ. Leva só 2 minutos.',
+      intro_cta: 'COMEÇAR', next: 'SEGUINTE', back: '← Voltar', skip: 'Pular por agora',
+      step: '{n}/{total}',
+      smiq_placeholder: 'Escreva aqui sua resposta...',
+      smiq_counter: '{n}/{min} caracteres mínimos',
+      lead_name: 'Nome completo', lead_name_ph: 'Seu nome',
+      lead_email: 'Email', lead_email_ph: 'voce@email.com',
+      lead_gdpr: 'Aceito receber comunicações do Strike IQ',
+      lead_cta: 'VER MEU PERFIL',
+      other_country: 'Outro país',
+      profile_title: 'SEU PERFIL DE LUTADOR', profile_cta: 'CONTINUAR',
+      recommendations: 'SEUS 3 PRÓXIMOS PASSOS',
+    },
     q: {
-      objetivo: 'Qual é seu objetivo principal?', disciplina: 'O que você pratica?',
-      experiencia: 'Há quanto tempo você treina?', frecuencia: 'Quantos dias por semana você treina?',
-      equipo: 'Contra o que você bate?', lugar: 'Onde você costuma treinar?',
-      duracion: 'Quanto dura seu treino?', debilidad: 'O que mais te atrapalha?',
-      medir: 'O que você quer medir primeiro?', motivacion: 'O que te faz voltar a treinar?',
+      smiq: 'Qual é o maior obstáculo que impede você de melhorar seu desempenho no treino agora?',
+      situacion: 'O que melhor descreve você?',
+      experiencia: 'Há quanto tempo você treina?',
+      frecuencia: 'Quantas vezes por semana você treina?',
+      objetivo: 'O que você quer alcançar nos próximos 90 dias?',
+      pain: 'O que mais te trava agora?',
+      inversion: 'Quanto você investe no seu treino por mês?',
+      edad: 'Quantos anos você tem?',
+      pais: 'De onde você treina?',
+      lead: 'Para onde enviamos sua análise personalizada?',
     },
     a: {
-      objetivo_potencia: 'Bater mais forte', objetivo_velocidad: 'Ser mais rápido',
-      objetivo_tecnica: 'Aprimorar minha técnica', objetivo_forma: 'Entrar em forma',
-      disciplina_boxeo: 'Boxe', disciplina_kickboxing: 'Kickboxing / Muay Thai',
-      disciplina_marciales: 'Karatê, taekwondo, kung fu', disciplina_solo: 'Treino por conta própria',
-      experiencia_novato: 'Menos de 6 meses', experiencia_medio: 'De 6 meses a 2 anos',
-      experiencia_veterano: 'Mais de 2 anos', experiencia_competidor: 'Compito ou já competi',
-      frecuencia_f12: '1 ou 2 dias', frecuencia_f34: '3 ou 4 dias',
-      frecuencia_f5: '5 dias ou mais', frecuencia_irregular: 'Quando dá',
-      equipo_saco: 'Saco pesado', equipo_muneco: 'Boneco ou manequim',
-      equipo_manoplas: 'Manoplas com parceiro', equipo_sombra: 'Sombra, sem saco',
-      lugar_gimnasio: 'Em academia ou clube', lugar_casa: 'Em casa',
-      lugar_exterior: 'Ao ar livre', lugar_varia: 'Depende do dia',
-      duracion_corta: 'Menos de 20 minutos', duracion_media: 'De 20 a 40 minutos',
-      duracion_larga: 'De 40 a 60 minutos', duracion_muylarga: 'Mais de uma hora',
-      debilidad_potencia: 'Falta potência', debilidad_reaccion: 'Reajo tarde',
-      debilidad_resistencia: 'Canso rápido', debilidad_constancia: 'Não sou constante',
-      medir_fuerza: 'A força do meu golpe', medir_reaccion: 'Meu tempo de reação',
-      medir_resistencia: 'Quanto aguento por rounds', medir_progreso: 'Minha evolução ao longo do tempo',
-      motivacion_numeros: 'Ver meus números subirem', motivacion_competir: 'Vencer os outros',
-      motivacion_superarme: 'Superar a mim mesmo', motivacion_desahogo: 'Descarregar e espairecer',
+      situacion_competidor: 'Treino para competir ou lutar',
+      situacion_fitness: 'Treino para ficar em forma / perder peso',
+      situacion_coach: 'Sou treinador ou coach',
+      situacion_gimnasio: 'Tenho ou administro uma academia',
+      situacion_principiante: 'Sou iniciante, acabei de começar',
+      experiencia_menos6m: 'Menos de 6 meses', experiencia_e6m2a: '6 meses a 2 anos',
+      experiencia_e2a5a: '2 a 5 anos', experiencia_mas5a: 'Mais de 5 anos',
+      frecuencia_f12: '1-2 vezes', frecuencia_f34: '3-4 vezes', frecuencia_f5: '5 ou mais vezes',
+      objetivo_competicion: 'Vencer minha primeira competição',
+      objetivo_peso: 'Perder peso e melhorar meu físico',
+      objetivo_potencia: 'Aumentar potência e velocidade',
+      objetivo_negocio: 'Fazer crescer meu negócio ou academia',
+      objetivo_disfrutar: 'Aproveitar o treino e me manter ativo',
+      pain_sinplan: 'Não tenho um plano estruturado',
+      pain_sintiempo: 'Falta tempo para treinar',
+      pain_sinentrenador: 'Não tenho um bom treinador',
+      pain_motivacion: 'Tenho dificuldade em manter a motivação',
+      pain_sinprogreso: 'Não sei se estou progredindo',
+      inversion_i50: 'Menos de 50€', inversion_i50150: '50 a 150€',
+      inversion_i150300: '150 a 300€', inversion_i300: 'Mais de 300€',
+      edad_a20: 'Menos de 20', edad_a2029: '20 a 29', edad_a3039: '30 a 39',
+      edad_a4049: '40 a 49', edad_a50: '50 ou mais',
     },
     b: {
       competidor_name: 'O COMPETIDOR',
-      competidor_desc: 'Você treina com um objetivo claro e segura o ritmo. Sua margem já não está em bater mais forte, e sim em manter a potência quando o cansaço chega.',
-      competidor_tip: 'Faça rounds longos no MODO POTÊNCIA e observe a queda dos seus G do primeiro ao último round.',
-      demoledor_name: 'O DEMOLIDOR',
-      demoledor_desc: 'Você busca o impacto. Seu forte é o golpe único e devastador, e o saco é seu território.',
-      demoledor_tip: 'Calibre com precisão e persiga seu recorde de G no MODO POTÊNCIA. Descanse entre os golpes: potência máxima exige músculo descansado.',
-      relampago_name: 'O RELÂMPAGO',
-      relampago_desc: 'O seu negócio é chegar antes. Velocidade e tempo de reação são sua vantagem competitiva.',
-      relampago_tip: 'MODO REAÇÃO e MODO CORES são os seus. Mire em ficar sempre abaixo de 300 ms.',
-      tecnico_name: 'O TÉCNICO',
-      tecnico_desc: 'Você se importa com o como, não só com o quanto. Você mede para corrigir, e é aí que mais cresce.',
-      tecnico_tip: 'Use o MODO COMBO para encadear sem perder a limpeza e compare sua potência média, não a máxima.',
-      explorador_name: 'O EXPLORADOR',
-      explorador_desc: 'Você está começando ou treina quando dá. Seu maior ganho agora é a constância, não a intensidade.',
-      explorador_tip: 'Sessões curtas de 2 rounds, várias vezes por semana. Olhe sua sequência de dias no histórico: esse é seu placar.',
+      competidor_desc: 'Você treina para vencer. Cada golpe conta, cada segundo importa. Você está aqui para dominar.',
+      competidor_tip1: 'Calibre o sensor antes de cada sessão: na competição a diferença está nos décimos.',
+      competidor_tip2: 'Use o MODO POTÊNCIA com rounds longos e observe quanto seus G caem do primeiro ao último.',
+      competidor_tip3: 'Treine o MODO REAÇÃO duas vezes por semana: abaixo de 300 ms é onde se ganha a troca.',
+      fitness_name: 'O FITNESS FIGHTER',
+      fitness_desc: 'Você usa o combate para transformar seu corpo e sua mente. O ringue é sua academia.',
+      fitness_tip1: 'Faça 3 rounds seguidos: o contador de calorias mostra o gasto real de cada um.',
+      fitness_tip2: 'Busque volume de golpes antes da potência máxima: queima mais e castiga menos.',
+      fitness_tip3: 'Olhe sua sequência de dias no histórico. A constância pesa mais que a intensidade.',
+      coach_name: 'O COACH',
+      coach_desc: 'Sua missão é tornar os outros melhores. Os dados são sua ferramenta mais poderosa.',
+      coach_tip1: 'Calibre o dispositivo com cada aluno: o limiar certo muda conforme o saco e o golpe.',
+      coach_tip2: 'Compare a potência média, não a máxima: é ela que revela a técnica real do aluno.',
+      coach_tip3: 'Use o MODO CORES com rótulos próprios para transformar cada cor em um comando técnico.',
+      gimnasio_name: 'A ACADEMIA',
+      gimnasio_desc: 'Você lidera uma comunidade de guerreiros. A tecnologia é sua vantagem competitiva.',
+      gimnasio_tip1: 'Monte um ranking interno com o histórico: competição saudável enche as aulas.',
+      gimnasio_tip2: 'Use o MODO REAÇÃO em grupo, é o que mais engaja alunos novos.',
+      gimnasio_tip3: 'Meça cada aluno no dia 1 e no dia 30: esse antes e depois é seu melhor argumento.',
+      principiante_name: 'O INICIANTE',
+      principiante_desc: 'Todo mestre já foi iniciante. Você deu o primeiro passo. O mais importante.',
+      principiante_tip1: 'Comece calibrando: sem isso o app não sabe como você bate e os números não valem.',
+      principiante_tip2: 'Sessões curtas de 2 rounds. Treinar pouco e sempre vale mais que muito e uma vez só.',
+      principiante_tip3: 'Não persiga a potência máxima ainda: foque em repetir o gesto e na sequência de dias.',
     },
   },
   de: {
-    intro_title: 'Bevor es losgeht...', intro_sub: '10 kurze Fragen für dein Kämpferprofil',
-    step: '{n} / {total}', profile_title: 'DEIN KÄMPFERPROFIL', profile_cta: 'WEITER',
+    ui: {
+      intro_title: 'Erzähl uns von dir',
+      intro_sub: 'Damit wir dein Strike-IQ-Erlebnis anpassen können. Dauert nur 2 Minuten.',
+      intro_cta: 'STARTEN', next: 'WEITER', back: '← Zurück', skip: 'Später ausfüllen',
+      step: '{n}/{total}',
+      smiq_placeholder: 'Schreib deine Antwort hier...',
+      smiq_counter: '{n}/{min} Zeichen mindestens',
+      lead_name: 'Vollständiger Name', lead_name_ph: 'Dein Name',
+      lead_email: 'E-Mail', lead_email_ph: 'du@email.com',
+      lead_gdpr: 'Ich möchte Mitteilungen von Strike IQ erhalten',
+      lead_cta: 'MEIN PROFIL ANSEHEN',
+      other_country: 'Anderes Land',
+      profile_title: 'DEIN KÄMPFERPROFIL', profile_cta: 'WEITER',
+      recommendations: 'DEINE NÄCHSTEN 3 SCHRITTE',
+    },
     q: {
-      objetivo: 'Was ist dein Hauptziel?', disciplina: 'Was trainierst du?',
-      experiencia: 'Wie lange trainierst du schon?', frecuencia: 'An wie vielen Tagen pro Woche trainierst du?',
-      equipo: 'Worauf schlägst du?', lugar: 'Wo trainierst du normalerweise?',
-      duracion: 'Wie lange dauert dein Training?', debilidad: 'Was bremst dich am meisten?',
-      medir: 'Was willst du zuerst messen?', motivacion: 'Was bringt dich zurück ins Training?',
+      smiq: 'Was ist gerade das größte Hindernis, das dich daran hindert, deine Trainingsleistung zu verbessern?',
+      situacion: 'Was beschreibt dich am besten?',
+      experiencia: 'Wie lange trainierst du schon?',
+      frecuencia: 'Wie oft trainierst du pro Woche?',
+      objetivo: 'Was willst du in den nächsten 90 Tagen erreichen?',
+      pain: 'Was bremst dich gerade am meisten?',
+      inversion: 'Wie viel investierst du monatlich in dein Training?',
+      edad: 'Wie alt bist du?',
+      pais: 'Von wo aus trainierst du?',
+      lead: 'Wohin schicken wir deine persönliche Auswertung?',
     },
     a: {
-      objetivo_potencia: 'Härter schlagen', objetivo_velocidad: 'Schneller werden',
-      objetivo_tecnica: 'Meine Technik verfeinern', objetivo_forma: 'In Form kommen',
-      disciplina_boxeo: 'Boxen', disciplina_kickboxing: 'Kickboxen / Muay Thai',
-      disciplina_marciales: 'Karate, Taekwondo, Kung-Fu', disciplina_solo: 'Ich trainiere allein',
-      experiencia_novato: 'Weniger als 6 Monate', experiencia_medio: '6 Monate bis 2 Jahre',
-      experiencia_veterano: 'Mehr als 2 Jahre', experiencia_competidor: 'Ich kämpfe im Wettkampf',
-      frecuencia_f12: '1 oder 2 Tage', frecuencia_f34: '3 oder 4 Tage',
-      frecuencia_f5: '5 Tage oder mehr', frecuencia_irregular: 'Wann immer es geht',
-      equipo_saco: 'Schwerer Sandsack', equipo_muneco: 'Puppe oder Dummy',
-      equipo_manoplas: 'Pratzen mit Partner', equipo_sombra: 'Schattenboxen, ohne Sack',
-      lugar_gimnasio: 'Im Gym oder Verein', lugar_casa: 'Zu Hause',
-      lugar_exterior: 'Draußen', lugar_varia: 'Je nach Tag',
-      duracion_corta: 'Unter 20 Minuten', duracion_media: '20 bis 40 Minuten',
-      duracion_larga: '40 bis 60 Minuten', duracion_muylarga: 'Mehr als eine Stunde',
-      debilidad_potencia: 'Mir fehlt Kraft', debilidad_reaccion: 'Ich reagiere zu spät',
-      debilidad_resistencia: 'Mir geht schnell die Luft aus', debilidad_constancia: 'Ich bleibe nicht dran',
-      medir_fuerza: 'Wie hart ich schlage', medir_reaccion: 'Meine Reaktionszeit',
-      medir_resistencia: 'Wie lange ich über Runden durchhalte', medir_progreso: 'Meinen Fortschritt über die Zeit',
-      motivacion_numeros: 'Meine Zahlen steigen sehen', motivacion_competir: 'Andere schlagen',
-      motivacion_superarme: 'Mich selbst übertreffen', motivacion_desahogo: 'Dampf ablassen',
+      situacion_competidor: 'Ich trainiere für Wettkämpfe',
+      situacion_fitness: 'Ich trainiere für Fitness / Abnehmen',
+      situacion_coach: 'Ich bin Trainer oder Coach',
+      situacion_gimnasio: 'Ich besitze oder leite ein Gym',
+      situacion_principiante: 'Ich bin Anfänger, gerade erst gestartet',
+      experiencia_menos6m: 'Weniger als 6 Monate', experiencia_e6m2a: '6 Monate bis 2 Jahre',
+      experiencia_e2a5a: '2 bis 5 Jahre', experiencia_mas5a: 'Mehr als 5 Jahre',
+      frecuencia_f12: '1-2 Mal', frecuencia_f34: '3-4 Mal', frecuencia_f5: '5 Mal oder öfter',
+      objetivo_competicion: 'Meinen ersten Wettkampf gewinnen',
+      objetivo_peso: 'Abnehmen und meinen Körper verbessern',
+      objetivo_potencia: 'Kraft und Geschwindigkeit steigern',
+      objetivo_negocio: 'Mein Business oder Gym wachsen lassen',
+      objetivo_disfrutar: 'Spaß am Training haben und aktiv bleiben',
+      pain_sinplan: 'Ich habe keinen strukturierten Plan',
+      pain_sintiempo: 'Mir fehlt die Zeit zum Trainieren',
+      pain_sinentrenador: 'Ich habe keinen guten Trainer',
+      pain_motivacion: 'Ich bleibe schwer motiviert',
+      pain_sinprogreso: 'Ich weiß nicht, ob ich Fortschritte mache',
+      inversion_i50: 'Weniger als 50 €', inversion_i50150: '50 bis 150 €',
+      inversion_i150300: '150 bis 300 €', inversion_i300: 'Mehr als 300 €',
+      edad_a20: 'Unter 20', edad_a2029: '20 bis 29', edad_a3039: '30 bis 39',
+      edad_a4049: '40 bis 49', edad_a50: '50 oder älter',
     },
     b: {
       competidor_name: 'DER WETTKÄMPFER',
-      competidor_desc: 'Du trainierst mit klarem Ziel und hältst das Tempo. Dein Spielraum liegt nicht mehr im härteren Schlag, sondern darin, die Kraft zu halten, wenn die Müdigkeit kommt.',
-      competidor_tip: 'Mach lange Runden im KRAFT-MODUS und beobachte, wie deine G von der ersten zur letzten Runde abfallen.',
-      demoledor_name: 'DER ZERSTÖRER',
-      demoledor_desc: 'Dir geht es um den Einschlag. Der einzelne, wuchtige Schlag ist deine Stärke, und der Sack ist dein Terrain.',
-      demoledor_tip: 'Kalibriere fein und jage deinen G-Rekord im KRAFT-MODUS. Pausiere zwischen den Schlägen: Maximalkraft braucht frische Muskeln.',
-      relampago_name: 'DER BLITZ',
-      relampago_desc: 'Deine Sache ist, zuerst da zu sein. Geschwindigkeit und Reaktionszeit sind dein Vorteil.',
-      relampago_tip: 'REAKTIONSMODUS und FARBMODUS sind für dich gemacht. Ziel: dauerhaft unter 300 ms bleiben.',
-      tecnico_name: 'DER TECHNIKER',
-      tecnico_desc: 'Dir ist wichtig, wie es gemacht wird, nicht nur wie hart es trifft. Du misst, um zu korrigieren, und genau da wächst du am meisten.',
-      tecnico_tip: 'Nutze den COMBO-MODUS für saubere Schlagfolgen und vergleiche deine Durchschnittskraft, nicht die Spitze.',
-      explorador_name: 'DER ENTDECKER',
-      explorador_desc: 'Du fängst an oder trainierst, wann es passt. Dein größter Gewinn ist gerade Beständigkeit, nicht Intensität.',
-      explorador_tip: 'Kurze Einheiten mit 2 Runden, mehrmals pro Woche. Achte im Verlauf auf deine Tagesserie: das ist dein Punktestand.',
+      competidor_desc: 'Du trainierst, um zu gewinnen. Jeder Schlag zählt, jede Sekunde zählt. Du bist hier, um zu dominieren.',
+      competidor_tip1: 'Kalibriere den Sensor vor jeder Einheit: im Wettkampf entscheiden Zehntel.',
+      competidor_tip2: 'Nutze den KRAFT-MODUS mit langen Runden und beobachte den G-Abfall von der ersten zur letzten.',
+      competidor_tip3: 'Trainiere den REAKTIONSMODUS zweimal pro Woche: unter 300 ms gewinnt man den Schlagabtausch.',
+      fitness_name: 'DER FITNESS-FIGHTER',
+      fitness_desc: 'Du nutzt den Kampfsport, um Körper und Kopf zu verändern. Der Ring ist dein Gym.',
+      fitness_tip1: 'Mach 3 Runden am Stück: der Kalorienzähler zeigt dir den echten Verbrauch jeder Runde.',
+      fitness_tip2: 'Geh auf Schlagvolumen statt Maximalkraft: verbrennt mehr und belastet weniger.',
+      fitness_tip3: 'Achte auf deine Tagesserie im Verlauf. Beständigkeit bringt mehr als Intensität.',
+      coach_name: 'DER COACH',
+      coach_desc: 'Deine Aufgabe ist es, andere besser zu machen. Daten sind dein stärkstes Werkzeug.',
+      coach_tip1: 'Kalibriere das Gerät für jeden Schüler: der richtige Schwellenwert hängt von Sack und Schlag ab.',
+      coach_tip2: 'Vergleiche die Durchschnittskraft, nicht die Spitze: sie zeigt die echte Technik.',
+      coach_tip3: 'Nutze den FARBMODUS mit eigenen Labels, um jede Farbe zu einer technischen Ansage zu machen.',
+      gimnasio_name: 'DAS GYM',
+      gimnasio_desc: 'Du führst eine Community von Kämpfern. Technologie ist dein Wettbewerbsvorteil.',
+      gimnasio_tip1: 'Bau aus dem Verlauf ein internes Ranking: gesunder Wettbewerb füllt die Kurse.',
+      gimnasio_tip2: 'Setz den REAKTIONSMODUS in der Gruppe ein, er begeistert neue Mitglieder am schnellsten.',
+      gimnasio_tip3: 'Miss jedes Mitglied an Tag 1 und Tag 30: dieses Vorher-Nachher ist dein bestes Argument.',
+      principiante_name: 'DER ANFÄNGER',
+      principiante_desc: 'Jeder Meister war einmal Anfänger. Du hast den ersten Schritt gemacht. Den wichtigsten.',
+      principiante_tip1: 'Fang mit dem Kalibrieren an: sonst weiß die App nicht, wie du schlägst, und die Zahlen taugen nichts.',
+      principiante_tip2: 'Kurze Einheiten mit 2 Runden. Wenig und oft schlägt viel und einmalig.',
+      principiante_tip3: 'Jag noch nicht der Maximalkraft hinterher: achte auf die Wiederholung der Bewegung und die Tagesserie.',
     },
   },
   ja: {
-    intro_title: '始める前に...', intro_sub: 'あなたのファイタープロフィールを作る10の質問',
-    step: '{n} / {total}', profile_title: 'あなたのファイタープロフィール', profile_cta: '続ける',
+    ui: {
+      intro_title: 'あなたのことを教えてください',
+      intro_sub: 'Strike IQ をあなた仕様にするためです。2分で終わります。',
+      intro_cta: 'はじめる', next: '次へ', back: '← 戻る', skip: '今はスキップ',
+      step: '{n}/{total}',
+      smiq_placeholder: 'ここに回答を入力...',
+      smiq_counter: '{n}/{min} 文字以上',
+      lead_name: '氏名', lead_name_ph: 'あなたの名前',
+      lead_email: 'メール', lead_email_ph: 'you@email.com',
+      lead_gdpr: 'Strike IQ からのお知らせの受信に同意します',
+      lead_cta: 'プロフィールを見る',
+      other_country: 'その他の国',
+      profile_title: 'あなたのファイタープロフィール', profile_cta: '続ける',
+      recommendations: '次にやるべき3つのこと',
+    },
     q: {
-      objetivo: '一番の目標は?', disciplina: '何をやっている?',
-      experiencia: 'どのくらい練習している?', frecuencia: '週に何日練習する?',
-      equipo: '何を叩いている?', lugar: '普段どこで練習する?',
-      duracion: '1回の練習時間は?', debilidad: '一番の課題は?',
-      medir: 'まず何を測りたい?', motivacion: '練習を続ける理由は?',
+      smiq: '今、トレーニングの成果を伸ばすうえで一番の障害になっているものは何ですか?',
+      situacion: 'あなたに一番近いのは?',
+      experiencia: 'どのくらい練習していますか?',
+      frecuencia: '週に何回練習しますか?',
+      objetivo: 'これからの90日で何を達成したいですか?',
+      pain: '今、一番の足かせは?',
+      inversion: '月にトレーニングへいくら使っていますか?',
+      edad: '年齢は?',
+      pais: 'どこから練習していますか?',
+      lead: '個別分析はどこへ送ればよいですか?',
     },
     a: {
-      objetivo_potencia: 'もっと強く打ちたい', objetivo_velocidad: 'もっと速くなりたい',
-      objetivo_tecnica: '技術を磨きたい', objetivo_forma: '体を鍛えたい',
-      disciplina_boxeo: 'ボクシング', disciplina_kickboxing: 'キックボクシング / ムエタイ',
-      disciplina_marciales: '空手・テコンドー・カンフー', disciplina_solo: '独学で練習している',
-      experiencia_novato: '6か月未満', experiencia_medio: '6か月〜2年',
-      experiencia_veterano: '2年以上', experiencia_competidor: '試合に出ている',
-      frecuencia_f12: '1〜2日', frecuencia_f34: '3〜4日',
-      frecuencia_f5: '5日以上', frecuencia_irregular: 'できるときだけ',
-      equipo_saco: 'ヘビーバッグ', equipo_muneco: 'ダミー人形',
-      equipo_manoplas: 'ミット(相手あり)', equipo_sombra: 'シャドー(バッグなし)',
-      lugar_gimnasio: 'ジムやクラブ', lugar_casa: '自宅',
-      lugar_exterior: '屋外', lugar_varia: '日によって違う',
-      duracion_corta: '20分未満', duracion_media: '20〜40分',
-      duracion_larga: '40〜60分', duracion_muylarga: '1時間以上',
-      debilidad_potencia: 'パワーが足りない', debilidad_reaccion: '反応が遅い',
-      debilidad_resistencia: 'すぐバテる', debilidad_constancia: '続かない',
-      medir_fuerza: 'パンチの強さ', medir_reaccion: 'リアクションタイム',
-      medir_resistencia: 'ラウンドを通した持久力', medir_progreso: '長期的な成長',
-      motivacion_numeros: '数字が伸びるのを見る', motivacion_competir: '相手に勝つ',
-      motivacion_superarme: '自分を超える', motivacion_desahogo: 'ストレス発散',
+      situacion_competidor: '試合や競技のために練習している',
+      situacion_fitness: '体づくりや減量のために練習している',
+      situacion_coach: 'トレーナー・コーチです',
+      situacion_gimnasio: 'ジムを経営・運営しています',
+      situacion_principiante: '初心者です。始めたばかり',
+      experiencia_menos6m: '6か月未満', experiencia_e6m2a: '6か月〜2年',
+      experiencia_e2a5a: '2〜5年', experiencia_mas5a: '5年以上',
+      frecuencia_f12: '1〜2回', frecuencia_f34: '3〜4回', frecuencia_f5: '5回以上',
+      objetivo_competicion: '初めての試合に勝つ',
+      objetivo_peso: '減量して体を変える',
+      objetivo_potencia: 'パワーとスピードを上げる',
+      objetivo_negocio: 'ビジネスやジムを成長させる',
+      objetivo_disfrutar: '楽しく続けて健康を保つ',
+      pain_sinplan: '体系的な計画がない',
+      pain_sintiempo: '練習する時間がない',
+      pain_sinentrenador: '良い指導者がいない',
+      pain_motivacion: 'モチベーションが続かない',
+      pain_sinprogreso: '成長しているか分からない',
+      inversion_i50: '50ユーロ未満', inversion_i50150: '50〜150ユーロ',
+      inversion_i150300: '150〜300ユーロ', inversion_i300: '300ユーロ以上',
+      edad_a20: '20歳未満', edad_a2029: '20〜29歳', edad_a3039: '30〜39歳',
+      edad_a4049: '40〜49歳', edad_a50: '50歳以上',
     },
     b: {
       competidor_name: 'ザ・コンペティター',
-      competidor_desc: '明確な目標を持ち、ペースを保てるタイプ。伸びしろはもう強く打つことではなく、疲れてきてもパワーを落とさないことにある。',
-      competidor_tip: 'パワーモードで長いラウンドを行い、最初と最後のラウンドでGがどれだけ落ちるかを見よう。',
-      demoledor_name: 'ザ・デモリッシャー',
-      demoledor_desc: '狙いはインパクト。一撃の重さが武器で、サンドバッグが主戦場。',
-      demoledor_tip: '細かくキャリブレートしてパワーモードでG記録を狙おう。最大出力には休んだ筋肉が必要なので、パンチの間は休むこと。',
-      relampago_name: 'ザ・ライトニング',
-      relampago_desc: '持ち味は先に届くこと。スピードとリアクションタイムが最大の武器。',
-      relampago_tip: 'リアクションモードとカラーモードが最適。安定して300ms未満を目指そう。',
-      tecnico_name: 'ザ・テクニシャン',
-      tecnico_desc: '強さだけでなく「どう打つか」を重視するタイプ。修正のために測る、そこが一番伸びる。',
-      tecnico_tip: 'コンボモードで質を落とさず連打し、最大値ではなく平均パワーを比べよう。',
-      explorador_name: 'ザ・エクスプローラー',
-      explorador_desc: '始めたばかり、あるいはできるときに練習するタイプ。今の伸びしろは強度より継続にある。',
-      explorador_tip: '2ラウンドの短いセッションを週に数回。履歴の連続日数が今のスコアだ。',
+      competidor_desc: '勝つために練習している。一発一発、一秒一秒が勝負。あなたは制するためにここにいる。',
+      competidor_tip1: '毎回キャリブレーションを。試合では0.1の差が勝敗を分ける。',
+      competidor_tip2: 'パワーモードで長いラウンドを行い、最初と最後でGがどれだけ落ちるか見よう。',
+      competidor_tip3: '週2回はリアクションモードを。300ms を切れば打ち合いを取れる。',
+      fitness_name: 'ザ・フィットネスファイター',
+      fitness_desc: '格闘技で体と心を変える。リングがあなたのジムだ。',
+      fitness_tip1: '3ラウンド続けて実施。カロリー計が各ラウンドの実消費を教えてくれる。',
+      fitness_tip2: '最大パワーより本数を追おう。消費が増え、関節への負担は減る。',
+      fitness_tip3: '履歴の連続日数を見よう。強度より継続のほうが効く。',
+      coach_name: 'ザ・コーチ',
+      coach_desc: '他人を伸ばすのがあなたの仕事。データは最強の武器だ。',
+      coach_tip1: '生徒ごとにキャリブレーションを。適切なしきい値はサンドバッグと打ち方で変わる。',
+      coach_tip2: '最大値ではなく平均パワーを比べよう。生徒の本当の技術が見える。',
+      coach_tip3: 'カラーモードのラベルを自作し、色ごとに技術指示を割り当てよう。',
+      gimnasio_name: 'ザ・ジム',
+      gimnasio_desc: '戦士たちのコミュニティを率いている。テクノロジーがあなたの強みだ。',
+      gimnasio_tip1: '履歴から館内ランキングを作ろう。健全な競争がクラスを満席にする。',
+      gimnasio_tip2: 'グループでリアクションモードを。新規会員が一番食いつく。',
+      gimnasio_tip3: '入会1日目と30日目に測定を。そのビフォーアフターが最高の営業材料になる。',
+      principiante_name: 'ザ・ビギナー',
+      principiante_desc: 'どんな達人も最初は初心者だった。あなたは最初の一歩を踏み出した。一番大事な一歩を。',
+      principiante_tip1: 'まずキャリブレーションから。これがないとアプリはあなたの打ち方を知らず、数字も意味を持たない。',
+      principiante_tip2: '2ラウンドの短いセッションで。少しずつ何度も、のほうが一気に一度より効く。',
+      principiante_tip3: 'まだ最大パワーは追わなくていい。動作の反復と連続日数だけ見よう。',
     },
   },
   fr: {
-    intro_title: 'Avant de commencer...', intro_sub: '10 questions rapides pour créer ton profil de combattant',
-    step: '{n} / {total}', profile_title: 'TON PROFIL DE COMBATTANT', profile_cta: 'CONTINUER',
+    ui: {
+      intro_title: 'Parle-nous de toi',
+      intro_sub: 'Pour personnaliser ton expérience Strike IQ. Ça ne prend que 2 minutes.',
+      intro_cta: 'COMMENCER', next: 'SUIVANT', back: '← Retour', skip: 'Passer pour l\'instant',
+      step: '{n}/{total}',
+      smiq_placeholder: 'Écris ta réponse ici...',
+      smiq_counter: '{n}/{min} caractères minimum',
+      lead_name: 'Nom complet', lead_name_ph: 'Ton nom',
+      lead_email: 'E-mail', lead_email_ph: 'toi@email.com',
+      lead_gdpr: 'J\'accepte de recevoir des communications de Strike IQ',
+      lead_cta: 'VOIR MON PROFIL',
+      other_country: 'Un autre pays',
+      profile_title: 'TON PROFIL DE COMBATTANT', profile_cta: 'CONTINUER',
+      recommendations: 'TES 3 PROCHAINES ÉTAPES',
+    },
     q: {
-      objetivo: 'Quel est ton objectif principal ?', disciplina: 'Que pratiques-tu ?',
-      experiencia: 'Depuis combien de temps tu t\'entraînes ?', frecuencia: 'Combien de jours par semaine ?',
-      equipo: 'Sur quoi tu frappes ?', lugar: 'Où t\'entraînes-tu d\'habitude ?',
-      duracion: 'Combien de temps dure ta séance ?', debilidad: 'Qu\'est-ce qui te freine le plus ?',
-      medir: 'Que veux-tu mesurer en premier ?', motivacion: 'Qu\'est-ce qui te fait revenir ?',
+      smiq: 'Quel est le plus grand obstacle qui t\'empêche d\'améliorer tes performances à l\'entraînement en ce moment ?',
+      situacion: 'Qu\'est-ce qui te décrit le mieux ?',
+      experiencia: 'Depuis combien de temps t\'entraînes-tu ?',
+      frecuencia: 'Combien de fois par semaine t\'entraînes-tu ?',
+      objetivo: 'Que veux-tu accomplir dans les 90 prochains jours ?',
+      pain: 'Qu\'est-ce qui te freine le plus en ce moment ?',
+      inversion: 'Combien investis-tu par mois dans ton entraînement ?',
+      edad: 'Quel âge as-tu ?',
+      pais: 'D\'où t\'entraînes-tu ?',
+      lead: 'Où envoyons-nous ton analyse personnalisée ?',
     },
     a: {
-      objetivo_potencia: 'Frapper plus fort', objetivo_velocidad: 'Être plus rapide',
-      objetivo_tecnica: 'Affiner ma technique', objetivo_forma: 'Me remettre en forme',
-      disciplina_boxeo: 'Boxe', disciplina_kickboxing: 'Kickboxing / Muay Thaï',
-      disciplina_marciales: 'Karaté, taekwondo, kung-fu', disciplina_solo: 'Je m\'entraîne seul',
-      experiencia_novato: 'Moins de 6 mois', experiencia_medio: 'De 6 mois à 2 ans',
-      experiencia_veterano: 'Plus de 2 ans', experiencia_competidor: 'Je fais ou j\'ai fait de la compétition',
-      frecuencia_f12: '1 ou 2 jours', frecuencia_f34: '3 ou 4 jours',
-      frecuencia_f5: '5 jours ou plus', frecuencia_irregular: 'Quand je peux',
-      equipo_saco: 'Sac lourd', equipo_muneco: 'Mannequin',
-      equipo_manoplas: 'Pattes d\'ours avec un partenaire', equipo_sombra: 'Shadow, sans sac',
-      lugar_gimnasio: 'En salle ou en club', lugar_casa: 'À la maison',
-      lugar_exterior: 'En extérieur', lugar_varia: 'Ça dépend des jours',
-      duracion_corta: 'Moins de 20 minutes', duracion_media: 'De 20 à 40 minutes',
-      duracion_larga: 'De 40 à 60 minutes', duracion_muylarga: 'Plus d\'une heure',
-      debilidad_potencia: 'Je manque de puissance', debilidad_reaccion: 'Je réagis trop tard',
-      debilidad_resistencia: 'Je m\'essouffle vite', debilidad_constancia: 'Je manque de régularité',
-      medir_fuerza: 'La force de mon coup', medir_reaccion: 'Mon temps de réaction',
-      medir_resistencia: 'Ma tenue sur la durée', medir_progreso: 'Ma progression dans le temps',
-      motivacion_numeros: 'Voir mes chiffres monter', motivacion_competir: 'Battre les autres',
-      motivacion_superarme: 'Me dépasser', motivacion_desahogo: 'Évacuer la pression',
+      situacion_competidor: 'Je m\'entraîne pour la compétition',
+      situacion_fitness: 'Je m\'entraîne pour la forme / perdre du poids',
+      situacion_coach: 'Je suis entraîneur ou coach',
+      situacion_gimnasio: 'Je possède ou gère une salle',
+      situacion_principiante: 'Je débute, je viens de commencer',
+      experiencia_menos6m: 'Moins de 6 mois', experiencia_e6m2a: 'De 6 mois à 2 ans',
+      experiencia_e2a5a: 'De 2 à 5 ans', experiencia_mas5a: 'Plus de 5 ans',
+      frecuencia_f12: '1-2 fois', frecuencia_f34: '3-4 fois', frecuencia_f5: '5 fois ou plus',
+      objetivo_competicion: 'Gagner ma première compétition',
+      objetivo_peso: 'Perdre du poids et améliorer mon physique',
+      objetivo_potencia: 'Augmenter puissance et vitesse',
+      objetivo_negocio: 'Développer mon activité ou ma salle',
+      objetivo_disfrutar: 'Prendre du plaisir et rester actif',
+      pain_sinplan: 'Je n\'ai pas de plan structuré',
+      pain_sintiempo: 'Je manque de temps pour m\'entraîner',
+      pain_sinentrenador: 'Je n\'ai pas de bon entraîneur',
+      pain_motivacion: 'J\'ai du mal à rester motivé',
+      pain_sinprogreso: 'Je ne sais pas si je progresse',
+      inversion_i50: 'Moins de 50 €', inversion_i50150: 'De 50 à 150 €',
+      inversion_i150300: 'De 150 à 300 €', inversion_i300: 'Plus de 300 €',
+      edad_a20: 'Moins de 20 ans', edad_a2029: 'De 20 à 29 ans', edad_a3039: 'De 30 à 39 ans',
+      edad_a4049: 'De 40 à 49 ans', edad_a50: '50 ans ou plus',
     },
     b: {
       competidor_name: 'LE COMPÉTITEUR',
-      competidor_desc: 'Tu t\'entraînes avec un objectif clair et tu tiens le rythme. Ta marge n\'est plus de frapper plus fort, mais de garder la puissance quand la fatigue arrive.',
-      competidor_tip: 'Fais des rounds longs en MODE PUISSANCE et surveille la chute de tes G du premier au dernier round.',
-      demoledor_name: 'LE DÉMOLISSEUR',
-      demoledor_desc: 'Tu cherches l\'impact. Ta force, c\'est le coup unique et massif, et le sac est ton terrain.',
-      demoledor_tip: 'Calibre finement et vise ton record de G en MODE PUISSANCE. Repose-toi entre les coups : la puissance max exige un muscle frais.',
-      relampago_name: 'L\'ÉCLAIR',
-      relampago_desc: 'Ton truc, c\'est d\'arriver avant. La vitesse et le temps de réaction sont ton avantage.',
-      relampago_tip: 'Le MODE RÉACTION et le MODE COULEURS sont faits pour toi. Vise à passer durablement sous 300 ms.',
-      tecnico_name: 'LE TECHNICIEN',
-      tecnico_desc: 'Ce qui compte pour toi, c\'est comment c\'est fait, pas seulement la force. Tu mesures pour corriger, et c\'est là que tu progresses le plus.',
-      tecnico_tip: 'Utilise le MODE COMBO pour enchaîner sans perdre en propreté et compare ta puissance moyenne, pas ton maximum.',
-      explorador_name: 'L\'EXPLORATEUR',
-      explorador_desc: 'Tu débutes ou tu t\'entraînes quand tu peux. Ton plus gros gain en ce moment, c\'est la régularité, pas l\'intensité.',
-      explorador_tip: 'Des séances courtes de 2 rounds, plusieurs fois par semaine. Regarde ta série de jours dans l\'historique : c\'est ton compteur.',
+      competidor_desc: 'Tu t\'entraînes pour gagner. Chaque coup compte, chaque seconde compte. Tu es là pour dominer.',
+      competidor_tip1: 'Calibre le capteur avant chaque séance : en compétition la différence se joue au dixième.',
+      competidor_tip2: 'Utilise le MODE PUISSANCE avec des rounds longs et surveille la chute de tes G du premier au dernier.',
+      competidor_tip3: 'Travaille le MODE RÉACTION deux fois par semaine : sous 300 ms, c\'est là qu\'on gagne l\'échange.',
+      fitness_name: 'LE FITNESS FIGHTER',
+      fitness_desc: 'Tu utilises le combat pour transformer ton corps et ton mental. Le ring est ta salle.',
+      fitness_tip1: 'Enchaîne 3 rounds : le compteur de calories te donne la dépense réelle de chacun.',
+      fitness_tip2: 'Vise le volume de coups avant la puissance max : ça brûle plus et ça abîme moins.',
+      fitness_tip3: 'Regarde ta série de jours dans l\'historique. La régularité pèse plus que l\'intensité.',
+      coach_name: 'LE COACH',
+      coach_desc: 'Ta mission est de rendre les autres meilleurs. Les données sont ton outil le plus puissant.',
+      coach_tip1: 'Calibre l\'appareil pour chaque élève : le bon seuil change selon le sac et le coup.',
+      coach_tip2: 'Compare la puissance moyenne, pas le maximum : c\'est elle qui révèle la vraie technique.',
+      coach_tip3: 'Utilise le MODE COULEURS avec tes propres libellés pour transformer chaque couleur en consigne technique.',
+      gimnasio_name: 'LA SALLE',
+      gimnasio_desc: 'Tu diriges une communauté de combattants. La technologie est ton avantage concurrentiel.',
+      gimnasio_tip1: 'Monte un classement interne à partir de l\'historique : une saine compétition remplit les cours.',
+      gimnasio_tip2: 'Fais tourner le MODE RÉACTION en groupe, c\'est celui qui accroche le plus les nouveaux.',
+      gimnasio_tip3: 'Mesure chaque adhérent au jour 1 et au jour 30 : cet avant/après est ton meilleur argument.',
+      principiante_name: 'LE DÉBUTANT',
+      principiante_desc: 'Tout maître a d\'abord été un débutant. Tu as fait le premier pas. Le plus important.',
+      principiante_tip1: 'Commence par calibrer : sans ça l\'appli ne sait pas comment tu frappes et les chiffres ne valent rien.',
+      principiante_tip2: 'Des séances courtes de 2 rounds. Peu et souvent vaut mieux que beaucoup et une fois.',
+      principiante_tip3: 'Ne cours pas encore après la puissance max : concentre-toi sur le geste et sur ta série de jours.',
     },
   },
   ru: {
-    intro_title: 'Прежде чем начать...', intro_sub: '10 быстрых вопросов, чтобы собрать твой профиль бойца',
-    step: '{n} / {total}', profile_title: 'ТВОЙ ПРОФИЛЬ БОЙЦА', profile_cta: 'ПРОДОЛЖИТЬ',
+    ui: {
+      intro_title: 'Расскажи о себе',
+      intro_sub: 'Чтобы настроить Strike IQ под тебя. Займёт всего 2 минуты.',
+      intro_cta: 'НАЧАТЬ', next: 'ДАЛЕЕ', back: '← Назад', skip: 'Пропустить пока',
+      step: '{n}/{total}',
+      smiq_placeholder: 'Напиши свой ответ здесь...',
+      smiq_counter: '{n}/{min} символов минимум',
+      lead_name: 'Полное имя', lead_name_ph: 'Твоё имя',
+      lead_email: 'Email', lead_email_ph: 'ty@email.com',
+      lead_gdpr: 'Согласен получать сообщения от Strike IQ',
+      lead_cta: 'СМОТРЕТЬ МОЙ ПРОФИЛЬ',
+      other_country: 'Другая страна',
+      profile_title: 'ТВОЙ ПРОФИЛЬ БОЙЦА', profile_cta: 'ПРОДОЛЖИТЬ',
+      recommendations: 'ТВОИ 3 СЛЕДУЮЩИХ ШАГА',
+    },
     q: {
-      objetivo: 'Какая у тебя главная цель?', disciplina: 'Чем ты занимаешься?',
-      experiencia: 'Как давно тренируешься?', frecuencia: 'Сколько дней в неделю тренируешься?',
-      equipo: 'По чему бьёшь?', lugar: 'Где обычно тренируешься?',
-      duracion: 'Сколько длится тренировка?', debilidad: 'Что мешает тебе больше всего?',
-      medir: 'Что хочешь измерить в первую очередь?', motivacion: 'Что возвращает тебя к тренировкам?',
+      smiq: 'Что сейчас больше всего мешает тебе улучшать результаты на тренировках?',
+      situacion: 'Что описывает тебя лучше всего?',
+      experiencia: 'Как давно ты тренируешься?',
+      frecuencia: 'Сколько раз в неделю ты тренируешься?',
+      objetivo: 'Чего хочешь добиться за ближайшие 90 дней?',
+      pain: 'Что тормозит тебя сильнее всего сейчас?',
+      inversion: 'Сколько ты вкладываешь в тренировки в месяц?',
+      edad: 'Сколько тебе лет?',
+      pais: 'Откуда ты тренируешься?',
+      lead: 'Куда прислать твой персональный разбор?',
     },
     a: {
-      objetivo_potencia: 'Бить сильнее', objetivo_velocidad: 'Стать быстрее',
-      objetivo_tecnica: 'Отточить технику', objetivo_forma: 'Прийти в форму',
-      disciplina_boxeo: 'Бокс', disciplina_kickboxing: 'Кикбоксинг / муай-тай',
-      disciplina_marciales: 'Карате, тхэквондо, кунг-фу', disciplina_solo: 'Тренируюсь сам',
-      experiencia_novato: 'Меньше 6 месяцев', experiencia_medio: 'От 6 месяцев до 2 лет',
-      experiencia_veterano: 'Больше 2 лет', experiencia_competidor: 'Выступаю или выступал',
-      frecuencia_f12: '1-2 дня', frecuencia_f34: '3-4 дня',
-      frecuencia_f5: '5 дней и больше', frecuencia_irregular: 'Когда получается',
-      equipo_saco: 'Тяжёлый мешок', equipo_muneco: 'Манекен',
-      equipo_manoplas: 'Лапы с партнёром', equipo_sombra: 'Бой с тенью, без мешка',
-      lugar_gimnasio: 'В зале или клубе', lugar_casa: 'Дома',
-      lugar_exterior: 'На улице', lugar_varia: 'Зависит от дня',
-      duracion_corta: 'Меньше 20 минут', duracion_media: 'От 20 до 40 минут',
-      duracion_larga: 'От 40 до 60 минут', duracion_muylarga: 'Больше часа',
-      debilidad_potencia: 'Не хватает силы', debilidad_reaccion: 'Реагирую поздно',
-      debilidad_resistencia: 'Быстро устаю', debilidad_constancia: 'Нет регулярности',
-      medir_fuerza: 'Силу удара', medir_reaccion: 'Время реакции',
-      medir_resistencia: 'Сколько держусь по раундам', medir_progreso: 'Прогресс со временем',
-      motivacion_numeros: 'Смотреть, как растут цифры', motivacion_competir: 'Обыгрывать других',
-      motivacion_superarme: 'Превосходить себя', motivacion_desahogo: 'Сбросить напряжение',
+      situacion_competidor: 'Тренируюсь для соревнований и боёв',
+      situacion_fitness: 'Тренируюсь для формы / похудения',
+      situacion_coach: 'Я тренер',
+      situacion_gimnasio: 'У меня свой зал или я им управляю',
+      situacion_principiante: 'Я новичок, только начал',
+      experiencia_menos6m: 'Меньше 6 месяцев', experiencia_e6m2a: 'От 6 месяцев до 2 лет',
+      experiencia_e2a5a: 'От 2 до 5 лет', experiencia_mas5a: 'Больше 5 лет',
+      frecuencia_f12: '1-2 раза', frecuencia_f34: '3-4 раза', frecuencia_f5: '5 и больше раз',
+      objetivo_competicion: 'Выиграть первые соревнования',
+      objetivo_peso: 'Похудеть и улучшить форму',
+      objetivo_potencia: 'Повысить силу и скорость',
+      objetivo_negocio: 'Развить свой бизнес или зал',
+      objetivo_disfrutar: 'Получать удовольствие и держать себя в тонусе',
+      pain_sinplan: 'У меня нет чёткого плана',
+      pain_sintiempo: 'Не хватает времени на тренировки',
+      pain_sinentrenador: 'Нет хорошего тренера',
+      pain_motivacion: 'Тяжело сохранять мотивацию',
+      pain_sinprogreso: 'Не понимаю, есть ли прогресс',
+      inversion_i50: 'Меньше 50 €', inversion_i50150: 'От 50 до 150 €',
+      inversion_i150300: 'От 150 до 300 €', inversion_i300: 'Больше 300 €',
+      edad_a20: 'Меньше 20', edad_a2029: 'От 20 до 29', edad_a3039: 'От 30 до 39',
+      edad_a4049: 'От 40 до 49', edad_a50: '50 и старше',
     },
     b: {
       competidor_name: 'БОЕЦ-СОРЕВНОВАТЕЛЬ',
-      competidor_desc: 'Ты тренируешься с чёткой целью и держишь темп. Твой запас теперь не в силе удара, а в умении сохранять мощность, когда приходит усталость.',
-      competidor_tip: 'Делай длинные раунды в РЕЖИМЕ МОЩНОСТИ и следи, насколько падают твои G от первого раунда к последнему.',
-      demoledor_name: 'СОКРУШИТЕЛЬ',
-      demoledor_desc: 'Тебе нужен удар. Твоя сила — один тяжёлый акцентированный удар, а мешок — твоя территория.',
-      demoledor_tip: 'Настрой калибровку точно и гонись за рекордом G в РЕЖИМЕ МОЩНОСТИ. Отдыхай между ударами: максимальная сила требует свежих мышц.',
-      relampago_name: 'МОЛНИЯ',
-      relampago_desc: 'Твоё — успеть первым. Скорость и время реакции — твоё преимущество.',
-      relampago_tip: 'РЕЖИМ РЕАКЦИИ и РЕЖИМ ЦВЕТОВ — для тебя. Цель — стабильно держаться ниже 300 мс.',
-      tecnico_name: 'ТЕХНИК',
-      tecnico_desc: 'Тебе важно, как сделано, а не только насколько сильно. Ты измеряешь, чтобы исправлять, и именно тут растёшь быстрее всего.',
-      tecnico_tip: 'Используй РЕЖИМ КОМБО, чтобы связывать удары без потери чистоты, и сравнивай среднюю мощность, а не максимум.',
-      explorador_name: 'ИССЛЕДОВАТЕЛЬ',
-      explorador_desc: 'Ты начинаешь или тренируешься когда получается. Сейчас твой главный выигрыш — регулярность, а не интенсивность.',
-      explorador_tip: 'Короткие сессии по 2 раунда несколько раз в неделю. Следи за серией дней в истории: это твой счёт.',
+      competidor_desc: 'Ты тренируешься, чтобы побеждать. Каждый удар на счету, каждая секунда важна. Ты здесь, чтобы доминировать.',
+      competidor_tip1: 'Калибруй датчик перед каждой тренировкой: на соревнованиях всё решают десятые.',
+      competidor_tip2: 'Работай в РЕЖИМЕ МОЩНОСТИ длинными раундами и следи, насколько падают G от первого к последнему.',
+      competidor_tip3: 'Два раза в неделю тренируй РЕЖИМ РЕАКЦИИ: ниже 300 мс выигрывается размен.',
+      fitness_name: 'ФИТНЕС-БОЕЦ',
+      fitness_desc: 'Ты используешь единоборства, чтобы менять тело и голову. Ринг — твой спортзал.',
+      fitness_tip1: 'Делай 3 раунда подряд: счётчик калорий покажет реальный расход каждого.',
+      fitness_tip2: 'Гонись за объёмом ударов, а не за максимальной силой: сжигаешь больше, а суставы целее.',
+      fitness_tip3: 'Смотри серию дней в истории. Регулярность даёт больше, чем интенсивность.',
+      coach_name: 'ТРЕНЕР',
+      coach_desc: 'Твоя задача — делать других лучше. Данные — твой самый сильный инструмент.',
+      coach_tip1: 'Калибруй устройство под каждого ученика: нужный порог зависит от мешка и удара.',
+      coach_tip2: 'Сравнивай среднюю мощность, а не максимум: именно она показывает реальную технику.',
+      coach_tip3: 'Используй РЕЖИМ ЦВЕТОВ со своими подписями, чтобы каждый цвет стал технической командой.',
+      gimnasio_name: 'ЗАЛ',
+      gimnasio_desc: 'Ты ведёшь за собой сообщество бойцов. Технологии — твоё конкурентное преимущество.',
+      gimnasio_tip1: 'Сделай внутренний рейтинг по истории: здоровая конкуренция заполняет группы.',
+      gimnasio_tip2: 'Запускай РЕЖИМ РЕАКЦИИ на группу — он лучше всего цепляет новичков.',
+      gimnasio_tip3: 'Замеряй каждого в 1-й и 30-й день: это «до и после» — твой лучший аргумент.',
+      principiante_name: 'НОВИЧОК',
+      principiante_desc: 'Каждый мастер когда-то был новичком. Ты сделал первый шаг. Самый важный.',
+      principiante_tip1: 'Начни с калибровки: без неё приложение не знает, как ты бьёшь, и цифры бесполезны.',
+      principiante_tip2: 'Короткие сессии по 2 раунда. Понемногу и часто лучше, чем много и один раз.',
+      principiante_tip3: 'Пока не гонись за максимальной силой: следи за повторением движения и за серией дней.',
     },
   },
   zh: {
-    intro_title: '开始之前...', intro_sub: '10 个快速问题，生成你的格斗档案',
-    step: '{n} / {total}', profile_title: '你的格斗档案', profile_cta: '继续',
+    ui: {
+      intro_title: '说说你自己',
+      intro_sub: '让我们为你定制 Strike IQ 体验。只需 2 分钟。',
+      intro_cta: '开始', next: '下一步', back: '← 返回', skip: '暂时跳过',
+      step: '{n}/{total}',
+      smiq_placeholder: '在这里写下你的答案...',
+      smiq_counter: '{n}/{min} 个字符起',
+      lead_name: '全名', lead_name_ph: '你的名字',
+      lead_email: '邮箱', lead_email_ph: 'you@email.com',
+      lead_gdpr: '我同意接收 Strike IQ 的消息',
+      lead_cta: '查看我的档案',
+      other_country: '其他国家',
+      profile_title: '你的格斗档案', profile_cta: '继续',
+      recommendations: '你的下三步',
+    },
     q: {
-      objetivo: '你的主要目标是什么？', disciplina: '你练什么？',
-      experiencia: '你练了多久？', frecuencia: '你每周练几天？',
-      equipo: '你打什么？', lugar: '你通常在哪里训练？',
-      duracion: '你一次训练多久？', debilidad: '你觉得什么最拖后腿？',
-      medir: '你最想先测什么？', motivacion: '是什么让你坚持训练？',
+      smiq: '目前阻碍你提升训练表现的最大障碍是什么？',
+      situacion: '哪一项最符合你？',
+      experiencia: '你练了多久？',
+      frecuencia: '你每周训练几次？',
+      objetivo: '未来 90 天你想达成什么？',
+      pain: '现在最拖累你的是什么？',
+      inversion: '你每月在训练上投入多少？',
+      edad: '你多大年纪？',
+      pais: '你在哪里训练？',
+      lead: '把你的个性化分析发到哪里？',
     },
     a: {
-      objetivo_potencia: '打得更重', objetivo_velocidad: '变得更快',
-      objetivo_tecnica: '打磨技术', objetivo_forma: '练出体能',
-      disciplina_boxeo: '拳击', disciplina_kickboxing: '自由搏击 / 泰拳',
-      disciplina_marciales: '空手道、跆拳道、功夫', disciplina_solo: '我自己练',
-      experiencia_novato: '不到 6 个月', experiencia_medio: '6 个月到 2 年',
-      experiencia_veterano: '超过 2 年', experiencia_competidor: '我参加过比赛',
-      frecuencia_f12: '1 到 2 天', frecuencia_f34: '3 到 4 天',
-      frecuencia_f5: '5 天以上', frecuencia_irregular: '有空就练',
-      equipo_saco: '重沙袋', equipo_muneco: '假人或木人桩',
-      equipo_manoplas: '和搭档打手靶', equipo_sombra: '空击，不用沙袋',
-      lugar_gimnasio: '健身房或俱乐部', lugar_casa: '在家',
-      lugar_exterior: '户外', lugar_varia: '看情况',
-      duracion_corta: '不到 20 分钟', duracion_media: '20 到 40 分钟',
-      duracion_larga: '40 到 60 分钟', duracion_muylarga: '一个多小时',
-      debilidad_potencia: '力量不够', debilidad_reaccion: '反应太慢',
-      debilidad_resistencia: '很快就累', debilidad_constancia: '坚持不下来',
-      medir_fuerza: '我出拳有多重', medir_reaccion: '我的反应时间',
-      medir_resistencia: '我能撑几个回合', medir_progreso: '我的长期进步',
-      motivacion_numeros: '看着数字上涨', motivacion_competir: '赢过别人',
-      motivacion_superarme: '超越自己', motivacion_desahogo: '发泄和放松',
+      situacion_competidor: '我为比赛或实战而训练',
+      situacion_fitness: '我为健身 / 减重而训练',
+      situacion_coach: '我是教练',
+      situacion_gimnasio: '我拥有或经营一家场馆',
+      situacion_principiante: '我是新手，刚刚开始',
+      experiencia_menos6m: '不到 6 个月', experiencia_e6m2a: '6 个月到 2 年',
+      experiencia_e2a5a: '2 到 5 年', experiencia_mas5a: '超过 5 年',
+      frecuencia_f12: '1-2 次', frecuencia_f34: '3-4 次', frecuencia_f5: '5 次或以上',
+      objetivo_competicion: '赢下我的第一场比赛',
+      objetivo_peso: '减重并改善体型',
+      objetivo_potencia: '提升力量和速度',
+      objetivo_negocio: '把我的生意或场馆做大',
+      objetivo_disfrutar: '享受训练并保持活力',
+      pain_sinplan: '我没有系统的计划',
+      pain_sintiempo: '我没有时间训练',
+      pain_sinentrenador: '我没有好教练',
+      pain_motivacion: '我很难保持动力',
+      pain_sinprogreso: '我不知道自己有没有进步',
+      inversion_i50: '低于 50 欧元', inversion_i50150: '50 到 150 欧元',
+      inversion_i150300: '150 到 300 欧元', inversion_i300: '超过 300 欧元',
+      edad_a20: '20 岁以下', edad_a2029: '20 到 29 岁', edad_a3039: '30 到 39 岁',
+      edad_a4049: '40 到 49 岁', edad_a50: '50 岁及以上',
     },
     b: {
       competidor_name: '竞技者',
-      competidor_desc: '你目标明确，也扛得住节奏。你的空间已经不在打得更重，而在疲劳来临时还能保持力量。',
-      competidor_tip: '在力量模式下打长回合，观察你的 G 值从第一回合到最后一回合掉了多少。',
-      demoledor_name: '破坏者',
-      demoledor_desc: '你追求的是冲击力。单发重拳是你的强项，沙袋是你的主场。',
-      demoledor_tip: '把校准调细，在力量模式里冲击你的 G 值纪录。出拳之间要休息：最大力量需要新鲜的肌肉。',
-      relampago_name: '闪电',
-      relampago_desc: '你的特点是先到一步。速度和反应时间就是你的竞争优势。',
-      relampago_tip: '反应模式和颜色模式最适合你。目标是稳定保持在 300 毫秒以内。',
-      tecnico_name: '技术家',
-      tecnico_desc: '你在意的是怎么打，而不只是打多重。你测量是为了修正，而这正是你成长最快的地方。',
-      tecnico_tip: '用连击模式串联出拳而不失动作质量，比较你的平均力量，而不是最大值。',
-      explorador_name: '探索者',
-      explorador_desc: '你刚起步，或者有空才练。你现在最大的收益是坚持，而不是强度。',
-      explorador_tip: '每周多次、每次 2 回合的短训练。看历史里的连续天数：那才是你的计分板。',
+      competidor_desc: '你为赢而训练。每一拳都算数，每一秒都重要。你来这里是为了主宰。',
+      competidor_tip1: '每次训练前都校准传感器：比赛中差距就在零点几之间。',
+      competidor_tip2: '用力量模式打长回合，观察 G 值从第一回合到最后一回合掉了多少。',
+      competidor_tip3: '每周练两次反应模式：低于 300 毫秒才能赢下对攻。',
+      fitness_name: '健身斗士',
+      fitness_desc: '你用格斗改变身体和心态。擂台就是你的健身房。',
+      fitness_tip1: '连续打 3 个回合：卡路里计数会告诉你每个回合的真实消耗。',
+      fitness_tip2: '先追求出拳量而不是最大力量：消耗更多，关节负担更小。',
+      fitness_tip3: '看历史里的连续天数。坚持比强度更能推动结果。',
+      coach_name: '教练',
+      coach_desc: '你的使命是让别人变得更好。数据是你最有力的工具。',
+      coach_tip1: '为每位学员单独校准：正确的阈值随沙袋和出拳方式而变。',
+      coach_tip2: '比较平均力量而不是最大值：那才反映学员的真实技术。',
+      coach_tip3: '用颜色模式自定义标签，把每种颜色变成一条技术指令。',
+      gimnasio_name: '场馆',
+      gimnasio_desc: '你带领着一群战士。技术就是你的竞争优势。',
+      gimnasio_tip1: '用历史数据做一个馆内排行榜：良性竞争能让课堂爆满。',
+      gimnasio_tip2: '在团课里用反应模式，它最能抓住新学员。',
+      gimnasio_tip3: '在第 1 天和第 30 天各测一次：这个前后对比就是你最好的说服力。',
+      principiante_name: '新手',
+      principiante_desc: '每位大师都曾是新手。你已经迈出了第一步，也是最重要的一步。',
+      principiante_tip1: '先从校准开始：不校准，应用就不知道你怎么出拳，数字也没有意义。',
+      principiante_tip2: '每次 2 个回合的短训练。少量多次胜过一次猛练。',
+      principiante_tip3: '先别追最大力量：专注于把动作打对，以及连续训练的天数。',
     },
   },
   'zh-TW': {
-    intro_title: '開始之前...', intro_sub: '10 個快速問題，生成你的格鬥檔案',
-    step: '{n} / {total}', profile_title: '你的格鬥檔案', profile_cta: '繼續',
+    ui: {
+      intro_title: '說說你自己',
+      intro_sub: '讓我們為你打造 Strike IQ 體驗。只需 2 分鐘。',
+      intro_cta: '開始', next: '下一步', back: '← 返回', skip: '暫時跳過',
+      step: '{n}/{total}',
+      smiq_placeholder: '在這裡寫下你的答案...',
+      smiq_counter: '{n}/{min} 個字元起',
+      lead_name: '全名', lead_name_ph: '你的名字',
+      lead_email: '電子郵件', lead_email_ph: 'you@email.com',
+      lead_gdpr: '我同意接收 Strike IQ 的訊息',
+      lead_cta: '查看我的檔案',
+      other_country: '其他國家',
+      profile_title: '你的格鬥檔案', profile_cta: '繼續',
+      recommendations: '你的下三步',
+    },
     q: {
-      objetivo: '你的主要目標是什麼？', disciplina: '你練什麼？',
-      experiencia: '你練了多久？', frecuencia: '你每週練幾天？',
-      equipo: '你打什麼？', lugar: '你通常在哪裡訓練？',
-      duracion: '你一次訓練多久？', debilidad: '你覺得什麼最拖累你？',
-      medir: '你最想先測什麼？', motivacion: '是什麼讓你持續訓練？',
+      smiq: '目前阻礙你提升訓練表現的最大障礙是什麼？',
+      situacion: '哪一項最符合你？',
+      experiencia: '你練了多久？',
+      frecuencia: '你每週訓練幾次？',
+      objetivo: '未來 90 天你想達成什麼？',
+      pain: '現在最拖累你的是什麼？',
+      inversion: '你每月在訓練上投入多少？',
+      edad: '你多大年紀？',
+      pais: '你在哪裡訓練？',
+      lead: '把你的個人化分析寄到哪裡？',
     },
     a: {
-      objetivo_potencia: '打得更重', objetivo_velocidad: '變得更快',
-      objetivo_tecnica: '打磨技術', objetivo_forma: '練出體能',
-      disciplina_boxeo: '拳擊', disciplina_kickboxing: '自由搏擊 / 泰拳',
-      disciplina_marciales: '空手道、跆拳道、功夫', disciplina_solo: '我自己練',
-      experiencia_novato: '不到 6 個月', experiencia_medio: '6 個月到 2 年',
-      experiencia_veterano: '超過 2 年', experiencia_competidor: '我參加過比賽',
-      frecuencia_f12: '1 到 2 天', frecuencia_f34: '3 到 4 天',
-      frecuencia_f5: '5 天以上', frecuencia_irregular: '有空就練',
-      equipo_saco: '重沙袋', equipo_muneco: '假人或木人樁',
-      equipo_manoplas: '和夥伴打手靶', equipo_sombra: '空擊，不用沙袋',
-      lugar_gimnasio: '健身房或俱樂部', lugar_casa: '在家',
-      lugar_exterior: '戶外', lugar_varia: '看情況',
-      duracion_corta: '不到 20 分鐘', duracion_media: '20 到 40 分鐘',
-      duracion_larga: '40 到 60 分鐘', duracion_muylarga: '一個多小時',
-      debilidad_potencia: '力量不夠', debilidad_reaccion: '反應太慢',
-      debilidad_resistencia: '很快就累', debilidad_constancia: '堅持不下來',
-      medir_fuerza: '我出拳有多重', medir_reaccion: '我的反應時間',
-      medir_resistencia: '我能撐幾個回合', medir_progreso: '我的長期進步',
-      motivacion_numeros: '看著數字上升', motivacion_competir: '贏過別人',
-      motivacion_superarme: '超越自己', motivacion_desahogo: '發洩和放鬆',
+      situacion_competidor: '我為比賽或實戰而訓練',
+      situacion_fitness: '我為健身 / 減重而訓練',
+      situacion_coach: '我是教練',
+      situacion_gimnasio: '我擁有或經營一家場館',
+      situacion_principiante: '我是新手，剛剛開始',
+      experiencia_menos6m: '不到 6 個月', experiencia_e6m2a: '6 個月到 2 年',
+      experiencia_e2a5a: '2 到 5 年', experiencia_mas5a: '超過 5 年',
+      frecuencia_f12: '1-2 次', frecuencia_f34: '3-4 次', frecuencia_f5: '5 次或以上',
+      objetivo_competicion: '贏下我的第一場比賽',
+      objetivo_peso: '減重並改善體態',
+      objetivo_potencia: '提升力量和速度',
+      objetivo_negocio: '把我的生意或場館做大',
+      objetivo_disfrutar: '享受訓練並保持活力',
+      pain_sinplan: '我沒有系統的計畫',
+      pain_sintiempo: '我沒有時間訓練',
+      pain_sinentrenador: '我沒有好教練',
+      pain_motivacion: '我很難保持動力',
+      pain_sinprogreso: '我不知道自己有沒有進步',
+      inversion_i50: '低於 50 歐元', inversion_i50150: '50 到 150 歐元',
+      inversion_i150300: '150 到 300 歐元', inversion_i300: '超過 300 歐元',
+      edad_a20: '20 歲以下', edad_a2029: '20 到 29 歲', edad_a3039: '30 到 39 歲',
+      edad_a4049: '40 到 49 歲', edad_a50: '50 歲以上',
     },
     b: {
       competidor_name: '競技者',
-      competidor_desc: '你目標明確，也扛得住節奏。你的空間已經不在打得更重，而在疲勞來臨時還能維持力量。',
-      competidor_tip: '在力量模式下打長回合，觀察你的 G 值從第一回合到最後一回合掉了多少。',
-      demoledor_name: '破壞者',
-      demoledor_desc: '你追求的是衝擊力。單發重拳是你的強項，沙袋是你的主場。',
-      demoledor_tip: '把校準調細，在力量模式裡衝擊你的 G 值紀錄。出拳之間要休息：最大力量需要新鮮的肌肉。',
-      relampago_name: '閃電',
-      relampago_desc: '你的特點是先到一步。速度和反應時間就是你的競爭優勢。',
-      relampago_tip: '反應模式和顏色模式最適合你。目標是穩定保持在 300 毫秒以內。',
-      tecnico_name: '技術家',
-      tecnico_desc: '你在意的是怎麼打，而不只是打多重。你測量是為了修正，而這正是你成長最快的地方。',
-      tecnico_tip: '用連擊模式串聯出拳而不失動作品質，比較你的平均力量，而不是最大值。',
-      explorador_name: '探索者',
-      explorador_desc: '你剛起步，或者有空才練。你現在最大的收益是堅持，而不是強度。',
-      explorador_tip: '每週多次、每次 2 回合的短訓練。看歷史裡的連續天數：那才是你的計分板。',
+      competidor_desc: '你為贏而訓練。每一拳都算數，每一秒都重要。你來這裡是為了主宰。',
+      competidor_tip1: '每次訓練前都校準感測器：比賽中差距就在零點幾之間。',
+      competidor_tip2: '用力量模式打長回合，觀察 G 值從第一回合到最後一回合掉了多少。',
+      competidor_tip3: '每週練兩次反應模式：低於 300 毫秒才能贏下對攻。',
+      fitness_name: '健身鬥士',
+      fitness_desc: '你用格鬥改變身體和心態。擂台就是你的健身房。',
+      fitness_tip1: '連續打 3 個回合：卡路里計數會告訴你每個回合的真實消耗。',
+      fitness_tip2: '先追求出拳量而不是最大力量：消耗更多，關節負擔更小。',
+      fitness_tip3: '看歷史裡的連續天數。堅持比強度更能推動結果。',
+      coach_name: '教練',
+      coach_desc: '你的使命是讓別人變得更好。數據是你最有力的工具。',
+      coach_tip1: '為每位學員單獨校準：正確的門檻隨沙袋和出拳方式而變。',
+      coach_tip2: '比較平均力量而不是最大值：那才反映學員的真實技術。',
+      coach_tip3: '用顏色模式自訂標籤，把每種顏色變成一條技術指令。',
+      gimnasio_name: '場館',
+      gimnasio_desc: '你帶領著一群戰士。技術就是你的競爭優勢。',
+      gimnasio_tip1: '用歷史數據做一個館內排行榜：良性競爭能讓課堂爆滿。',
+      gimnasio_tip2: '在團課裡用反應模式，它最能抓住新學員。',
+      gimnasio_tip3: '在第 1 天和第 30 天各測一次：這個前後對比就是你最好的說服力。',
+      principiante_name: '新手',
+      principiante_desc: '每位大師都曾是新手。你已經邁出了第一步，也是最重要的一步。',
+      principiante_tip1: '先從校準開始：不校準，應用程式就不知道你怎麼出拳，數字也沒有意義。',
+      principiante_tip2: '每次 2 個回合的短訓練。少量多次勝過一次猛練。',
+      principiante_tip3: '先別追最大力量：專注於把動作打對，以及連續訓練的天數。',
     },
   },
   ko: {
-    intro_title: '시작하기 전에...', intro_sub: '당신의 파이터 프로필을 만드는 10가지 질문',
-    step: '{n} / {total}', profile_title: '당신의 파이터 프로필', profile_cta: '계속하기',
+    ui: {
+      intro_title: '당신에 대해 알려주세요',
+      intro_sub: 'Strike IQ를 당신에게 맞추기 위해서입니다. 2분이면 끝납니다.',
+      intro_cta: '시작하기', next: '다음', back: '← 뒤로', skip: '나중에 하기',
+      step: '{n}/{total}',
+      smiq_placeholder: '여기에 답을 적어주세요...',
+      smiq_counter: '최소 {min}자 중 {n}자',
+      lead_name: '이름', lead_name_ph: '이름을 입력하세요',
+      lead_email: '이메일', lead_email_ph: 'you@email.com',
+      lead_gdpr: 'Strike IQ의 소식 수신에 동의합니다',
+      lead_cta: '내 프로필 보기',
+      other_country: '다른 국가',
+      profile_title: '당신의 파이터 프로필', profile_cta: '계속하기',
+      recommendations: '다음 3단계',
+    },
     q: {
-      objetivo: '가장 큰 목표는 무엇인가요?', disciplina: '어떤 운동을 하나요?',
-      experiencia: '얼마나 오래 훈련했나요?', frecuencia: '일주일에 며칠 훈련하나요?',
-      equipo: '무엇을 치나요?', lugar: '보통 어디서 훈련하나요?',
-      duracion: '한 번에 얼마나 훈련하나요?', debilidad: '가장 발목을 잡는 것은?',
-      medir: '가장 먼저 측정하고 싶은 것은?', motivacion: '다시 훈련하게 만드는 것은?',
+      smiq: '지금 훈련 성과를 끌어올리는 데 가장 큰 걸림돌은 무엇인가요?',
+      situacion: '어떤 설명이 가장 잘 맞나요?',
+      experiencia: '얼마나 오래 훈련했나요?',
+      frecuencia: '일주일에 몇 번 훈련하나요?',
+      objetivo: '앞으로 90일 동안 무엇을 이루고 싶나요?',
+      pain: '지금 가장 발목을 잡는 것은?',
+      inversion: '한 달에 훈련에 얼마를 투자하나요?',
+      edad: '나이가 어떻게 되나요?',
+      pais: '어디에서 훈련하나요?',
+      lead: '맞춤 분석을 어디로 보낼까요?',
     },
     a: {
-      objetivo_potencia: '더 세게 치기', objetivo_velocidad: '더 빨라지기',
-      objetivo_tecnica: '기술 다듬기', objetivo_forma: '몸 만들기',
-      disciplina_boxeo: '복싱', disciplina_kickboxing: '킥복싱 / 무에타이',
-      disciplina_marciales: '가라테, 태권도, 쿵후', disciplina_solo: '혼자 훈련합니다',
-      experiencia_novato: '6개월 미만', experiencia_medio: '6개월에서 2년',
-      experiencia_veterano: '2년 이상', experiencia_competidor: '시합에 나갑니다',
-      frecuencia_f12: '1~2일', frecuencia_f34: '3~4일',
-      frecuencia_f5: '5일 이상', frecuencia_irregular: '가능할 때만',
-      equipo_saco: '헤비백', equipo_muneco: '더미 또는 목인',
-      equipo_manoplas: '파트너와 미트', equipo_sombra: '섀도, 백 없이',
-      lugar_gimnasio: '체육관이나 클럽', lugar_casa: '집에서',
-      lugar_exterior: '야외', lugar_varia: '날마다 다름',
-      duracion_corta: '20분 미만', duracion_media: '20~40분',
-      duracion_larga: '40~60분', duracion_muylarga: '한 시간 이상',
-      debilidad_potencia: '파워가 부족해요', debilidad_reaccion: '반응이 늦어요',
-      debilidad_resistencia: '금방 지쳐요', debilidad_constancia: '꾸준하지 못해요',
-      medir_fuerza: '내 타격의 힘', medir_reaccion: '내 반응 시간',
-      medir_resistencia: '라운드를 버티는 힘', medir_progreso: '시간에 따른 성장',
-      motivacion_numeros: '수치가 오르는 것', motivacion_competir: '남을 이기는 것',
-      motivacion_superarme: '나를 넘어서는 것', motivacion_desahogo: '스트레스 해소',
+      situacion_competidor: '시합이나 경기를 위해 훈련합니다',
+      situacion_fitness: '체력 관리 / 감량을 위해 훈련합니다',
+      situacion_coach: '트레이너 또는 코치입니다',
+      situacion_gimnasio: '체육관을 소유하거나 운영합니다',
+      situacion_principiante: '이제 막 시작한 초보자입니다',
+      experiencia_menos6m: '6개월 미만', experiencia_e6m2a: '6개월에서 2년',
+      experiencia_e2a5a: '2년에서 5년', experiencia_mas5a: '5년 이상',
+      frecuencia_f12: '1~2회', frecuencia_f34: '3~4회', frecuencia_f5: '5회 이상',
+      objetivo_competicion: '첫 시합에서 우승하기',
+      objetivo_peso: '체중을 줄이고 몸을 만들기',
+      objetivo_potencia: '파워와 스피드 올리기',
+      objetivo_negocio: '사업이나 체육관 키우기',
+      objetivo_disfrutar: '즐겁게 훈련하며 활동적으로 지내기',
+      pain_sinplan: '체계적인 계획이 없어요',
+      pain_sintiempo: '훈련할 시간이 없어요',
+      pain_sinentrenador: '좋은 코치가 없어요',
+      pain_motivacion: '동기를 유지하기 어려워요',
+      pain_sinprogreso: '늘고 있는지 모르겠어요',
+      inversion_i50: '50유로 미만', inversion_i50150: '50~150유로',
+      inversion_i150300: '150~300유로', inversion_i300: '300유로 이상',
+      edad_a20: '20세 미만', edad_a2029: '20~29세', edad_a3039: '30~39세',
+      edad_a4049: '40~49세', edad_a50: '50세 이상',
     },
     b: {
       competidor_name: '컴페티터',
-      competidor_desc: '목표가 분명하고 페이스를 유지할 줄 압니다. 이제 여유는 더 세게 치는 데 있지 않고, 피로가 왔을 때 파워를 유지하는 데 있습니다.',
-      competidor_tip: '파워 모드에서 긴 라운드를 하고, 첫 라운드와 마지막 라운드의 G 하락 폭을 확인하세요.',
-      demoledor_name: '디몰리셔',
-      demoledor_desc: '당신이 노리는 건 임팩트입니다. 한 방의 묵직한 타격이 강점이고, 헤비백이 당신의 무대입니다.',
-      demoledor_tip: '캘리브레이션을 세밀하게 맞추고 파워 모드에서 G 기록에 도전하세요. 타격 사이엔 쉬어야 합니다. 최대 파워엔 회복된 근육이 필요합니다.',
-      relampago_name: '라이트닝',
-      relampago_desc: '당신의 강점은 먼저 도달하는 것입니다. 스피드와 반응 시간이 곧 경쟁력입니다.',
-      relampago_tip: '반응 모드와 컬러 모드가 딱 맞습니다. 꾸준히 300ms 아래를 목표로 하세요.',
-      tecnico_name: '테크니션',
-      tecnico_desc: '얼마나 세게가 아니라 어떻게 치는지를 중시합니다. 고치기 위해 측정하고, 바로 거기서 가장 크게 성장합니다.',
-      tecnico_tip: '콤보 모드로 폼을 잃지 않고 연결하고, 최고치가 아니라 평균 파워를 비교하세요.',
-      explorador_name: '익스플로러',
-      explorador_desc: '이제 시작했거나 가능할 때 훈련합니다. 지금 가장 큰 이득은 강도가 아니라 꾸준함입니다.',
-      explorador_tip: '2라운드짜리 짧은 세션을 주 여러 번. 기록의 연속 일수를 보세요. 그게 당신의 점수판입니다.',
+      competidor_desc: '당신은 이기기 위해 훈련합니다. 한 방 한 방이 중요하고, 1초가 중요합니다. 지배하기 위해 여기에 왔습니다.',
+      competidor_tip1: '매 세션 전에 센서를 캘리브레이션하세요. 시합에서는 0.1 차이가 승부를 가릅니다.',
+      competidor_tip2: '파워 모드로 긴 라운드를 하고, 첫 라운드와 마지막 라운드의 G 하락 폭을 확인하세요.',
+      competidor_tip3: '주 2회 반응 모드를 훈련하세요. 300ms 아래에서 교환을 이깁니다.',
+      fitness_name: '피트니스 파이터',
+      fitness_desc: '당신은 격투로 몸과 마음을 바꿉니다. 링이 당신의 체육관입니다.',
+      fitness_tip1: '3라운드를 연속으로 하세요. 칼로리 카운터가 각 라운드의 실제 소모량을 알려줍니다.',
+      fitness_tip2: '최대 파워보다 타격 횟수를 노리세요. 더 많이 태우고 관절 부담은 적습니다.',
+      fitness_tip3: '기록에서 연속 일수를 보세요. 강도보다 꾸준함이 결과를 바꿉니다.',
+      coach_name: '코치',
+      coach_desc: '당신의 임무는 다른 사람을 더 낫게 만드는 것입니다. 데이터가 가장 강력한 도구입니다.',
+      coach_tip1: '수강생마다 기기를 캘리브레이션하세요. 적정 임계값은 백과 타격에 따라 달라집니다.',
+      coach_tip2: '최고치가 아니라 평균 파워를 비교하세요. 그게 실제 기술을 보여줍니다.',
+      coach_tip3: '컬러 모드에 직접 라벨을 붙여 각 색을 기술 지시로 바꾸세요.',
+      gimnasio_name: '체육관',
+      gimnasio_desc: '당신은 파이터 커뮤니티를 이끕니다. 기술이 당신의 경쟁력입니다.',
+      gimnasio_tip1: '기록으로 내부 랭킹을 만드세요. 건전한 경쟁이 수업을 채웁니다.',
+      gimnasio_tip2: '그룹으로 반응 모드를 돌리세요. 신규 회원을 가장 빨리 사로잡습니다.',
+      gimnasio_tip3: '회원을 1일차와 30일차에 측정하세요. 그 전후 비교가 최고의 세일즈입니다.',
+      principiante_name: '비기너',
+      principiante_desc: '모든 고수도 한때는 초보였습니다. 당신은 첫걸음을 뗐습니다. 가장 중요한 한 걸음을.',
+      principiante_tip1: '캘리브레이션부터 시작하세요. 그게 없으면 앱은 당신의 타격을 모르고 숫자도 의미가 없습니다.',
+      principiante_tip2: '2라운드짜리 짧은 세션. 조금씩 자주가 한 번에 몰아치는 것보다 낫습니다.',
+      principiante_tip3: '아직 최대 파워를 좇지 마세요. 동작을 반복하는 것과 연속 일수에 집중하세요.',
     },
   },
   ar: {
-    intro_title: 'قبل أن نبدأ...', intro_sub: '10 أسئلة سريعة لبناء ملفك كمقاتل',
-    step: '{n} / {total}', profile_title: 'ملفك كمقاتل', profile_cta: 'متابعة',
+    ui: {
+      intro_title: 'حدّثنا عن نفسك',
+      intro_sub: 'لنخصّص تجربتك في Strike IQ. لن يستغرق سوى دقيقتين.',
+      intro_cta: 'ابدأ', next: 'التالي', back: '← رجوع', skip: 'تخطّي الآن',
+      step: '{n}/{total}',
+      smiq_placeholder: 'اكتب إجابتك هنا...',
+      smiq_counter: '{n}/{min} حرفاً كحد أدنى',
+      lead_name: 'الاسم الكامل', lead_name_ph: 'اسمك',
+      lead_email: 'البريد الإلكتروني', lead_email_ph: 'you@email.com',
+      lead_gdpr: 'أوافق على تلقّي رسائل من Strike IQ',
+      lead_cta: 'عرض ملفي',
+      other_country: 'دولة أخرى',
+      profile_title: 'ملفك كمقاتل', profile_cta: 'متابعة',
+      recommendations: 'خطواتك الثلاث التالية',
+    },
     q: {
-      objetivo: 'ما هدفك الأساسي؟', disciplina: 'ماذا تمارس؟',
-      experiencia: 'منذ متى وأنت تتدرب؟', frecuencia: 'كم يوماً في الأسبوع تتدرب؟',
-      equipo: 'على ماذا تضرب؟', lugar: 'أين تتدرب عادةً؟',
-      duracion: 'كم تستغرق حصتك؟', debilidad: 'ما الذي يعيقك أكثر؟',
-      medir: 'ما الذي تريد قياسه أولاً؟', motivacion: 'ما الذي يعيدك إلى التدريب؟',
+      smiq: 'ما أكبر عائق يمنعك حالياً من تحسين أدائك في التدريب؟',
+      situacion: 'ما الوصف الأقرب إليك؟',
+      experiencia: 'منذ متى وأنت تتدرب؟',
+      frecuencia: 'كم مرة تتدرب في الأسبوع؟',
+      objetivo: 'ما الذي تريد تحقيقه خلال التسعين يوماً القادمة؟',
+      pain: 'ما الذي يعيقك أكثر الآن؟',
+      inversion: 'كم تنفق على تدريبك شهرياً؟',
+      edad: 'كم عمرك؟',
+      pais: 'من أين تتدرب؟',
+      lead: 'إلى أين نرسل تحليلك المخصص؟',
     },
     a: {
-      objetivo_potencia: 'أن أضرب أقوى', objetivo_velocidad: 'أن أصبح أسرع',
-      objetivo_tecnica: 'أن أصقل تقنيتي', objetivo_forma: 'أن أستعيد لياقتي',
-      disciplina_boxeo: 'ملاكمة', disciplina_kickboxing: 'كيك بوكسينغ / مواي تاي',
-      disciplina_marciales: 'كاراتيه، تايكوندو، كونغ فو', disciplina_solo: 'أتدرب بمفردي',
-      experiencia_novato: 'أقل من 6 أشهر', experiencia_medio: 'من 6 أشهر إلى سنتين',
-      experiencia_veterano: 'أكثر من سنتين', experiencia_competidor: 'أنافس أو نافست',
-      frecuencia_f12: 'يوم أو يومان', frecuencia_f34: '3 أو 4 أيام',
-      frecuencia_f5: '5 أيام أو أكثر', frecuencia_irregular: 'حين أستطيع',
-      equipo_saco: 'كيس ثقيل', equipo_muneco: 'دمية تدريب',
-      equipo_manoplas: 'لبادات مع شريك', equipo_sombra: 'ملاكمة الظل، بلا كيس',
-      lugar_gimnasio: 'في نادٍ أو صالة', lugar_casa: 'في البيت',
-      lugar_exterior: 'في الهواء الطلق', lugar_varia: 'يختلف حسب اليوم',
-      duracion_corta: 'أقل من 20 دقيقة', duracion_media: 'من 20 إلى 40 دقيقة',
-      duracion_larga: 'من 40 إلى 60 دقيقة', duracion_muylarga: 'أكثر من ساعة',
-      debilidad_potencia: 'تنقصني القوة', debilidad_reaccion: 'رد فعلي متأخر',
-      debilidad_resistencia: 'أتعب بسرعة', debilidad_constancia: 'لست منتظماً',
-      medir_fuerza: 'قوة ضربتي', medir_reaccion: 'زمن رد فعلي',
-      medir_resistencia: 'قدرتي على الاستمرار عبر الجولات', medir_progreso: 'تقدّمي مع الوقت',
-      motivacion_numeros: 'رؤية أرقامي ترتفع', motivacion_competir: 'التغلب على الآخرين',
-      motivacion_superarme: 'تجاوز نفسي', motivacion_desahogo: 'تفريغ الضغط',
+      situacion_competidor: 'أتدرب للمنافسة أو النزال',
+      situacion_fitness: 'أتدرب للياقة أو إنقاص الوزن',
+      situacion_coach: 'أنا مدرب',
+      situacion_gimnasio: 'أملك أو أدير نادياً',
+      situacion_principiante: 'أنا مبتدئ، بدأت للتو',
+      experiencia_menos6m: 'أقل من 6 أشهر', experiencia_e6m2a: 'من 6 أشهر إلى سنتين',
+      experiencia_e2a5a: 'من سنتين إلى 5 سنوات', experiencia_mas5a: 'أكثر من 5 سنوات',
+      frecuencia_f12: 'مرة أو مرتان', frecuencia_f34: '3 أو 4 مرات', frecuencia_f5: '5 مرات أو أكثر',
+      objetivo_competicion: 'الفوز بأول منافسة لي',
+      objetivo_peso: 'إنقاص الوزن وتحسين لياقتي',
+      objetivo_potencia: 'زيادة القوة والسرعة',
+      objetivo_negocio: 'تنمية عملي أو ناديي',
+      objetivo_disfrutar: 'الاستمتاع بالتدريب والبقاء نشيطاً',
+      pain_sinplan: 'ليس لديّ خطة منظمة',
+      pain_sintiempo: 'لا أجد وقتاً للتدريب',
+      pain_sinentrenador: 'ليس لديّ مدرب جيد',
+      pain_motivacion: 'يصعب عليّ الحفاظ على الحماس',
+      pain_sinprogreso: 'لا أعرف إن كنت أتقدم',
+      inversion_i50: 'أقل من 50 يورو', inversion_i50150: 'من 50 إلى 150 يورو',
+      inversion_i150300: 'من 150 إلى 300 يورو', inversion_i300: 'أكثر من 300 يورو',
+      edad_a20: 'أقل من 20', edad_a2029: 'من 20 إلى 29', edad_a3039: 'من 30 إلى 39',
+      edad_a4049: 'من 40 إلى 49', edad_a50: '50 أو أكثر',
     },
     b: {
       competidor_name: 'المنافس',
-      competidor_desc: 'تتدرب بهدف واضح وتحافظ على الإيقاع. هامشك لم يعد في الضرب أقوى، بل في الحفاظ على القوة حين يأتي التعب.',
-      competidor_tip: 'خُض جولات طويلة في وضع القوة وراقب انخفاض قيم G من الجولة الأولى إلى الأخيرة.',
-      demoledor_name: 'المدمّر',
-      demoledor_desc: 'أنت تبحث عن الاصطدام. قوتك في الضربة المفردة الساحقة، والكيس هو ميدانك.',
-      demoledor_tip: 'اضبط المعايرة بدقة وطارد رقمك القياسي في وضع القوة. استرح بين الضربات: القوة القصوى تحتاج عضلة مرتاحة.',
-      relampago_name: 'البرق',
-      relampago_desc: 'ميزتك أن تصل أولاً. السرعة وزمن رد الفعل هما سلاحك.',
-      relampago_tip: 'وضع رد الفعل ووضع الألوان صُنعا لك. استهدف البقاء تحت 300 مللي ثانية بثبات.',
-      tecnico_name: 'الفنّي',
-      tecnico_desc: 'يهمك كيف تُنفَّذ الضربة لا مقدار قوتها فقط. تقيس لتصحّح، وهناك تنمو أكثر.',
-      tecnico_tip: 'استخدم وضع الكومبو لتسلسل الضربات دون فقدان النظافة، وقارن متوسط قوتك لا ذروتها.',
-      explorador_name: 'المستكشف',
-      explorador_desc: 'أنت في البداية أو تتدرب حين تستطيع. أكبر مكسب لك الآن هو الانتظام، لا الشدة.',
-      explorador_tip: 'حصص قصيرة من جولتين، عدة مرات في الأسبوع. راقب سلسلة أيامك في السجل: تلك هي نتيجتك.',
+      competidor_desc: 'أنت تتدرب لتفوز. كل ضربة تُحسب، وكل ثانية تهم. أنت هنا لتسيطر.',
+      competidor_tip1: 'عايِر الحساس قبل كل حصة: في المنافسة يصنع العُشر فرقاً.',
+      competidor_tip2: 'استخدم وضع القوة بجولات طويلة وراقب انخفاض قيم G من الأولى إلى الأخيرة.',
+      competidor_tip3: 'درّب وضع رد الفعل مرتين أسبوعياً: تحت 300 مللي ثانية تُحسم التبادلات.',
+      fitness_name: 'مقاتل اللياقة',
+      fitness_desc: 'تستخدم القتال لتغيير جسدك وعقلك. الحلبة هي ناديك.',
+      fitness_tip1: 'أدِّ 3 جولات متتالية: عدّاد السعرات يعطيك الحرق الحقيقي لكل جولة.',
+      fitness_tip2: 'اسعَ لعدد الضربات قبل القوة القصوى: يحرق أكثر ويرهق المفاصل أقل.',
+      fitness_tip3: 'راقب سلسلة أيامك في السجل. الانتظام يصنع فرقاً أكبر من الشدة.',
+      coach_name: 'المدرّب',
+      coach_desc: 'مهمتك أن تجعل الآخرين أفضل. البيانات هي أقوى أدواتك.',
+      coach_tip1: 'عايِر الجهاز مع كل متدرب: العتبة الصحيحة تتغير بحسب الكيس والضربة.',
+      coach_tip2: 'قارن متوسط القوة لا ذروتها: هو ما يكشف التقنية الحقيقية للمتدرب.',
+      coach_tip3: 'استخدم وضع الألوان بتسميات خاصة لتحويل كل لون إلى أمر تقني.',
+      gimnasio_name: 'النادي',
+      gimnasio_desc: 'أنت تقود مجتمعاً من المقاتلين. التقنية هي ميزتك التنافسية.',
+      gimnasio_tip1: 'ابنِ ترتيباً داخلياً من السجل: المنافسة الصحية تملأ الحصص.',
+      gimnasio_tip2: 'شغّل وضع رد الفعل جماعياً، فهو الأسرع في جذب الأعضاء الجدد.',
+      gimnasio_tip3: 'قِس كل عضو في اليوم الأول واليوم الثلاثين: هذا الفارق هو أقوى حججك.',
+      principiante_name: 'المبتدئ',
+      principiante_desc: 'كل أستاذ كان يوماً مبتدئاً. لقد خطوت الخطوة الأولى، وهي الأهم.',
+      principiante_tip1: 'ابدأ بالمعايرة: بدونها لا يعرف التطبيق كيف تضرب ولا قيمة للأرقام.',
+      principiante_tip2: 'حصص قصيرة من جولتين. القليل المتكرر أفضل من الكثير مرة واحدة.',
+      principiante_tip3: 'لا تلاحق القوة القصوى بعد: ركّز على تكرار الحركة وعلى سلسلة الأيام.',
     },
   },
   hi: {
-    intro_title: 'शुरू करने से पहले...', intro_sub: 'आपकी फाइटर प्रोफ़ाइल बनाने के लिए 10 त्वरित सवाल',
-    step: '{n} / {total}', profile_title: 'आपकी फाइटर प्रोफ़ाइल', profile_cta: 'जारी रखें',
+    ui: {
+      intro_title: 'हमें अपने बारे में बताएँ',
+      intro_sub: 'ताकि हम आपका Strike IQ अनुभव आपके अनुसार बना सकें। सिर्फ़ 2 मिनट लगेंगे।',
+      intro_cta: 'शुरू करें', next: 'आगे', back: '← वापस', skip: 'अभी छोड़ें',
+      step: '{n}/{total}',
+      smiq_placeholder: 'अपना उत्तर यहाँ लिखें...',
+      smiq_counter: '{n}/{min} अक्षर न्यूनतम',
+      lead_name: 'पूरा नाम', lead_name_ph: 'आपका नाम',
+      lead_email: 'ईमेल', lead_email_ph: 'you@email.com',
+      lead_gdpr: 'मैं Strike IQ से संदेश पाने के लिए सहमत हूँ',
+      lead_cta: 'मेरी प्रोफ़ाइल देखें',
+      other_country: 'अन्य देश',
+      profile_title: 'आपकी फाइटर प्रोफ़ाइल', profile_cta: 'जारी रखें',
+      recommendations: 'आपके अगले 3 कदम',
+    },
     q: {
-      objetivo: 'आपका मुख्य लक्ष्य क्या है?', disciplina: 'आप क्या अभ्यास करते हैं?',
-      experiencia: 'आप कब से अभ्यास कर रहे हैं?', frecuencia: 'हफ़्ते में कितने दिन अभ्यास करते हैं?',
-      equipo: 'आप किस पर प्रहार करते हैं?', lugar: 'आप आमतौर पर कहाँ अभ्यास करते हैं?',
-      duracion: 'आपका सत्र कितना लंबा होता है?', debilidad: 'आपको सबसे ज़्यादा क्या रोकता है?',
-      medir: 'आप पहले क्या मापना चाहते हैं?', motivacion: 'आपको दोबारा अभ्यास पर क्या लाता है?',
+      smiq: 'अभी आपके प्रशिक्षण प्रदर्शन को बेहतर बनाने में सबसे बड़ी बाधा क्या है?',
+      situacion: 'आपको सबसे अच्छा क्या बताता है?',
+      experiencia: 'आप कब से अभ्यास कर रहे हैं?',
+      frecuencia: 'आप हफ़्ते में कितनी बार अभ्यास करते हैं?',
+      objetivo: 'अगले 90 दिनों में आप क्या हासिल करना चाहते हैं?',
+      pain: 'अभी आपको सबसे ज़्यादा क्या रोकता है?',
+      inversion: 'आप हर महीने प्रशिक्षण पर कितना खर्च करते हैं?',
+      edad: 'आपकी उम्र क्या है?',
+      pais: 'आप कहाँ से अभ्यास करते हैं?',
+      lead: 'आपका व्यक्तिगत विश्लेषण कहाँ भेजें?',
     },
     a: {
-      objetivo_potencia: 'और ज़ोर से मारना', objetivo_velocidad: 'और तेज़ होना',
-      objetivo_tecnica: 'तकनीक निखारना', objetivo_forma: 'फिट होना',
-      disciplina_boxeo: 'बॉक्सिंग', disciplina_kickboxing: 'किकबॉक्सिंग / मॉय थाई',
-      disciplina_marciales: 'कराटे, ताइक्वांडो, कुंग फू', disciplina_solo: 'मैं खुद अभ्यास करता हूँ',
-      experiencia_novato: '6 महीने से कम', experiencia_medio: '6 महीने से 2 साल',
-      experiencia_veterano: '2 साल से ज़्यादा', experiencia_competidor: 'मैं प्रतियोगिता करता हूँ',
-      frecuencia_f12: '1 या 2 दिन', frecuencia_f34: '3 या 4 दिन',
-      frecuencia_f5: '5 दिन या ज़्यादा', frecuencia_irregular: 'जब समय मिले',
-      equipo_saco: 'भारी बैग', equipo_muneco: 'डमी या पुतला',
-      equipo_manoplas: 'साथी के साथ पैड', equipo_sombra: 'शैडो, बिना बैग',
-      lugar_gimnasio: 'जिम या क्लब में', lugar_casa: 'घर पर',
-      lugar_exterior: 'खुले में', lugar_varia: 'दिन पर निर्भर',
-      duracion_corta: '20 मिनट से कम', duracion_media: '20 से 40 मिनट',
-      duracion_larga: '40 से 60 मिनट', duracion_muylarga: 'एक घंटे से ज़्यादा',
-      debilidad_potencia: 'ताक़त की कमी है', debilidad_reaccion: 'देर से प्रतिक्रिया करता हूँ',
-      debilidad_resistencia: 'जल्दी थक जाता हूँ', debilidad_constancia: 'नियमित नहीं हूँ',
-      medir_fuerza: 'मेरे प्रहार की ताक़त', medir_reaccion: 'मेरा प्रतिक्रिया समय',
-      medir_resistencia: 'राउंड में कितना टिकता हूँ', medir_progreso: 'समय के साथ मेरी प्रगति',
-      motivacion_numeros: 'अपने आँकड़े बढ़ते देखना', motivacion_competir: 'दूसरों को हराना',
-      motivacion_superarme: 'खुद से आगे निकलना', motivacion_desahogo: 'तनाव निकालना',
+      situacion_competidor: 'मैं प्रतियोगिता या मुकाबले के लिए अभ्यास करता हूँ',
+      situacion_fitness: 'मैं फ़िटनेस / वज़न घटाने के लिए अभ्यास करता हूँ',
+      situacion_coach: 'मैं प्रशिक्षक या कोच हूँ',
+      situacion_gimnasio: 'मेरा जिम है या मैं चलाता हूँ',
+      situacion_principiante: 'मैं शुरुआती हूँ, अभी शुरू किया है',
+      experiencia_menos6m: '6 महीने से कम', experiencia_e6m2a: '6 महीने से 2 साल',
+      experiencia_e2a5a: '2 से 5 साल', experiencia_mas5a: '5 साल से ज़्यादा',
+      frecuencia_f12: '1-2 बार', frecuencia_f34: '3-4 बार', frecuencia_f5: '5 या ज़्यादा बार',
+      objetivo_competicion: 'अपनी पहली प्रतियोगिता जीतना',
+      objetivo_peso: 'वज़न घटाना और शरीर सुधारना',
+      objetivo_potencia: 'ताक़त और गति बढ़ाना',
+      objetivo_negocio: 'अपना व्यवसाय या जिम बढ़ाना',
+      objetivo_disfrutar: 'अभ्यास का आनंद लेना और सक्रिय रहना',
+      pain_sinplan: 'मेरे पास व्यवस्थित योजना नहीं है',
+      pain_sintiempo: 'अभ्यास के लिए समय नहीं मिलता',
+      pain_sinentrenador: 'मेरे पास अच्छा कोच नहीं है',
+      pain_motivacion: 'प्रेरणा बनाए रखना मुश्किल लगता है',
+      pain_sinprogreso: 'पता नहीं चलता कि प्रगति हो रही है या नहीं',
+      inversion_i50: '50 यूरो से कम', inversion_i50150: '50 से 150 यूरो',
+      inversion_i150300: '150 से 300 यूरो', inversion_i300: '300 यूरो से ज़्यादा',
+      edad_a20: '20 से कम', edad_a2029: '20 से 29', edad_a3039: '30 से 39',
+      edad_a4049: '40 से 49', edad_a50: '50 या ज़्यादा',
     },
     b: {
       competidor_name: 'प्रतियोगी',
-      competidor_desc: 'आप स्पष्ट लक्ष्य के साथ अभ्यास करते हैं और रफ़्तार बनाए रखते हैं। अब आपकी गुंजाइश ज़ोर से मारने में नहीं, बल्कि थकान आने पर ताक़त बनाए रखने में है।',
-      competidor_tip: 'शक्ति मोड में लंबे राउंड करें और देखें कि पहले से आख़िरी राउंड तक आपके G कितने गिरते हैं।',
-      demoledor_name: 'ध्वंसक',
-      demoledor_desc: 'आपको प्रहार का असर चाहिए। एक भारी प्रहार आपकी ताक़त है, और बैग आपका मैदान।',
-      demoledor_tip: 'कैलिब्रेशन बारीकी से करें और शक्ति मोड में अपना G रिकॉर्ड तोड़ें। प्रहारों के बीच आराम करें: अधिकतम ताक़त के लिए ताज़ा मांसपेशी चाहिए।',
-      relampago_name: 'बिजली',
-      relampago_desc: 'आपकी खूबी है पहले पहुँचना। गति और प्रतिक्रिया समय ही आपकी बढ़त है।',
-      relampago_tip: 'प्रतिक्रिया मोड और रंग मोड आपके लिए हैं। लगातार 300 ms से नीचे रहने का लक्ष्य रखें।',
-      tecnico_name: 'तकनीशियन',
-      tecnico_desc: 'आपके लिए मायने रखता है कि कैसे किया जाए, सिर्फ़ कितना ज़ोर से नहीं। आप सुधारने के लिए मापते हैं, और वहीं सबसे ज़्यादा बढ़ते हैं।',
-      tecnico_tip: 'कॉम्बो मोड से सफ़ाई खोए बिना प्रहार जोड़ें, और अधिकतम नहीं बल्कि औसत ताक़त की तुलना करें।',
-      explorador_name: 'खोजी',
-      explorador_desc: 'आप शुरुआत कर रहे हैं या जब समय मिले तब अभ्यास करते हैं। अभी आपका सबसे बड़ा फ़ायदा तीव्रता नहीं, निरंतरता है।',
-      explorador_tip: '2 राउंड के छोटे सत्र, हफ़्ते में कई बार। इतिहास में अपनी दिनों की लय देखें: वही आपका स्कोरबोर्ड है।',
+      competidor_desc: 'आप जीतने के लिए अभ्यास करते हैं। हर प्रहार मायने रखता है, हर सेकंड मायने रखता है। आप यहाँ हावी होने आए हैं।',
+      competidor_tip1: 'हर सत्र से पहले सेंसर कैलिब्रेट करें: प्रतियोगिता में अंतर दशमलव में होता है।',
+      competidor_tip2: 'शक्ति मोड में लंबे राउंड करें और देखें कि पहले से आख़िरी राउंड तक आपके G कितने गिरते हैं।',
+      competidor_tip3: 'हफ़्ते में दो बार प्रतिक्रिया मोड का अभ्यास करें: 300 ms से नीचे ही मुकाबला जीता जाता है।',
+      fitness_name: 'फ़िटनेस फाइटर',
+      fitness_desc: 'आप शरीर और मन बदलने के लिए मुकाबले का उपयोग करते हैं। रिंग ही आपका जिम है।',
+      fitness_tip1: 'लगातार 3 राउंड करें: कैलोरी काउंटर हर राउंड की असली खपत बताएगा।',
+      fitness_tip2: 'अधिकतम ताक़त से पहले प्रहारों की संख्या पर ध्यान दें: ज़्यादा जलता है और जोड़ों पर कम असर पड़ता है।',
+      fitness_tip3: 'इतिहास में अपनी दिनों की लय देखें। तीव्रता से ज़्यादा निरंतरता असर करती है।',
+      coach_name: 'कोच',
+      coach_desc: 'आपका काम दूसरों को बेहतर बनाना है। डेटा आपका सबसे शक्तिशाली औज़ार है।',
+      coach_tip1: 'हर शिष्य के लिए डिवाइस कैलिब्रेट करें: सही सीमा बैग और प्रहार के अनुसार बदलती है।',
+      coach_tip2: 'अधिकतम नहीं, औसत ताक़त की तुलना करें: वही शिष्य की असली तकनीक दिखाती है।',
+      coach_tip3: 'रंग मोड में अपने लेबल लगाकर हर रंग को एक तकनीकी निर्देश बनाएँ।',
+      gimnasio_name: 'जिम',
+      gimnasio_desc: 'आप योद्धाओं के समुदाय का नेतृत्व करते हैं। तकनीक ही आपकी बढ़त है।',
+      gimnasio_tip1: 'इतिहास से आंतरिक रैंकिंग बनाएँ: स्वस्थ प्रतिस्पर्धा कक्षाएँ भर देती है।',
+      gimnasio_tip2: 'समूह में प्रतिक्रिया मोड चलाएँ, यही नए सदस्यों को सबसे तेज़ जोड़ता है।',
+      gimnasio_tip3: 'हर सदस्य को पहले और तीसवें दिन मापें: वह पहले-बाद की तुलना आपका सबसे अच्छा तर्क है।',
+      principiante_name: 'शुरुआती',
+      principiante_desc: 'हर गुरु कभी शुरुआती था। आपने पहला कदम उठा लिया है। सबसे महत्वपूर्ण कदम।',
+      principiante_tip1: 'कैलिब्रेशन से शुरू करें: उसके बिना ऐप को पता ही नहीं कि आप कैसे मारते हैं और आँकड़े बेकार हैं।',
+      principiante_tip2: '2 राउंड के छोटे सत्र। थोड़ा और बार-बार, एक बार में बहुत से बेहतर है।',
+      principiante_tip3: 'अभी अधिकतम ताक़त के पीछे न भागें: गति दोहराने और दिनों की लय पर ध्यान दें।',
     },
   },
 };
 
-// Texto del quiz con respaldo: idioma actual → inglés → español
+// ── Texto con respaldo: idioma actual → inglés → español ──
 function quizT(path, params) {
   const get = (d) => path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), d);
   let str = get(QUIZ_I18N[APP.lang]);
@@ -8160,7 +8585,13 @@ function quizT(path, params) {
   return str;
 }
 
-// ── Estado y persistencia ──
+// Lista de países del idioma elegido; siempre termina en "Otro país"
+function quizCountries() {
+  const list = QUIZ_COUNTRIES[APP.lang] || QUIZ_COUNTRIES.en;
+  return list.concat([{ id: 'otro', label: quizT('ui.other_country') }]);
+}
+
+// ── Persistencia ──
 function loadQuiz() {
   try {
     const raw = localStorage.getItem(QUIZ_STORAGE_KEY);
@@ -8172,64 +8603,37 @@ function saveQuiz(data) {
   try { localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
 }
 
-// Una sola vez por dispositivo: tanto completarlo como saltarlo levantan el
-// flag, porque el quiz es un paso de alta, no algo que se repita.
-function isQuizDone() {
-  return localStorage.getItem(QUIZ_DONE_KEY) === 'true';
-}
-
-function markQuizDone() {
-  localStorage.setItem(QUIZ_DONE_KEY, 'true');
-}
-
-function shouldShowQuiz() {
-  return !isQuizDone();
-}
-
-function getQuizBucket() {
-  return localStorage.getItem(QUIZ_BUCKET_KEY) || null;
-}
-
-// ── Cálculo del perfil ──
-function calcQuizBucket(answers) {
-  const points = {};
-  QUIZ_BUCKETS.forEach(b => { points[b.id] = 0; });
-
-  QUIZ_QUESTIONS.forEach(q => {
-    const opt = q.options.find(o => o.id === answers[q.id]);
-    if (!opt) return;
-    Object.keys(opt.scores).forEach(b => {
-      if (points[b] !== undefined) points[b] += opt.scores[b];
-    });
-  });
-
-  // Gana el más puntuado; a igualdad manda el orden de QUIZ_BUCKETS
-  let best = QUIZ_BUCKETS[0].id;
-  QUIZ_BUCKETS.forEach(b => { if (points[b.id] > points[best]) best = b.id; });
-  return { bucket: best, points };
+function isQuizDone()   { return localStorage.getItem(QUIZ_DONE_KEY) === 'true'; }
+function markQuizDone() { localStorage.setItem(QUIZ_DONE_KEY, 'true'); }
+function shouldShowQuiz() { return !isQuizDone(); }
+function getQuizBucket()  { return localStorage.getItem(QUIZ_BUCKET_KEY) || null; }
+function getLeadScore()   {
+  const v = parseInt(localStorage.getItem(QUIZ_SCORE_KEY), 10);
+  return Number.isFinite(v) ? v : null;
 }
 
 // ── Supabase ──
-// Al responder el quiz todavía no hay cuenta, así que la fila queda pendiente
-// en local y se sube en cuanto hay usuario.
 function quizRecordToRow(record, userId) {
+  const a = record.answers || {};
   return {
-    usuario_id:  userId,
-    fecha:       new Date(record.ts).toISOString(),
-    idioma:      record.lang || APP.lang,
-    version:     record.version || QUIZ_VERSION,
-    bucket:      record.bucket,
-    objetivo:    record.answers.objetivo,
-    disciplina:  record.answers.disciplina,
-    experiencia: record.answers.experiencia,
-    frecuencia:  record.answers.frecuencia,
-    equipo:      record.answers.equipo,
-    lugar:       record.answers.lugar,
-    duracion:    record.answers.duracion,
-    debilidad:   record.answers.debilidad,
-    medir:       record.answers.medir,
-    motivacion:  record.answers.motivacion,
-    puntos:      record.points,
+    usuario_id:     userId,
+    fecha:          new Date(record.ts).toISOString(),
+    idioma:         record.lang || APP.lang,
+    version:        record.version || QUIZ_VERSION,
+    bucket:         record.bucket,
+    lead_score:     record.leadScore,
+    smiq_texto:     a.smiq || null,
+    q2_situacion:   a.situacion || null,
+    q3_experiencia: a.experiencia || null,
+    q4_frecuencia:  a.frecuencia || null,
+    q5_objetivo:    a.objetivo || null,
+    q6_pain_point:  a.pain || null,
+    q7_inversion:   a.inversion || null,
+    q8_edad:        a.edad || null,
+    q9_pais:        a.pais || null,
+    q10_nombre:     a.nombre || null,
+    q10_email:      a.email || null,
+    q10_gdpr:       !!a.gdpr,
   };
 }
 
@@ -8263,15 +8667,15 @@ async function flushPendingQuiz() {
 }
 
 // ── Flujo ──
-// onDone se llama SIEMPRE (se complete o se salte): quien llama sigue con el
-// registro/home sin tener que saber si hubo quiz o no.
+// step 0 = intro, 1..10 = preguntas. onDone se llama SIEMPRE (se complete o
+// se salte): quien llama sigue con el registro/home sin saber si hubo quiz.
 let _quizState = null;
 
 function maybeShowQuiz(onDone) {
   if (!shouldShowQuiz()) { onDone && onDone(); return; }
-  _quizState = { idx: 0, answers: {}, onDone: onDone || (() => {}) };
+  _quizState = { step: 0, answers: {}, onDone: onDone || (() => {}), dir: 1 };
   showScreen('screen-quiz', true);
-  renderQuizQuestion();
+  renderQuizStep();
 }
 
 function finishQuizFlow() {
@@ -8280,78 +8684,207 @@ function finishQuizFlow() {
   done && done();
 }
 
+// Saltar cierra el funnel igual: es un paso de alta, no se reofrece
 function skipQuiz() {
-  markQuizDone();   // el quiz de alta no se vuelve a ofrecer
+  markQuizDone();
   finishQuizFlow();
 }
 
-function renderQuizQuestion() {
-  if (!_quizState) return;
+function isValidEmail(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v || '').trim());
+}
+
+// ¿Se puede avanzar desde el paso actual?
+function quizCanAdvance() {
+  if (!_quizState || _quizState.step === 0) return true;
+  const q = QUIZ_QUESTIONS[_quizState.step - 1];
+  const a = _quizState.answers;
+  if (q.type === 'text')    return String(a.smiq || '').trim().length >= SMIQ_MIN_CHARS;
+  if (q.type === 'lead')    return String(a.nombre || '').trim().length > 0 && isValidEmail(a.email);
+  if (q.type === 'country') return !!a.pais;
+  return !!a[q.id];
+}
+
+function updateQuizNextBtn() {
+  const btn = document.getElementById('btn-quiz-next');
+  if (btn) btn.disabled = !quizCanAdvance();
+}
+
+function renderQuizProgress() {
   const total = QUIZ_QUESTIONS.length;
-  const i     = _quizState.idx;
-  const q     = QUIZ_QUESTIONS[i];
-
-  const fill = document.getElementById('quiz-progress-fill');
-  if (fill) fill.style.width = Math.round((i / total) * 100) + '%';
+  const done  = _quizState ? _quizState.step : 0;
+  const fill  = document.getElementById('quiz-progress-fill');
+  if (fill) fill.style.width = Math.round((done / total) * 100) + '%';
   const step = document.getElementById('quiz-step');
-  if (step) step.textContent = quizT('step', { n: i + 1, total });
+  if (step) step.textContent = quizT('ui.step', { n: done, total });
+}
 
-  const back = document.getElementById('btn-quiz-back');
-  if (back) back.classList.toggle('hidden', i === 0);
+function renderQuizStep() {
+  if (!_quizState) return;
+  renderQuizProgress();
 
   const body = document.getElementById('quiz-body');
   if (!body) return;
 
-  const opts = q.options.map(o => `
-    <button class="quiz-opt" data-opt="${o.id}">
-      <span class="quiz-opt-emoji">${o.emoji}</span>
-      <span class="quiz-opt-label">${quizT('a.' + q.id + '_' + o.id)}</span>
-      <span class="quiz-opt-arrow">›</span>
-    </button>`).join('');
+  // Los botones fijos no llevan data-i18n: el idioma ya está fijado cuando
+  // arranca el quiz, así que se les pone el texto aquí.
+  const back = document.getElementById('btn-quiz-back');
+  if (back) {
+    back.textContent = quizT('ui.back');
+    back.classList.toggle('hidden', _quizState.step <= 1);
+  }
+  const skip = document.getElementById('btn-quiz-skip');
+  if (skip) {
+    skip.textContent = quizT('ui.skip');
+    skip.classList.toggle('hidden', _quizState.step === 0);
+  }
 
-  body.innerHTML = `
-    ${i === 0 ? `<div class="quiz-intro">
-      <div class="quiz-intro-title">${quizT('intro_title')}</div>
-      <div class="quiz-intro-sub">${quizT('intro_sub')}</div>
-    </div>` : ''}
-    <h2 class="quiz-question">${quizT('q.' + q.id)}</h2>
-    <div class="quiz-opts">${opts}</div>`;
+  body.innerHTML = _quizState.step === 0 ? quizIntroHTML() : quizQuestionHTML();
+  body.classList.remove('quiz-slide-in', 'quiz-slide-in-back');
+  void body.offsetWidth;   // reinicia la animación
+  body.classList.add(_quizState.dir < 0 ? 'quiz-slide-in-back' : 'quiz-slide-in');
 
-  body.querySelectorAll('.quiz-opt').forEach(btn => {
-    btn.onclick = () => answerQuiz(q.id, btn.dataset.opt);
-  });
+  wireQuizStep();
+  updateQuizNextBtn();
 }
 
-function answerQuiz(questionId, optionId) {
-  if (!_quizState) return;
-  _quizState.answers[questionId] = optionId;
-  vibrate([12]);
+function quizIntroHTML() {
+  return `
+    <div class="quiz-intro-screen">
+      <div class="quiz-intro-icon">🥊</div>
+      <h2 class="quiz-intro-title">${quizT('ui.intro_title')}</h2>
+      <p class="quiz-intro-sub">${quizT('ui.intro_sub')}</p>
+      <button class="quiz-next" id="btn-quiz-next">${quizT('ui.intro_cta')}</button>
+    </div>`;
+}
+
+function quizQuestionHTML() {
+  const q = QUIZ_QUESTIONS[_quizState.step - 1];
+  const a = _quizState.answers;
+  let inner = '';
+
+  if (q.type === 'text') {
+    const val = a.smiq || '';
+    const n   = val.trim().length;
+    inner = `
+      <textarea class="quiz-textarea" id="quiz-smiq" rows="6"
+                placeholder="${quizT('ui.smiq_placeholder')}">${escapeHTML(val)}</textarea>
+      <div class="quiz-charcount ${n >= SMIQ_MIN_CHARS ? 'ok' : ''}" id="quiz-charcount">
+        ${quizT('ui.smiq_counter', { n, min: SMIQ_MIN_CHARS })}
+      </div>`;
+
+  } else if (q.type === 'lead') {
+    inner = `
+      <div class="quiz-form">
+        <label class="quiz-label" for="quiz-name">${quizT('ui.lead_name')}</label>
+        <input class="quiz-input" id="quiz-name" type="text" autocomplete="name"
+               value="${escapeHTML(a.nombre || '')}" placeholder="${quizT('ui.lead_name_ph')}">
+        <label class="quiz-label" for="quiz-email">${quizT('ui.lead_email')}</label>
+        <input class="quiz-input" id="quiz-email" type="email" autocomplete="email"
+               value="${escapeHTML(a.email || '')}" placeholder="${quizT('ui.lead_email_ph')}">
+        <label class="quiz-check">
+          <input type="checkbox" id="quiz-gdpr" ${a.gdpr ? 'checked' : ''}>
+          <span>${quizT('ui.lead_gdpr')}</span>
+        </label>
+      </div>`;
+
+  } else {
+    const opts = q.type === 'country'
+      ? quizCountries().map(c => ({ id: c.id, emoji: '', label: c.label }))
+      : q.options.map(o => ({ id: o.id, emoji: o.emoji, label: quizT('a.' + q.id + '_' + o.id) }));
+    inner = `<div class="quiz-opts">` + opts.map(o => `
+      <button class="quiz-opt${a[q.id] === o.id ? ' selected' : ''}" data-opt="${o.id}">
+        ${o.emoji ? `<span class="quiz-opt-emoji">${o.emoji}</span>` : ''}
+        <span class="quiz-opt-label">${o.label}</span>
+      </button>`).join('') + `</div>`;
+  }
+
+  const cta = q.type === 'lead' ? quizT('ui.lead_cta') : quizT('ui.next');
+  return `
+    <h2 class="quiz-question">${quizT('q.' + q.id)}</h2>
+    ${inner}
+    <button class="quiz-next" id="btn-quiz-next">${cta}</button>`;
+}
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function wireQuizStep() {
+  const next = document.getElementById('btn-quiz-next');
+  if (next) next.onclick = quizNext;
+  if (_quizState.step === 0) return;
+
+  const q = QUIZ_QUESTIONS[_quizState.step - 1];
+  const a = _quizState.answers;
+
+  if (q.type === 'text') {
+    const ta = document.getElementById('quiz-smiq');
+    if (ta) ta.oninput = () => {
+      a.smiq = ta.value;
+      const n  = ta.value.trim().length;
+      const el = document.getElementById('quiz-charcount');
+      if (el) {
+        el.textContent = quizT('ui.smiq_counter', { n, min: SMIQ_MIN_CHARS });
+        el.classList.toggle('ok', n >= SMIQ_MIN_CHARS);
+      }
+      updateQuizNextBtn();
+    };
+
+  } else if (q.type === 'lead') {
+    const name  = document.getElementById('quiz-name');
+    const email = document.getElementById('quiz-email');
+    const gdpr  = document.getElementById('quiz-gdpr');
+    if (name)  name.oninput  = () => { a.nombre = name.value;  updateQuizNextBtn(); };
+    if (email) email.oninput = () => { a.email  = email.value; updateQuizNextBtn(); };
+    if (gdpr)  gdpr.onchange = () => { a.gdpr   = gdpr.checked; };
+
+  } else {
+    document.querySelectorAll('#quiz-body .quiz-opt').forEach(btn => {
+      btn.onclick = () => {
+        a[q.id] = btn.dataset.opt;
+        document.querySelectorAll('#quiz-body .quiz-opt').forEach(b =>
+          b.classList.toggle('selected', b === btn));
+        vibrate([10]);
+        updateQuizNextBtn();
+      };
+    });
+  }
+}
+
+function quizNext() {
+  if (!_quizState || !quizCanAdvance()) return;
   playSound('good_reaccion');
-  if (_quizState.idx < QUIZ_QUESTIONS.length - 1) {
-    _quizState.idx++;
-    renderQuizQuestion();
+  if (_quizState.step < QUIZ_QUESTIONS.length) {
+    _quizState.step++;
+    _quizState.dir = 1;
+    renderQuizStep();
   } else {
     completeQuiz();
   }
 }
 
 function quizBack() {
-  if (!_quizState || _quizState.idx === 0) return;
-  _quizState.idx--;
-  renderQuizQuestion();
+  if (!_quizState || _quizState.step <= 1) return;
+  _quizState.step--;
+  _quizState.dir = -1;
+  renderQuizStep();
 }
 
 function completeQuiz() {
-  const answers = _quizState ? _quizState.answers : {};
-  const { bucket, points } = calcQuizBucket(answers);
+  const answers   = _quizState ? _quizState.answers : {};
+  const bucket    = calcQuizBucket(answers);
+  const leadScore = calcLeadScore(answers);
   const record = {
     completed: true, version: QUIZ_VERSION, ts: Date.now(),
-    lang: APP.lang, answers, bucket, points,
+    lang: APP.lang, answers, bucket, leadScore,
   };
 
   saveQuiz(record);
   markQuizDone();
   localStorage.setItem(QUIZ_BUCKET_KEY, bucket);
+  localStorage.setItem(QUIZ_SCORE_KEY, String(leadScore));
   saveQuizToSupabase(record);
 
   const fill = document.getElementById('quiz-progress-fill');
@@ -8361,23 +8894,29 @@ function completeQuiz() {
 }
 
 function renderQuizResult(bucketId) {
-  const b    = QUIZ_BUCKETS.find(x => x.id === bucketId) || QUIZ_BUCKETS[0];
+  const meta = QUIZ_BUCKET_META[bucketId] || QUIZ_BUCKET_META.principiante;
   const body = document.getElementById('quiz-result-body');
   if (!body) { finishQuizFlow(); return; }
 
+  const tips = [1, 2, 3].map(i =>
+    `<li>${quizT('b.' + bucketId + '_tip' + i)}</li>`).join('');
+
   body.innerHTML = `
-    <div class="quiz-res-card" style="--bc:${b.color}">
-      <div class="quiz-res-kicker">${quizT('profile_title')}</div>
-      <div class="quiz-res-emoji">${b.emoji}</div>
-      <div class="quiz-res-name">${quizT('b.' + b.id + '_name')}</div>
-      <p class="quiz-res-desc">${quizT('b.' + b.id + '_desc')}</p>
-      <div class="quiz-res-tip">${quizT('b.' + b.id + '_tip')}</div>
-      <button class="btn-primary quiz-res-cta" id="btn-quiz-continue">${quizT('profile_cta')}</button>
+    <div class="quiz-res-card" style="--bc:${meta.color}">
+      <div class="quiz-res-kicker">${quizT('ui.profile_title')}</div>
+      <div class="quiz-res-emoji">${meta.emoji}</div>
+      <div class="quiz-res-name">${quizT('b.' + bucketId + '_name')}</div>
+      <p class="quiz-res-desc">${quizT('b.' + bucketId + '_desc')}</p>
+      <div class="quiz-res-tips">
+        <div class="quiz-res-tips-title">${quizT('ui.recommendations')}</div>
+        <ul>${tips}</ul>
+      </div>
+      <button class="quiz-next quiz-res-cta" id="btn-quiz-continue">${quizT('ui.profile_cta')}</button>
     </div>`;
 
   showScreen('screen-quiz-result', true);
   playSound('level_up');
-  spawnHitParticles(b.color, window.innerWidth / 2, window.innerHeight / 3, 24);
+  spawnHitParticles(meta.color, window.innerWidth / 2, window.innerHeight / 3, 24);
 
   const cta = document.getElementById('btn-quiz-continue');
   if (cta) cta.onclick = finishQuizFlow;
@@ -8761,6 +9300,34 @@ function initAvatarSystem() {
   }
 }
 
+// ═══════════════════════════════════════════════════
+// PANTALLA INICIAL
+//
+//   sin idioma            -> idioma
+//   idioma, sin quiz      -> idioma (paso 1 del alta) -> quiz -> perfil
+//   idioma + quiz, sin sesión -> registro/login
+//   todo                  -> home
+//
+// El idioma se muestra SIEMPRE mientras el quiz esté pendiente, aunque ya
+// hubiera uno guardado: el quiz es el paso 2 del alta y tiene que salir en
+// el idioma que el usuario acaba de elegir, no en el que quedó de antes.
+// ═══════════════════════════════════════════════════
+function decideStartScreen() {
+  const savedLang = localStorage.getItem('fkf_lang');
+  if (savedLang) {
+    APP.lang = savedLang;
+    applyLanguage();
+  }
+
+  if (!savedLang || shouldShowQuiz()) {
+    showScreen('screen-lang');
+    initLangScreen();
+    return;
+  }
+
+  continueAfterLang();
+}
+
 function init() {
   initSupabase();
   // Antes que nada: nadie debe leer el XP viejo sin migrar
@@ -8775,15 +9342,7 @@ function init() {
   initSettingsModal();
   initQuizScreen();
 
-  const savedLang = localStorage.getItem('fkf_lang');
-  if (savedLang) {
-    APP.lang = savedLang;
-    applyLanguage();
-    afterLangSelected();
-  } else {
-    showScreen('screen-lang');
-    initLangScreen();
-  }
+  decideStartScreen();
 
   // Pre-check accelerometer availability (listener added only when session starts)
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
