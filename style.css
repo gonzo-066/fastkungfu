@@ -5794,6 +5794,17 @@ body.rtl .calib-manual-slider {
   margin-top: 1px;
 }
 
+/* ── "Otro país": campo libre bajo la lista ── */
+.quiz-other-wrap {
+  margin-top: -2px;
+  animation: quizOtherIn 0.2s ease both;
+}
+
+@keyframes quizOtherIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Botón SIGUIENTE ── */
 .quiz-next {
   width: 100%;

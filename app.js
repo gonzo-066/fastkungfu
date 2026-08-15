@@ -7477,6 +7477,7 @@ const QUIZ_SCORE_KEY   = 'strikeiq_lead_score';
 const QUIZ_PENDING_KEY = 'strikeiq_quiz_pending';
 const QUIZ_VERSION     = 3;
 const SMIQ_MIN_CHARS   = 20;
+const OTHER_MIN_CHARS  = 2;    // mínimo del país escrito a mano
 
 const QUIZ_BUCKETS = ['competidor', 'fitness', 'coach', 'gimnasio', 'principiante'];
 
@@ -7623,6 +7624,7 @@ const QUIZ_I18N = {
       lead_gdpr: 'Acepto recibir comunicaciones de Strike IQ',
       lead_cta: 'VER MI PERFIL',
       other_country: 'Otro país',
+      other_country_ph: 'Escribe tu país...',
       profile_title: 'TU PERFIL DE LUCHADOR', profile_cta: 'CONTINUAR',
       recommendations: 'TUS 3 SIGUIENTES PASOS',
     },
@@ -7703,6 +7705,7 @@ const QUIZ_I18N = {
       lead_gdpr: 'I agree to receive communications from Strike IQ',
       lead_cta: 'SEE MY PROFILE',
       other_country: 'Another country',
+      other_country_ph: 'Type your country...',
       profile_title: 'YOUR FIGHTER PROFILE', profile_cta: 'CONTINUE',
       recommendations: 'YOUR NEXT 3 STEPS',
     },
@@ -7783,6 +7786,7 @@ const QUIZ_I18N = {
       lead_gdpr: 'Aceito receber comunicações do Strike IQ',
       lead_cta: 'VER MEU PERFIL',
       other_country: 'Outro país',
+      other_country_ph: 'Escreva seu país...',
       profile_title: 'SEU PERFIL DE LUTADOR', profile_cta: 'CONTINUAR',
       recommendations: 'SEUS 3 PRÓXIMOS PASSOS',
     },
@@ -7863,6 +7867,7 @@ const QUIZ_I18N = {
       lead_gdpr: 'Ich möchte Mitteilungen von Strike IQ erhalten',
       lead_cta: 'MEIN PROFIL ANSEHEN',
       other_country: 'Anderes Land',
+      other_country_ph: 'Schreib dein Land...',
       profile_title: 'DEIN KÄMPFERPROFIL', profile_cta: 'WEITER',
       recommendations: 'DEINE NÄCHSTEN 3 SCHRITTE',
     },
@@ -7943,6 +7948,7 @@ const QUIZ_I18N = {
       lead_gdpr: 'Strike IQ からのお知らせの受信に同意します',
       lead_cta: 'プロフィールを見る',
       other_country: 'その他の国',
+      other_country_ph: '国名を入力...',
       profile_title: 'あなたのファイタープロフィール', profile_cta: '続ける',
       recommendations: '次にやるべき3つのこと',
     },
@@ -8023,6 +8029,7 @@ const QUIZ_I18N = {
       lead_gdpr: 'J\'accepte de recevoir des communications de Strike IQ',
       lead_cta: 'VOIR MON PROFIL',
       other_country: 'Un autre pays',
+      other_country_ph: 'Écris ton pays...',
       profile_title: 'TON PROFIL DE COMBATTANT', profile_cta: 'CONTINUER',
       recommendations: 'TES 3 PROCHAINES ÉTAPES',
     },
@@ -8103,6 +8110,7 @@ const QUIZ_I18N = {
       lead_gdpr: 'Согласен получать сообщения от Strike IQ',
       lead_cta: 'СМОТРЕТЬ МОЙ ПРОФИЛЬ',
       other_country: 'Другая страна',
+      other_country_ph: 'Напиши свою страну...',
       profile_title: 'ТВОЙ ПРОФИЛЬ БОЙЦА', profile_cta: 'ПРОДОЛЖИТЬ',
       recommendations: 'ТВОИ 3 СЛЕДУЮЩИХ ШАГА',
     },
@@ -8183,6 +8191,7 @@ const QUIZ_I18N = {
       lead_gdpr: '我同意接收 Strike IQ 的消息',
       lead_cta: '查看我的档案',
       other_country: '其他国家',
+      other_country_ph: '输入你的国家...',
       profile_title: '你的格斗档案', profile_cta: '继续',
       recommendations: '你的下三步',
     },
@@ -8263,6 +8272,7 @@ const QUIZ_I18N = {
       lead_gdpr: '我同意接收 Strike IQ 的訊息',
       lead_cta: '查看我的檔案',
       other_country: '其他國家',
+      other_country_ph: '輸入你的國家...',
       profile_title: '你的格鬥檔案', profile_cta: '繼續',
       recommendations: '你的下三步',
     },
@@ -8343,6 +8353,7 @@ const QUIZ_I18N = {
       lead_gdpr: 'Strike IQ의 소식 수신에 동의합니다',
       lead_cta: '내 프로필 보기',
       other_country: '다른 국가',
+      other_country_ph: '국가를 입력하세요...',
       profile_title: '당신의 파이터 프로필', profile_cta: '계속하기',
       recommendations: '다음 3단계',
     },
@@ -8423,6 +8434,7 @@ const QUIZ_I18N = {
       lead_gdpr: 'أوافق على تلقّي رسائل من Strike IQ',
       lead_cta: 'عرض ملفي',
       other_country: 'دولة أخرى',
+      other_country_ph: 'اكتب بلدك...',
       profile_title: 'ملفك كمقاتل', profile_cta: 'متابعة',
       recommendations: 'خطواتك الثلاث التالية',
     },
@@ -8503,6 +8515,7 @@ const QUIZ_I18N = {
       lead_gdpr: 'मैं Strike IQ से संदेश पाने के लिए सहमत हूँ',
       lead_cta: 'मेरी प्रोफ़ाइल देखें',
       other_country: 'अन्य देश',
+      other_country_ph: 'अपना देश लिखें...',
       profile_title: 'आपकी फाइटर प्रोफ़ाइल', profile_cta: 'जारी रखें',
       recommendations: 'आपके अगले 3 कदम',
     },
@@ -8630,7 +8643,8 @@ function quizRecordToRow(record, userId) {
     q6_pain_point:  a.pain || null,
     q7_inversion:   a.inversion || null,
     q8_edad:        a.edad || null,
-    q9_pais:        a.pais || null,
+    // Si eligió "Otro país" se guarda lo que escribió, no el marcador
+    q9_pais:        (a.pais === 'otro' ? String(a.pais_otro || '').trim() : a.pais) || null,
     q10_nombre:     a.nombre || null,
     q10_email:      a.email || null,
     q10_gdpr:       !!a.gdpr,
@@ -8701,7 +8715,12 @@ function quizCanAdvance() {
   const a = _quizState.answers;
   if (q.type === 'text')    return String(a.smiq || '').trim().length >= SMIQ_MIN_CHARS;
   if (q.type === 'lead')    return String(a.nombre || '').trim().length > 0 && isValidEmail(a.email);
-  if (q.type === 'country') return !!a.pais;
+  if (q.type === 'country') {
+    if (!a.pais) return false;
+    // "Otro país" exige escribirlo a mano
+    if (a.pais === 'otro') return String(a.pais_otro || '').trim().length >= OTHER_MIN_CHARS;
+    return true;
+  }
   return !!a[q.id];
 }
 
@@ -8797,6 +8816,17 @@ function quizQuestionHTML() {
         ${o.emoji ? `<span class="quiz-opt-emoji">${o.emoji}</span>` : ''}
         <span class="quiz-opt-label">${o.label}</span>
       </button>`).join('') + `</div>`;
+
+    // "Otro país" abre un campo libre justo debajo de la lista (la opción
+    // "Otro" va siempre la última, así que queda pegado a ella)
+    if (q.type === 'country') {
+      inner += `
+        <div class="quiz-other-wrap${a.pais === 'otro' ? '' : ' hidden'}" id="quiz-other-wrap">
+          <input class="quiz-input" id="quiz-other-country" type="text" autocomplete="country-name"
+                 value="${escapeHTML(a.pais_otro || '')}"
+                 placeholder="${quizT('ui.other_country_ph')}">
+        </div>`;
+    }
   }
 
   const cta = q.type === 'lead' ? quizT('ui.lead_cta') : quizT('ui.next');
@@ -8841,11 +8871,23 @@ function wireQuizStep() {
     if (gdpr)  gdpr.onchange = () => { a.gdpr   = gdpr.checked; };
 
   } else {
+    const otherWrap  = document.getElementById('quiz-other-wrap');
+    const otherInput = document.getElementById('quiz-other-country');
+    if (otherInput) otherInput.oninput = () => {
+      a.pais_otro = otherInput.value;
+      updateQuizNextBtn();
+    };
+
     document.querySelectorAll('#quiz-body .quiz-opt').forEach(btn => {
       btn.onclick = () => {
         a[q.id] = btn.dataset.opt;
         document.querySelectorAll('#quiz-body .quiz-opt').forEach(b =>
           b.classList.toggle('selected', b === btn));
+        if (otherWrap) {
+          const isOther = btn.dataset.opt === 'otro';
+          otherWrap.classList.toggle('hidden', !isOther);
+          if (isOther && otherInput) otherInput.focus();
+        }
         vibrate([10]);
         updateQuizNextBtn();
       };
