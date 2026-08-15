@@ -1215,6 +1215,34 @@
 <canvas id="hit-particle-canvas" class="hit-particle-canvas"></canvas>
 
 <!-- ═══════════════════════════════════
+     QUIZ FUNNEL — 7 PREGUNTAS
+     Se muestra una sola vez, al terminar la primera sesión y antes de
+     los resultados. El contenido lo pinta JS (renderQuizQuestion).
+════════════════════════════════════ -->
+<div id="screen-quiz" class="screen hidden">
+  <div class="screen-inner quiz-inner">
+    <div class="quiz-top">
+      <div class="quiz-progress-track">
+        <div class="quiz-progress-fill" id="quiz-progress-fill" style="width:0%"></div>
+      </div>
+      <div class="quiz-progress-row">
+        <span class="quiz-step" id="quiz-step">1 / 7</span>
+        <button class="quiz-skip" id="btn-quiz-skip" data-i18n="quiz_skip">Saltar</button>
+      </div>
+    </div>
+    <div class="quiz-body" id="quiz-body"></div>
+    <button class="quiz-back" id="btn-quiz-back" data-i18n="quiz_back">← Atrás</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     QUIZ FUNNEL — PERFIL DE LUCHADOR
+════════════════════════════════════ -->
+<div id="screen-quiz-result" class="screen hidden">
+  <div class="screen-inner quiz-result-inner" id="quiz-result-body"></div>
+</div>
+
+<!-- ═══════════════════════════════════
      AAA — RESULT SPLASH SCREEN
 ════════════════════════════════════ -->
 <div id="screen-result-splash" class="screen hidden">
