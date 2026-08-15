@@ -1,4 +1,4 @@
-const CACHE_NAME = 'strikeiq-v6';
+const CACHE_NAME = 'strikeiq-v7';
 const ASSETS = [
   './',
   './index.html',
