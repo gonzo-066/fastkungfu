@@ -276,6 +276,9 @@ const TRANSLATIONS = {
     calib_result_threshold: 'Umbral configurado',
     calib_result_sensitivity: 'Sensibilidad',
     calib_ms_debounce:    '{n} ms debounce',
+    calib_manual_title:   'AJUSTE MANUAL',
+    calib_manual_label:   'SENSIBILIDAD: {g}G',
+    calib_manual_desc:    'Menor valor = más sensible',
     home_calib_status_yes: '✓ Calibración guardada — {date}',
     home_calib_status_no: '⚠️ Sin calibrar — toca para calibrar',
     sound_label:          'SONIDO',
@@ -465,6 +468,9 @@ const TRANSLATIONS = {
     calib_result_threshold: 'Configured threshold',
     calib_result_sensitivity: 'Sensitivity',
     calib_ms_debounce:    '{n} ms debounce',
+    calib_manual_title:   'MANUAL ADJUSTMENT',
+    calib_manual_label:   'SENSITIVITY: {g}G',
+    calib_manual_desc:    'Lower value = more sensitive',
     home_calib_status_yes: '✓ Calibration saved — {date}',
     home_calib_status_no: '⚠️ Not calibrated — tap to calibrate',
     sound_label:          'SOUND',
@@ -654,6 +660,9 @@ const TRANSLATIONS = {
     calib_result_threshold: 'Limiar configurado',
     calib_result_sensitivity: 'Sensibilidade',
     calib_ms_debounce:    '{n} ms debounce',
+    calib_manual_title:   'AJUSTE MANUAL',
+    calib_manual_label:   'SENSIBILIDADE: {g}G',
+    calib_manual_desc:    'Menor valor = mais sensível',
     home_calib_status_yes: '✓ Calibração salva — {date}',
     home_calib_status_no: '⚠️ Sem calibrar — toque para calibrar',
     sound_label:          'SOM',
@@ -843,6 +852,9 @@ const TRANSLATIONS = {
     calib_result_threshold: 'Eingestellter Schwellenwert',
     calib_result_sensitivity: 'Empfindlichkeit',
     calib_ms_debounce:    '{n} ms Entprellzeit',
+    calib_manual_title:   'MANUELLE EINSTELLUNG',
+    calib_manual_label:   'EMPFINDLICHKEIT: {g}G',
+    calib_manual_desc:    'Kleinerer Wert = empfindlicher',
     home_calib_status_yes: '✓ Kalibrierung gespeichert — {date}',
     home_calib_status_no: '⚠️ Nicht kalibriert — zum Kalibrieren tippen',
     sound_label:          'TON',
@@ -918,8 +930,13 @@ const APP = {
     lastPunchAt: 0,
     COOLDOWN: 150,
     COMBO_HIT_COOLDOWN: 150,
-    THRESHOLD: 1.5,           // G neto mínimo (default sin calibrar)
-    ABSOLUTE_MIN_G: 1.5,      // Nunca bajar de este valor aunque calibración lo pida
+    THRESHOLD: 0.8,           // G neto mínimo (default sin calibrar)
+    // Suelo absoluto del umbral. Antes era 1.5G y en sacos/muñecos que
+    // transmiten poca vibración al móvil ningún golpe lo superaba: no se
+    // registraba nada y el XP se quedaba a 0. Ahora se permite bajar hasta
+    // 0.01G y el usuario ajusta con el slider de sensibilidad.
+    ABSOLUTE_MIN_G: 0.01,     // Nunca bajar de este valor aunque calibración lo pida
+    MAX_THRESHOLD_G: 3.0,     // Tope del slider manual
     _logAt: 0,
   },
   sessionActive: false,
@@ -1100,12 +1117,28 @@ function migrateXPToV52() {
 }
 
 function loadGamificationXP() {
-  return parseInt(localStorage.getItem('fkf_gam_xp'), 10) || 0;
+  const raw = parseInt(localStorage.getItem('fkf_gam_xp'), 10);
+  if (!Number.isFinite(raw)) {
+    // Primer arranque o valor corrupto: se inicializa a 0 en localStorage
+    localStorage.setItem('fkf_gam_xp', '0');
+    return 0;
+  }
+  return Math.max(0, raw);
 }
 
 function saveGamificationXP(xp) {
-  localStorage.setItem('fkf_gam_xp', String(Math.max(0, xp)));
+  const safe = Math.max(0, Math.round(Number(xp) || 0));
+  localStorage.setItem('fkf_gam_xp', String(safe));
+  if (APP.gamification) APP.gamification.totalXP = safe;
 }
+
+// APP.xp — espejo de solo lectura del XP persistido ('fkf_gam_xp'). Permite
+// depurar desde el móvil (console.log / APP.xp) sin tener que recordar la
+// clave de localStorage, y asignarle un valor lo guarda de verdad.
+Object.defineProperty(APP, 'xp', {
+  get() { return loadGamificationXP(); },
+  set(v) { saveGamificationXP(v); updateGlobalXPBar(); },
+});
 
 function getXPLevelInfo(xp) {
   let idx = 0;
@@ -1642,13 +1675,23 @@ function triggerHitFeedback(gForce) {
   const tier = getGlobalTier(gForce);
   boostBgSpeed();
 
-  // Dar XP solo durante una sesión activa
-  if (APP.sessionActive) {
+  // Log temporal de depuración en móvil: si el XP no sube, aquí se ve si el
+  // golpe llegó y con qué flags de sesión.
+  console.log('[XP] golpe detectado, G:', Number(gForce).toFixed(2),
+              'XP antes:', APP.xp, '| tier:', tier.label, '+' + tier.xp,
+              '| sessionActive:', APP.sessionActive,
+              '| IMPACT_SESSION_ACTIVE:', window.IMPACT_SESSION_ACTIVE);
+
+  // Dar XP solo durante una sesión/round activo
+  if (APP.sessionActive || window.IMPACT_SESSION_ACTIVE) {
     const prev = loadGamificationXP();
     const next = prev + tier.xp;
     saveGamificationXP(next);
     if (APP.gamification) APP.gamification.totalXP = next;
     updateGlobalXPBar();
+    console.log('[XP] XP después:', APP.xp);
+  } else {
+    console.warn('[XP] sin sesión activa — no se suma XP');
   }
 
   // Visual popup
@@ -2614,7 +2657,7 @@ function deactivateAccelerometer() {
 // arrastraba la estimación de gravedad. Con 0.95 el filtro sigue la
 // orientación pero apenas reacciona al impacto, así que el pico llega entero.
 const GRAV_ALPHA       = 0.95;  // inercia del filtro (más alto = más lento)
-const NET_HIT_G        = 1.5;   // G netos mínimos para contar como golpe
+const NET_HIT_G        = 0.01;  // G netos mínimos para contar como golpe (suelo duro)
 const HIT_DEBOUNCE_MS  = 150;   // ms mínimos entre dos golpes (anti-doble)
 const FILTER_SETTLE_MS = 600;   // margen para que el filtro converja tras un reset
                                 // (con ALPHA 0.95 tarda más que con 0.85)
@@ -5636,6 +5679,15 @@ const CALIB_GRAVITY = 1.0;   // gravedad base contenida en cada lectura (G)
 const CALIB_TRIG_G  = 1.3;   // disparo: 1G de gravedad + 0.3G de impacto
 const CALIB_RING_G  = 1.1;   // fin del rebote: 1G + 0.1G
 
+// Umbral válido: nunca por debajo de 0.01G (dispositivos que reciben poca
+// vibración del saco) ni por encima del tope del slider.
+function clampThreshold(g) {
+  const v = Number(g);
+  if (!Number.isFinite(v)) return APP.accel.THRESHOLD;
+  return Math.min(APP.accel.MAX_THRESHOLD_G,
+                  Math.max(APP.accel.ABSOLUTE_MIN_G, Math.round(v * 100) / 100));
+}
+
 function loadCalibration() {
   const raw = localStorage.getItem('fkf_calibration');
   if (!raw) return false;
@@ -5648,7 +5700,7 @@ function loadCalibration() {
       return false;
     }
     APP.calibration = c;
-    APP.accel.THRESHOLD = Math.max(APP.accel.ABSOLUTE_MIN_G, c.threshold);
+    APP.accel.THRESHOLD = clampThreshold(c.threshold);
     APP.accel.COOLDOWN  = c.debounce;
     APP.accel.COMBO_HIT_COOLDOWN = Math.max(55, c.debounce - 45);
     return true;
@@ -5656,7 +5708,7 @@ function loadCalibration() {
 }
 
 function saveCalibration(soft, medium, hard, threshold, debounce) {
-  const safeThreshold = Math.max(APP.accel.ABSOLUTE_MIN_G, threshold);
+  const safeThreshold = clampThreshold(threshold);
   const calibration = {
     soft:       Math.round(soft   * 100) / 100,
     medium:     Math.round(medium * 100) / 100,
@@ -5672,6 +5724,67 @@ function saveCalibration(soft, medium, hard, threshold, debounce) {
   APP.accel.THRESHOLD = safeThreshold;
   APP.accel.COOLDOWN  = debounce;
   APP.accel.COMBO_HIT_COOLDOWN = Math.max(55, debounce - 45);
+}
+
+// ─────────────────────────────────────────────────────
+// AJUSTE MANUAL DE SENSIBILIDAD
+// Slider que convive con la calibración automática: el usuario puede afinar
+// el umbral después de calibrar (o sin calibrar) hasta 0.01G, para sacos o
+// muñecos que transmiten poca vibración al móvil.
+// ─────────────────────────────────────────────────────
+function currentManualThreshold() {
+  const fromCalib = APP.calibration && Number(APP.calibration.threshold);
+  if (Number.isFinite(fromCalib) && fromCalib > 0) return clampThreshold(fromCalib);
+  return clampThreshold(APP.accel.THRESHOLD || 0.8);
+}
+
+// Aplica y persiste el umbral manual al instante (cada movimiento del slider)
+function setManualThreshold(g) {
+  const v = clampThreshold(g);
+  const base = APP.calibration || {};
+  const calibration = {
+    soft:       base.soft   || 0,
+    medium:     base.medium || 0,
+    hard:       base.hard   || 0,
+    threshold:  v,
+    debounce:   base.debounce || APP.accel.COOLDOWN || 150,
+    netG:       true,
+    // Mover el slider no equivale a haber calibrado: si nunca se calibró, se
+    // sigue mostrando la intro de calibración (y el aviso del menú).
+    calibrated: base.calibrated === true,
+    manual:     true,
+    date:       base.date || Date.now(),
+  };
+  localStorage.setItem('fkf_calibration', JSON.stringify(calibration));
+  APP.calibration     = calibration;
+  APP.accel.THRESHOLD = v;
+  console.log('[FKF] umbral manual =', v.toFixed(2) + 'G');
+}
+
+function thresholdSliderHTML() {
+  const v = currentManualThreshold();
+  return `
+    <div class="calib-manual">
+      <div class="calib-manual-title">${t('calib_manual_title')}</div>
+      <div class="calib-manual-label" id="calib-thr-label">${t('calib_manual_label', { g: v.toFixed(2) })}</div>
+      <input type="range" class="slider calib-manual-slider" id="calib-thr-slider"
+             min="0.01" max="3" step="0.05" value="${v}" />
+      <div class="slider-range"><span>0.01G</span><span>3.00G</span></div>
+      <p class="calib-manual-desc">${t('calib_manual_desc')}</p>
+    </div>`;
+}
+
+function wireThresholdSlider() {
+  const sl  = document.getElementById('calib-thr-slider');
+  const lbl = document.getElementById('calib-thr-label');
+  if (!sl) return;
+  const apply = () => {
+    const v = clampThreshold(parseFloat(sl.value));
+    if (lbl) lbl.textContent = t('calib_manual_label', { g: v.toFixed(2) });
+    setManualThreshold(v);
+  };
+  sl.oninput  = apply;
+  sl.onchange = apply;
 }
 
 function showCalibrationScreen(fromScreen) {
@@ -5719,9 +5832,12 @@ function renderCalibExisting() {
         ${card('⏱', t('calib_cur_debounce'), `${c.debounce || 0}ms`)}
         ${card('📅', t('calib_existing_date'), c.date ? fmtDate(c.date) : '—')}
       </div>
+      ${thresholdSliderHTML()}
       <button class="btn-primary btn-calib-ready" id="btn-calib-keep">${t('calib_use_existing')}</button>
       <button class="btn-calib-outline" id="btn-calib-redo">${t('calib_recalibrate')}</button>
     </div>`;
+
+  wireThresholdSlider();
 
   document.getElementById('btn-calib-keep').onclick = () => {
     stopCalibListener();
@@ -5750,8 +5866,10 @@ function renderCalibIntro() {
       </div>
       <div class="calib-sensor-status" id="calib-sensor-status"></div>
       <button class="btn-primary btn-calib-ready" id="btn-calib-start">${t('calib_start')}</button>
+      ${thresholdSliderHTML()}
     </div>`;
   document.getElementById('btn-calib-start').onclick = () => renderCalibStep(1);
+  wireThresholdSlider();
   // Estado del sensor visible ya en la intro: el usuario sabe si responde
   // antes de empezar los 3 pasos.
   startCalibSensor(1);
@@ -6035,7 +6153,9 @@ function showCalibResults() {
   const medium = data[1].peakG;
   const hard   = data[2].peakG;
 
-  const threshold = Math.round(soft * 0.5 * 100) / 100;
+  // La mitad del golpe suave, con 0.01G como único suelo (sin mínimos altos:
+  // hay sacos/muñecos que apenas transmiten vibración al móvil).
+  const threshold = Math.max(0.01, Math.round(soft * 0.5 * 100) / 100);
   const debounce  = 150;
 
   content.innerHTML = `
